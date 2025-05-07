@@ -315,7 +315,7 @@ df_receita_movimentacao_periodos = df_receita_movimentacao_periodos[
 # Fazendo o agruamento a partir da Unidade, produto e periodo e pegando o menor valor restante baseado nisso.
 df_receita_movimentacao_periodos = df_receita_movimentacao_periodos.groupby(['Unidade', 'Produto', 'Periodo']).min().reset_index()
 
-# Tópico 1: Manter? Esse etapa já esta comentada em FTO
+# Etapa comentada em FTO, mantendo comentada aqui.
 # Etapa para considerar apenas correntes físicas
 # Ou seja, desconsiderar correntes lógicas
 # Edit: 29/09/2023

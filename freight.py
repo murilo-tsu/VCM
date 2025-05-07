@@ -284,8 +284,7 @@ unidades_interesse_inbound = correntes.copy()
 unidades_interesse_inbound = unidades_interesse_inbound.loc[unidades_interesse_inbound.Tipo == 'INBOUND']
 unidades_interesse_inbound = unidades_interesse_inbound.reset_index().drop(columns = 'index')
 
-# Tópico 1: Considerando que essa etapa estava sendo desnecessária, 
-# comentei linhas abaixo, posso apagar ou deixa comentado mesmo?
+# (13/03/2025) Etapa comentada pois estava sendo desnecessária.
 
 # inb_orig_aux = unidades_interesse_inbound['Unidade-Origem'].str.split("-", n = 2, expand = True)
 # inb_dest_aux = unidades_interesse_inbound['Unidade-Destino'].str.split("-", n = 2, expand = True)

@@ -176,7 +176,7 @@ rename_dataframes = {
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
 print('Carregando arquivos... \n')
-#print('Tempo de execução esperado: por volta de 16 min \n')
+print('Tempo de execução esperado: por volta de 16 min \n')
 
 # DataFrame :: Horizonte (Período) de Otimização
 df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
@@ -234,13 +234,13 @@ ptax_demurrage = pd.read_excel(os.path.join(path + arquivos_primarios['demurrage
                                   dtype =tp_dado_arquivos['ptax'])
 
 # Dataframe :: Template Suprimento
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
 template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
                                   usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
                                   dtype = tp_dado_arquivos['template_suprimento'])
 
 # Dataframe :: Template Suprimento
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
+#_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
 wizard_suprimento_faixa = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
                                   usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
                                   dtype = tp_dado_arquivos['template_suprimento'])
@@ -375,8 +375,8 @@ demurrage['ID-RIGHT'] = demurrage['NOME_PORTO_VCM'] + '-' + demurrage['NOME_PERI
 
 # Tópico 2: (Essas coisas já estavam anotadas no script de FTO, faz sentido implementar?)
 # Incluir uma coluna denominada DEMURRAGE USD - PREMIUM para replicar os dados de DEMURRAGE USD
-# Renomear o nome dos portos para remover o nível de premium (Isso eu acho que não faz sentido mais rsrs)
-# Criar um dataframe agrupado (? esse aqui não entendi não)
+# Renomear o nome dos portos para remover o nível de premium
+# Criar um dataframe agrupado (? esse aqui não entendi não, agrupado de que?)
 demurrage['Demurrage BRL - PREMIUM'] = demurrage['Demurrage BRL']
 demurrage = demurrage.groupby(['Porto','Terminal','Periodo','ID-RIGHT']).agg({'Demurrage BRL':'min','Demurrage BRL - PREMIUM':'max'})
 demurrage = demurrage.reset_index()
@@ -388,7 +388,7 @@ last_updated_cost = custos_mp.copy()
 last_updated_cost = last_updated_cost[['PERIODO','CD_PRODUTO_FTO','CODIGO_MOEDA','CUSTO_REPOSICAO_MERCADO']]
 last_updated_cost = last_updated_cost.sort_values(by = 'PERIODO', ascending = False)
 last_updated_cost = last_updated_cost.reset_index().drop(columns = 'index')
-last_updated_cost['Custo VCM (BRL/ton)'] = np.NaN
+last_updated_cost['Custo VCM (BRL/ton)'] = np.nan
 for i in range(last_updated_cost.shape[0]):
     if last_updated_cost['CODIGO_MOEDA'][i] == 'USD':
         last_updated_cost['Custo VCM (BRL/ton)'][i] = last_updated_cost['CUSTO_REPOSICAO_MERCADO'][i] * ptax_UF
@@ -432,7 +432,7 @@ custos_mp['Validar'] = (custos_mp['PERIODO'] >= custos_mp['Data Inicial']) & (cu
 custos_mp = custos_mp.loc[custos_mp.Validar == True]
 custos_mp = custos_mp.reset_index().drop(columns = ['index','Validar','Data Inicial','Data Final'])
 custos_mp = custos_mp.merge(agrupamento_produtos, how = 'left', right_on = 'CODIGO_ITEM', left_on = 'CD_PRODUTO_FTO')
-custos_mp['Custo VCM (BRL/ton)'] = np.NaN
+custos_mp['Custo VCM (BRL/ton)'] = np.nan
 for i in range(custos_mp.shape[0]):
     if custos_mp['CODIGO_MOEDA'][i] == 'USD':
         custos_mp['Custo VCM (BRL/ton)'][i] = custos_mp['CUSTO_REPOSICAO_MERCADO'][i] * ptax_UF
