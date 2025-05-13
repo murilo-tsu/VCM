@@ -201,13 +201,15 @@ df_template_cap_amrz['Volume Máximo'] = 0.0
 # =======================================================================================================================
 
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║ Etapa 01/02: Preenchimento de Custos de Armazenagem                                                            ║')
+print('║ Etapa 01/02: Preenchimento de Custos de Handling e Armazenagem                                                            ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 # ==========================================
 # >>>>>>>>> POR ESTADO TÁ ERRADO!! <<<<<<<<<
 # ==========================================
-# (faremos por estado só por enquanto)
+# Tópico 1: (faremos por estado só por enquanto)
 # Mesclando o template com o depGeolocalizacao pela unidade, para pegar o Estado.
+# Faria sentido puxar isso por unidade direto? 
+# (Sem passar pelo estado, mas ai ia ter que vir a unidade no dado de custo)
 
 left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
 # Substituindo o nome pela sigla.
@@ -222,7 +224,7 @@ df_template_hand_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosHandling
 left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
 left_outer_join(df_template_var_armz,df_custos_armz,left_on='Estado', right_on='Estado')
 df_template_var_armz['Custo Variável'] = df_template_var_armz['Armazenagem (R$/ton)'].fillna(0.0)
-# Tópico 1: Usando Custos Paliativos de FTO.
+# Tópico 2: Usando Custos Paliativos de FTO.
 # Custos de FHG: 'Custo Paliativo':[50, 100, 1, 80] (msm sigla, msm ordem)
 # (03/12/2024) Como pedido pelo Ricardo, caso o custo variável esteja zerado, preencher com um valor específico para cada unidade.
 df_template_var_armz['ID'] = df_template_var_armz['Unidade'].str[:3]

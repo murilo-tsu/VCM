@@ -195,7 +195,7 @@ id_mercados_consumidores = mercados.copy()
 id_mercados_consumidores = id_mercados_consumidores['VCM'].to_frame().rename({'VCM':'ID MC'})
 
 # DataFrame :: Template de Demanda :: Validar se data de atualização do arquivo consta no mês atual
-# validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['wizard_spot_demanda_produto_faixa']))
+validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['wizard_spot_demanda_produto_faixa']))
 wizard_spot_demanda_produto_faixa = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['wizard_spot_demanda_produto_faixa']),
                                                   sheet_name = arquivos_primarios['wizard_spot_demanda_produto_faixa_sn01'],
                                                   usecols = list(tp_dado_arquivos['wizard_spot_demanda_produto_faixa'].keys()),
