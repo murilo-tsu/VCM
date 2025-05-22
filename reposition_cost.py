@@ -131,8 +131,8 @@ arquivos_primarios = {
      'compras_importadas_sn': 'iptComprasImportadas',
      'compras_nacionais':'iptComprasNacionais.xlsx',
      'compras_nacionais_sn':'iptComprasNacionais',
-     'cap_portos':'iptCapacidadePortuaria.xlsx',
-     'cap_portos_sn': 'iptCapacidadePortuaria',
+    #  'cap_portos':'iptCapacidadePortuaria.xlsx',
+    #  'cap_portos_sn': 'iptCapacidadePortuaria',
      'custos_mp': 'iptCustoReposicao.xlsx',
      'custos_mp_sn': 'iptCustoReposicao',
      'demurrage': 'tbDadoPrimarioDemurrage.xlsx',
@@ -153,8 +153,8 @@ tp_dado_arquivos = {
                             'Mês003':np.float32,'Mês004':np.float32,'Mês005':np.float32,'Mês006':np.float32,
                             'Mês007':np.float32,'Mês008':np.float32,'Mês009':np.float32,'Mês010':np.float32,
                             'Mês011':np.float32,'Mês012':np.float32},
-     'cap_portos': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
+    #  'cap_portos': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
+    #                  'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
      'custos_mp': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
                     'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
                     'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
@@ -170,7 +170,6 @@ rename_dataframes = {
     'df_revisao_nacional':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Status':'STATUS','COMPANY':'COMPANY',
                     'RAW MATERIAL COD.':'CODIGO_MP'},
 }
-
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
@@ -237,13 +236,7 @@ validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_supri
 template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
                                   usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
                                   dtype = tp_dado_arquivos['template_suprimento'])
-
-# Dataframe :: Template Suprimento
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
-wizard_suprimento_faixa = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
-                                  usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
-                                  dtype = tp_dado_arquivos['template_suprimento'])
-wizard_suprimento_faixa = wizard_suprimento_faixa[['Unidade', 'Produto', 'Periodo']]
+wizard_suprimento_faixa = template_suprimento[['Unidade', 'Produto', 'Periodo']]
 
 
 # =======================================================================================================================
