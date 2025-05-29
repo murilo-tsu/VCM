@@ -248,9 +248,8 @@ df_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidade
 # template_saida.to_excel(os.path.join(cwd,output_path+'tbOutLimitesSaida.xlsx'), index = False, sheet_name='LimitesSaida')
 # print('\nLimites de capacidade de expedição preenchidos!')
 
-# Parte 2 - Limites Cap. Portuária
-# Tópico 1: Volume Minimo faz sentido manter zero ou tem alguma regra de preenchimento?
-# Tópico 1.1: Regras pra preencher o máximo? Caso não tenha no dado!
+# 2025-05-28 :: O script de preenchimento de capacidade portuária vai ser preenchido através do script SUPPLY.PY
+
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
 print('║ Iniciando preenchimento de limites de capacidade portuária                                                     ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
@@ -282,12 +281,12 @@ df_descarga = df_descarga.merge(df_expedicao,how='left',left_on='Nome Unidade',r
 df_descarga = df_descarga[['UNIDADE_ARMAZENAGEM_VCM','Nome VCM','Quantidade']]
 df_descarga = df_descarga.dropna()
 df_descarga = df_descarga.rename(columns={'UNIDADE_ARMAZENAGEM_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
-df_descarga['Ativo'] = ''
+df_descarga['Ativo'] = 'True'
 template_entrada = template_entrada.drop(columns={'Limite','Ativo'})
 left_outer_join(template_entrada,df_descarga,left_on=['Unidade','Periodo'],right_on=['Unidade','Periodo'])
 template_entrada['Limite'] = template_entrada['Limite'].fillna(0.0)
 template_entrada['Ativo'] = template_entrada.apply(lambda x: 'True' if x['Limite']!=0.0 else 'False', axis=1)
-template_entrada.to_excel(os.path.join(cwd,output_path+'tbOutLimitesEntrada.xlsx'),index=False,sheet_name='LimitesEntrada')
+template_entrada.to_csv(os.path.join(cwd,output_path+'tbOutLimitesEntrada.csv'), index=False, sep=';', encoding = 'utf-8')
 print('\nLimites de Descarga preenchidos!\n')
 
 end_time = time.time()
