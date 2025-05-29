@@ -131,8 +131,8 @@ arquivos_primarios = {
      'compras_importadas_sn': 'iptComprasImportadas',
      'compras_nacionais':'iptComprasNacionais.xlsx',
      'compras_nacionais_sn':'iptComprasNacionais',
-     'cap_portos':'iptCapacidadePortuaria.xlsx',
-     'cap_portos_sn': 'iptCapacidadePortuaria',
+    #  'cap_portos':'iptCapacidadePortuaria.xlsx',
+    #  'cap_portos_sn': 'iptCapacidadePortuaria',
      'custos_mp': 'iptCustoReposicao.xlsx',
      'custos_mp_sn': 'iptCustoReposicao',
      'demurrage': 'tbDadoPrimarioDemurrage.xlsx',
@@ -153,8 +153,8 @@ tp_dado_arquivos = {
                             'Mês003':np.float32,'Mês004':np.float32,'Mês005':np.float32,'Mês006':np.float32,
                             'Mês007':np.float32,'Mês008':np.float32,'Mês009':np.float32,'Mês010':np.float32,
                             'Mês011':np.float32,'Mês012':np.float32},
-     'cap_portos': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
+    #  'cap_portos': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
+    #                  'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
      'custos_mp': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
                     'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
                     'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
@@ -171,7 +171,6 @@ rename_dataframes = {
                     'RAW MATERIAL COD.':'CODIGO_MP'},
 }
 
-
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
@@ -182,7 +181,6 @@ print('Tempo de execução esperado: por volta de 16 min \n')
 df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
-#df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
 
 # Dataframe :: Portos existentes com códigos e correntes.
 df_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['portos']),
@@ -234,17 +232,11 @@ ptax_demurrage = pd.read_excel(os.path.join(path + arquivos_primarios['demurrage
                                   dtype =tp_dado_arquivos['ptax'])
 
 # Dataframe :: Template Suprimento
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
+validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
 template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
                                   usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
                                   dtype = tp_dado_arquivos['template_suprimento'])
-
-# Dataframe :: Template Suprimento
-#_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
-wizard_suprimento_faixa = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
-                                  usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
-                                  dtype = tp_dado_arquivos['template_suprimento'])
-wizard_suprimento_faixa = wizard_suprimento_faixa[['Unidade', 'Produto', 'Periodo']]
+wizard_suprimento_faixa = template_suprimento[['Unidade', 'Produto', 'Periodo']]
 
 
 # =======================================================================================================================
@@ -279,7 +271,8 @@ left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', rig
 left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
 
 # 3. DataFrame de Compras Completo :: Importado + Nacional
-cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO','PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
+cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO',
+        'PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
 df_revisao_importada = df_revisao_importada[cols]
 df_revisao_nacional = df_revisao_nacional[cols]
 df_revisao = pd.concat([df_revisao_importada,df_revisao_nacional])
@@ -340,7 +333,7 @@ for i in tqdm(range(template_suprimento.shape[0]), desc = 'Processando...', unit
 columns = ['Unidade','Produto','Periodo','Suprimento Mínimo','Suprimento Máximo']
 template_suprimento = template_suprimento[columns]
 template_suprimento = template_suprimento.fillna(0.0)
-template_suprimento = template_suprimento.round({'Suprimento Mínimo':2,'Suprimento Máximo':2}) # arredonda com duas casas decimais
+template_suprimento = template_suprimento.round({'Suprimento Mínimo':2,'Suprimento Máximo':2})
 
 # (30/04/2025) :: Linhas acima duplicadas do script supply.py
 
@@ -373,10 +366,10 @@ demurrage = demurrage.merge(df_portos, how = 'left', left_on = 'Porto', right_on
 
 demurrage['ID-RIGHT'] = demurrage['NOME_PORTO_VCM'] + '-' + demurrage['NOME_PERIODO']
 
-# Tópico 2: (Essas coisas já estavam anotadas no script de FTO, faz sentido implementar?)
+# (Essas coisas já estavam anotadas no script de FTO)
 # Incluir uma coluna denominada DEMURRAGE USD - PREMIUM para replicar os dados de DEMURRAGE USD
 # Renomear o nome dos portos para remover o nível de premium
-# Criar um dataframe agrupado (? esse aqui não entendi não, agrupado de que?)
+# Criar um dataframe agrupado
 demurrage['Demurrage BRL - PREMIUM'] = demurrage['Demurrage BRL']
 demurrage = demurrage.groupby(['Porto','Terminal','Periodo','ID-RIGHT']).agg({'Demurrage BRL':'min','Demurrage BRL - PREMIUM':'max'})
 demurrage = demurrage.reset_index()
