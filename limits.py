@@ -4,12 +4,13 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  limits.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 08/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 10/04/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 30/05/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (10/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Limites de Descarga                                                                                         ║')
@@ -51,114 +52,18 @@ path = 'Input Data/'                           # Dados de entrada (ciclo de plan
 output_path = 'Output Data/'                   # Dados de saída (input para o VCM)
 exec_log_path = 'Error Logs/'                  # Logs de erros durante a execução
 
-# Configuração do logger
-logging.basicConfig(
-    filename=os.path.join(exec_log_path, 'execution_log.log'),
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
-logging.info("Iniciando execução do script.")
-
-
 # =======================================================================================================================
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
-
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-
-# PADRONIZAR STRINGS
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
-
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'periodos': 'iptPeriodos.xlsx',
-     'periodos_sn': 'Períodos de Otimização',
-     'portos_armz_apo': 'depUnidadesPortuarias.xlsx',
-     'portos_armz_apo_sn': 'depUnidadesPortuarias',
-     'cap_prod': 'tbDadoPrimarioCapProducao.xlsx',
-     'cap_prod_sn': 'tbDadoPrimarioCapProducao',
-     'unidades_exp':'depUnidadesProdutivas.xlsx',
-     'unidades_exp_sn': 'depUnidadesProdutivas',
-     'cap_portos' : 'iptCapacidadePortuaria.xlsx',
-     'cap_portos_sn' : 'iptCapacidadePortuaria',
-     'cap_desc' : 'tbDadoPrimarioCapDescarga.xlsx',
-     'cap_desc_sn' : 'tbDadoPrimarioCapDescarga',
-     'template_saida' : 'tmpSaida.csv',
-     'template_entrada' : 'tmpEntrada.csv',
-     'template_capacidade' : 'tmpCapacidade.xlsx',
-     'unidades':'depUnidadesPortuarias.xlsx',
-     'unidades_sn':'depUnidadesPortuarias',
-}
-
-tp_dado_arquivos = {
-     'periodos':{'NUMERO':np.int64,'PERIODO':'datetime64[ns]', 'NOME_PERIODO':str},
-     'portos_armz_apo': {'PORTO':str, 'NOME_AZ_PORTO_VCM':str},
-     'cap_prod': {'Unidade':str,'Nome Unidade':str,'Dt/Ref':'datetime64[ns]', 'Quantidade':str},
-     'unidades_exp': {'DESCRICAO_PLANTA':str, 'UNIDADE_ARMAZENAGEM_VCM':str}, #'DEPOSITO':str, 'PLANTA':str, 
-     'cap_portos': {'PERIODO':'datetime64[ns]','Aratu':np.float64, 'Vila Do Conde':np.float64, 'Itaqui':np.float64, 'Vitória':np.float64, 
-                    'Hidrovias Miritituba':np.float64, 'Santos Termag':np.float64, 'Paranaguá':np.float64, 'Açu':np.float64, 'Salvador':np.float64,
-                    'Pecém':np.float64, 'Santos Comercial':np.float64, 'Vitória TPD':np.float64, 'Santos Hidrovias':np.float64, 'Santarem':np.float64, 'Recife':np.float64},
-     'cap_desc': {'Unidade':str, 'Nome Unidade':str, 'Dt/Ref':'datetime64[ns]', 'Quantidade':np.float64},
-     'template_saida': {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
-     'template_entrada' : {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
-     'template_capacidade' : {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.int64, 'Volume Máximo':np.int64},
-     'unidades' : {'UNIDADE':str, 'NOME_AZ_PORTO_VCM':str},
-}
-
-rename_dataframes = {
-    'df_periodos':{'NUMERO':'Numero','NOME_PERIODO':'Nome VCM', 'PERIODO':'Nome'},
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 
 # =======================================================================================================================
@@ -166,128 +71,158 @@ rename_dataframes = {
 # =======================================================================================================================
 print('Carregando arquivos necessários... \n')
 
+# DataFrame ::  Dicionário Genérico
+dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
+                       sheet_name = arquivos_primarios['dicgen'].split('.')[0],
+                       usecols = list(tp_dado_arquivos['dicgen'].keys()),
+                       dtype = tp_dado_arquivos['dicgen'])
+
 # DataFrame :: Horizonte (Período) de Otimização
 df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
 df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
 
-# DataFrame :: Portos APO
-df_portosAPO = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['portos_armz_apo']),
-                         sheet_name= arquivos_primarios['portos_armz_apo_sn'], 
-                       usecols=list(tp_dado_arquivos['portos_armz_apo'].keys()),
-                       dtype=tp_dado_arquivos['portos_armz_apo']).applymap(padronizar)
-
-# DataFrame :: Capacidade de Produção
+# DataFrame :: Capacidade de Produtivas / Armazenagem / Expedição
 df_cap_producao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_prod']),
                          sheet_name= arquivos_primarios['cap_prod_sn'], 
                        usecols=list(tp_dado_arquivos['cap_prod'].keys()),
-                       dtype=tp_dado_arquivos['cap_prod']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['cap_prod']).applymap(fx.padronizar)
+
+# DataFrame :: Capacidade de Armazenagem das Fábricas
+df_cap_arm = df_cap_producao.copy()
+df_cap_arm_maxmin = df_cap_producao.copy()
+# DataFrame :: Capacidade de Descarga das Fábricas
+df_cap_desc = df_cap_producao.copy()
 
 # DataFrame :: Unidades de Expedição e Descarga
 df_expedicao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
                          sheet_name= arquivos_primarios['unidades_exp_sn'], 
                        usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
-                       dtype=tp_dado_arquivos['unidades_exp']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
+
+# DataFrame :: Depara Unidades Portuárias :: Porto APO
+df_unidades_port = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_por']),
+                                 sheet_name = arquivos_primarios['unidades_por_sn'],
+                                 usecols=list(tp_dado_arquivos['unidades_por'].keys()),
+                                 dtype=tp_dado_arquivos['unidades_por']).applymap(fx.padronizar)
+
+# DataFrame :: Depara Unidades Produtivas / Armazenagem / Expedição
+df_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
+                         sheet_name= arquivos_primarios['unidades_exp_sn'], 
+                       usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
+                       dtype=tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 
 # DataFrame :: Capacidade Portos
 df_cap_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_portos']),
                          sheet_name= arquivos_primarios['cap_portos_sn'],
-                       dtype=tp_dado_arquivos['cap_portos']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['cap_portos']).applymap(fx.padronizar)
 
-# DataFrame :: Capacidade de Descarga das Fábricas
-df_descarga = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_desc']),
-                         sheet_name= arquivos_primarios['cap_desc_sn'], 
-                       usecols=list(tp_dado_arquivos['cap_desc'].keys()),
-                       dtype=tp_dado_arquivos['cap_desc']).applymap(padronizar)
 
 # DataFrame :: Template Saída
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_saida']))
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_saida']))
 template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_saida']),
                        delimiter = ';', encoding = 'utf-8-sig',
                        usecols=list(tp_dado_arquivos['template_saida'].keys()),
                        dtype=tp_dado_arquivos['template_saida'])
 
 # DataFrame :: Template Entrada
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_entrada']))
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_entrada']))
 template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_entrada']),
                        delimiter = ';', encoding = 'utf-8-sig',
                        usecols=list(tp_dado_arquivos['template_entrada'].keys()),
                        dtype=tp_dado_arquivos['template_entrada'])
 
 # DataFrame :: Template Capacidade
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
 template_capacidade = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
                        usecols=list(tp_dado_arquivos['template_capacidade'].keys()),
                        dtype=tp_dado_arquivos['template_capacidade'])
-
-# DataFrame :: Depara Unidades
-df_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades']),
-                         sheet_name= arquivos_primarios['unidades_sn'], 
-                       usecols=list(tp_dado_arquivos['unidades'].keys()),
-                       dtype=tp_dado_arquivos['unidades']).applymap(padronizar)
-
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
 # =======================================================================================================================
 
-# Parte 1 - Limites de Saida/Expedição
-# Destativando esse trecho pois já é preenchido em outro script
-# print('Iniciando preenchimento de limites de expedição')
-# left_outer_join(df_cap_producao,df_periodos,left_on='Dt/Ref', right_on='Nome')
-# df_cap_producao = df_cap_producao.dropna()
-# df_cap_producao['Ativo'] = 'True'
-# left_outer_join(df_cap_producao,df_unidades,left_on='Nome Unidade', right_on='DESCRICAO')
-# df_cap_producao = df_cap_producao.rename(columns={'Unidade':'Sigla','NOME_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
-# template_saida = template_saida.drop(columns={'Limite','Ativo'})
-# template_saida = template_saida.merge(df_cap_producao, how='left', left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'])
-# template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
-# template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
-# template_saida['Limite'] = template_saida['Limite'].fillna(0.0)
-# template_saida.to_excel(os.path.join(cwd,output_path+'tbOutLimitesSaida.xlsx'), index = False, sheet_name='LimitesSaida')
-# print('\nLimites de capacidade de expedição preenchidos!')
-
-# 2025-05-28 :: O script de preenchimento de capacidade portuária vai ser preenchido através do script SUPPLY.PY
-
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║ Iniciando preenchimento de limites de capacidade portuária                                                     ║')
+print('║  >>  LIMITES DE SAÍDA  <<                                                                                      ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ # Popula a capacidade de expedição das plantas (IMP) e dos portos (APO)                                        ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+# PARTE 1 :: LIMITES DE CAPACIDADE DE EXPEDIÇÃO PLANTAS + PORTOS
+print('Iniciando preenchimento de limites de expedição')
+print('Etapa 01 :: CAPACIDADE DOS PORTOS :: index = APO')
 
+unid_imp = df_unidades[['DEPOSITO','PLANTA','UNIDADE_EXPEDICAO_VCM']]
+unid_imp = unid_imp[unid_imp['DEPOSITO'] == '1001'].copy()
 df_cap_portos = pd.melt(df_cap_portos, id_vars=['PERIODO'], var_name='Porto', value_name='Capacidade')
-df_cap_portos = df_cap_portos.applymap(padronizar)
-df_portosAPO = df_portosAPO.drop_duplicates(['PORTO','NOME_AZ_PORTO_VCM'])
-left_outer_join(df_cap_portos,df_portosAPO,left_on='Porto', right_on='PORTO')
-left_outer_join(df_cap_portos,df_periodos,left_on='PERIODO', right_on='Nome')
+df_cap_portos = df_cap_portos.applymap(fx.padronizar)
+portos_apo = df_unidades_port[['NOME_AZ_PORTO_VCM','PORTO']].drop_duplicates().dropna(subset = 'NOME_AZ_PORTO_VCM')
+fx.left_outer_join(df_cap_portos,portos_apo,left_on='Porto', right_on='PORTO')
+fx.left_outer_join(df_cap_portos,df_periodos,left_on='PERIODO', right_on='Nome')
 df_cap_portos = df_cap_portos[['NOME_AZ_PORTO_VCM','Nome VCM','Capacidade']]
 df_cap_portos = df_cap_portos.rename(columns={'NOME_AZ_PORTO_VCM':'Unidade','Nome VCM':'Periodo','Capacidade':'Limite'})
 df_cap_portos = df_cap_portos.dropna()
 df_cap_portos['Limite'] = df_cap_portos['Limite']*1000
-left_outer_join(template_capacidade,df_cap_portos,left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'])
-template_capacidade['Limite'] = template_capacidade['Limite'].fillna(0.0)
-template_capacidade['Volume Máximo'] = template_capacidade['Limite']
-template_capacidade = template_capacidade.drop(columns={'Limite'})
-template_capacidade.to_excel(os.path.join(cwd, output_path+'tbOutLimitesPortosAPO.xlsx'),index=False,sheet_name='LimitesPortosAPO')
-print('\nLimites de capacidade portuária preenchidos!\n')
+print('Etapa 02 :: CAPACIDADE DAS PLANTAS :: index = IMP')
+df_cap_producao = df_cap_producao[df_cap_producao['Agrupador'] == 'CAPACIDADE PRODUCAO'].copy()
+df_cap_producao['DEPOSITO'] = '1001'
+fx.left_outer_join(df_cap_producao,df_periodos,left_on='Dt/Ref', right_on='Nome')
+df_cap_producao = df_cap_producao.dropna()
+df_cap_producao['Ativo'] = 'True'
+fx.left_outer_join(df_cap_producao,df_unidades,left_on=['Unidade','DEPOSITO'], right_on=['PLANTA','DEPOSITO'],name_left='Cap. por Unidade',
+                   name_right='Depara de Unidades')
+df_cap_producao = df_cap_producao.rename(columns={'Unidade':'Sigla','NOME_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
+template_saida = template_saida.drop(columns={'Limite','Ativo'})
+df_cap_producao = df_cap_producao[['UNIDADE_EXPEDICAO_VCM','Periodo','Limite']].rename(columns={'UNIDADE_EXPEDICAO_VCM':'Unidade'})
+df_cap = pd.concat([df_cap_portos, df_cap_producao])
+df_cap['Ativo'] = True
+fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'],
+                   name_left = 'Template', name_right = 'Capacidades Expedição Portos + Unidades')
+template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
+template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
+template_saida['Limite'] = template_saida['Limite'].fillna(0.0)
+template_saida.to_csv(os.path.join(cwd,output_path+'tmpOutSaida.csv'), index = False, sep=';', encoding='utf-8')
+print('\nLimites de capacidade de expedição preenchidos!')
 
-# Parte 3
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║ Iniciando preenchimento de limites de Descarga                                                                 ║')
+print('║  >>  LIMITES DE ENTRADA  <<                                                                                    ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ # Popula a capacidade de descarga das plantas internas (AIN)                                                   ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 
-df_expedicao['DESCRICAO_PLANTA'] = df_expedicao['DESCRICAO_PLANTA'].str.slice(3)
-left_outer_join(df_descarga,df_periodos,left_on='Dt/Ref',right_on='Nome')
-df_descarga = df_descarga.merge(df_expedicao,how='left',left_on='Nome Unidade',right_on='DESCRICAO_PLANTA')
-df_descarga = df_descarga[['UNIDADE_ARMAZENAGEM_VCM','Nome VCM','Quantidade']]
-df_descarga = df_descarga.dropna()
-df_descarga = df_descarga.rename(columns={'UNIDADE_ARMAZENAGEM_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
-df_descarga['Ativo'] = 'True'
-template_entrada = template_entrada.drop(columns={'Limite','Ativo'})
-left_outer_join(template_entrada,df_descarga,left_on=['Unidade','Periodo'],right_on=['Unidade','Periodo'])
+unid_arm = df_unidades[['DEPOSITO','PLANTA','UNIDADE_ARMAZENAGEM_VCM']]
+df_cap_arm = df_cap_arm[(df_cap_arm['Agrupador'] == 'CAPACIDADE DESCARGA')&(df_cap_arm['Local'] == 'INTERNO')].copy()
+df_cap_arm['Unidade'] = df_cap_arm['Unidade'].replace(list(dicgen['DE']), list(dicgen['PARA']))
+df_cap_arm = df_cap_arm.merge(df_periodos, how = 'cross')
+df_cap_arm['DEPOSITO'] = '1001'
+df_cap_arm['Ativo'] = True
+fx.left_outer_join(df_cap_arm, unid_arm, left_on=['Unidade','DEPOSITO'], right_on=['PLANTA','DEPOSITO'],
+                   name_left='Unidades de Armazenagem x Depara de Unidades de Armazenagem')
+df_cap_arm = df_cap_arm[['UNIDADE_ARMAZENAGEM_VCM','Nome VCM','Quantidade','Ativo']]
+df_cap_arm = df_cap_arm.rename(columns={'UNIDADE_ARMAZENAGEM_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
+fx.left_outer_join(template_entrada, df_cap_arm, left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'],
+                   name_left = 'Template Entrada', name_right = 'Capacidade Armazenagem')
+template_entrada = template_entrada[['Unidade','Periodo','Limite_y','Ativo_y']]
+template_entrada = template_entrada.rename(columns={'Limite_y':'Limite','Ativo_y':'Ativo'})
+template_entrada['Ativo'] = template_entrada['Ativo'].fillna('False')
 template_entrada['Limite'] = template_entrada['Limite'].fillna(0.0)
-template_entrada['Ativo'] = template_entrada.apply(lambda x: 'True' if x['Limite']!=0.0 else 'False', axis=1)
-template_entrada.to_csv(os.path.join(cwd,output_path+'tbOutLimitesEntrada.csv'), index=False, sep=';', encoding = 'utf-8')
-print('\nLimites de Descarga preenchidos!\n')
+template_entrada.to_csv(os.path.join(cwd,output_path+'tmpOutEntrada.csv'), sep=';', encoding='utf-8')
 
-end_time = time.time()
-print(f'Tempo de Execução: {round(end_time - start_time,2)} segundos')
+print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+print('║  >>  LIMITES DE CAPACIDADE MÍNIMO E MÁXIMO  <<                                                                 ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ # Popula a capacidade de armazenagem interno (AIN) e externo (AEX)                                             ║')
+print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+
+df_cap_arm_maxmin['Unidade'] = df_cap_arm_maxmin['Unidade'].replace(list(dicgen['DE']),list(dicgen['PARA']))
+unid_arm['Local'] = np.where(unid_arm['UNIDADE_ARMAZENAGEM_VCM'].str[:3] == 'AIN','INTERNO','EXTERNO')
+fx.left_outer_join(df_cap_arm_maxmin, unid_arm, left_on=['Unidade','Local'], right_on = ['PLANTA','Local'],
+                   name_left='Capacidade de Armazenagem INTERNO e EXTERNO', name_right='Depara de Unidades')
+fx.left_outer_join(df_cap_arm_maxmin, df_periodos, left_on = 'Dt/Ref', right_on = 'Nome',
+                   name_left = 'Capacidade de Armazenagem INTERNO e EXTERNO', name_right = 'Períodos')
+fx.left_outer_join(template_capacidade, df_cap_arm_maxmin, left_on=['Unidade','Periodo'], right_on=['UNIDADE_ARMAZENAGEM_VCM','Nome VCM'])
+template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
+template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
+template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
+template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(0.0)
+template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
