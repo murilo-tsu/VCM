@@ -131,7 +131,7 @@ arquivos_primarios = {
      'compras_importadas_sn': 'iptComprasImportadas',
      'compras_nacionais': 'iptComprasNacionais.xlsx',
      'compras_nacionais_sn': 'iptComprasNacionais',
-     'template_suprimento' : 'tmpSuprimento.xlsx',
+     'template_suprimento' : 'tmpSuprimentoFaixa.xlsx',
      'demanda': 'iptDemandaIrrestrita.xlsx',
      'demanda_sn': 'Demanda',
      'unidades_expedicao': 'depUnidadesProdutivas.xlsx',

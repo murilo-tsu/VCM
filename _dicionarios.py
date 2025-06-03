@@ -17,6 +17,7 @@ arquivos_primarios = {
      'wizard_suprimento_faixa':'tmpSuprimentoFaixa.xlsx',
      'wizard_suprimento_faixa_sn01':'SUPRIMENTO_FAIXA',
      'capacidade_portos':'iptCapacidadePortuaria.xlsx',
+     'capacidade_portos_sn':'iptCapacidadePortuaria',
      'cap_op_portos':'iptCapOperPorto.xlsx',
      'correntes':'iptUpdateCorrentes.xlsx',
      # Os nomes de tabela abaixo foram agrupados pela redução dos arquivos primários
@@ -27,26 +28,30 @@ arquivos_primarios = {
      # Unidades Armazenagem / Produtivas / Expedição
      'unidades_exp':'depUnidadesProdutivas.xlsx',
      'unidades_exp_sn': 'depUnidadesProdutivas',
-     'cap_portos' : 'iptCapacidadePortuaria.xlsx',
-     'cap_portos_sn' : 'iptCapacidadePortuaria',
+     'unidades_terceiras': 'depUnidadesGerencias.xlsx',
      'template_saida' : 'tmpSaida.csv',
      'template_entrada' : 'tmpEntrada.csv',
      'template_capacidade' : 'tmpCapacidadeArmazenagem.xlsx',
+     'template_demanda' : 'tmpDemanda.xlsx',
+     'template_limites' : 'tmpDefinicaoLimites.csv',
      'unidades_por':'depUnidadesPortuarias.xlsx',
      'unidades_por_sn':'depUnidadesPortuarias',
      'arq_tbDeparaMercadoConsumidor': 'depEstruturaComercial.xlsx',
      'arq_demanda_irrestrita': 'iptDemandaIrrestrita.xlsx',
-     'arq_demanda_irrestrita_sn01': 'Demanda',     
+     'arq_demanda_irrestrita_sn01': 'Demanda',
      'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.xlsx',
      'arq_RendEntr_sn01': 'RENDIMENTO_ENTRADA_PROD',
      'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.xlsx',
-     'arq_RendSaida_sn01': 'RENDIMENTO_SAIDA_PROD',   
+     'arq_RendSaida_sn01': 'RENDIMENTO_SAIDA_PROD',
      'arq_resultados_vcm': 'Resultados.xlsx',
-     'arq_resultados_vcm_sn01': 'RESULTADOS',    
-     'arq_tbUpdateCorrentes': 'iptUpdateCorrentes.xlsx',        
+     'arq_resultados_vcm_sn01': 'RESULTADOS',
+     'arq_tbUpdateCorrentes': 'iptUpdateCorrentes.xlsx',
+     'arq_tbUpdateCorrentes_sn': 'iptUpdateCorrentes',
      # Identificar onde usa os elementas abaixo para deprecar
-     'portos_armz_apo': 'depUnidadesPortuarias.xlsx',
-     'portos_armz_apo_sn': 'depUnidadesPortuarias',
+     # 'portos_armz_apo': 'depUnidadesPortuarias.xlsx',
+     # 'portos_armz_apo_sn': 'depUnidadesPortuarias',
+     # 'cap_portos' : 'iptCapacidadePortuaria.xlsx',
+     # 'cap_portos_sn' : 'iptCapacidadePortuaria',
 }
 
 tp_dado_arquivos = {
@@ -73,6 +78,7 @@ tp_dado_arquivos = {
      'cap_portos': {'PERIODO':'datetime64[ns]', '__default__':np.float64},
      'unidades_exp': {'DEPOSITO':'str','PLANTA':str, 'DESCRICAO_DEPOSITO':str, 'DESCRICAO_PLANTA':str, 'TIPO_UNIDADE':'str',
                       'UNIDADE_ARMAZENAGEM_VCM':str,'UP_MISTURADORA_VCM':str,'UNIDADE_EXPEDICAO_VCM':str},
+     'unidades_terceiras':{'UNIDADE PRODUTORA':str, 'UNIDADE FATURAMENTO':str, 'GERENCIA':str, 'CONSULTORIA':str},                 
      'unidades_por': {'NOME_PORTO_VCM':str, 'NOME_AZ_PORTO_VCM':str, 'PORTO':str, 'UNIDADE':str, 'CORRENTE':str},
      'template_saida': {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
      'template_entrada' : {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
@@ -84,8 +90,10 @@ tp_dado_arquivos = {
      'arq_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
      'arq_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
      'arq_resultados_vcm':{'Corrente-VCM':str,'Produto-VCM':str,'Período-VCM':str, 'Quantidade':np.float64,
-                          'Unidade-Origem-VCM':str,'Unidade-Destino-VCM':str,'Corredor':str},    
-     'arq_tbUpdateCorrentes':{'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str}    
+                          'Unidade-Origem-VCM':str,'Unidade-Destino-VCM':str,'Corredor':str},
+     'arq_tbUpdateCorrentes':{'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
+     'template_demanda':{'Unidade':str, 'Produto':str, 'Periodo':str, 'Demanda Mínima':np.float64, 'Demanda Máxima':np.float64},
+     'template_limites':{'Unidade':str, 'Nivel Detalhe':str},
 }
 
 rename_dataframes = {
@@ -93,5 +101,5 @@ rename_dataframes = {
                    'BALANCE (TONS)':'BALANCE_TONS','Status':'STATUS','COMPANY':'COMPANY','RAW MATERIAL COD.':'CODIGO_MP'},
     'df_revisao_nacional':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Status':'STATUS','COMPANY':'COMPANY',
                             'RAW MATERIAL COD.':'CODIGO_MP'},
-    'df_periodos':{'NUMERO':'Numero','NOME_PERIODO':'Nome VCM', 'PERIODO':'Nome'}
+    'df_periodos':{'NUMERO':'Numero','NOME_PERIODO':'Nome VCM', 'PERIODO':'Nome'},
 }

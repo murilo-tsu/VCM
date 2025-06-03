@@ -131,12 +131,10 @@ arquivos_primarios = {
      'compras_importadas_sn': 'iptComprasImportadas',
      'compras_nacionais':'iptComprasNacionais.xlsx',
      'compras_nacionais_sn':'iptComprasNacionais',
-    #  'cap_portos':'iptCapacidadePortuaria.xlsx',
-    #  'cap_portos_sn': 'iptCapacidadePortuaria',
      'custos_mp': 'iptCustoReposicao.xlsx',
      'custos_mp_sn': 'iptCustoReposicao',
-     'demurrage': 'tbDadoPrimarioDemurrage.xlsx',
-     'demurrage_sn': 'UF DEMURRAGE',
+     'demurrage': 'iptDemurrage.xlsx',
+     'demurrage_sn': 'iptDemurrage',
      'ptax_demurrage': 'PTAX',
      'template_suprimento': 'tmpSuprimentoFaixa.xlsx',
 }
@@ -153,8 +151,6 @@ tp_dado_arquivos = {
                             'Mês003':np.float32,'Mês004':np.float32,'Mês005':np.float32,'Mês006':np.float32,
                             'Mês007':np.float32,'Mês008':np.float32,'Mês009':np.float32,'Mês010':np.float32,
                             'Mês011':np.float32,'Mês012':np.float32},
-    #  'cap_portos': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
-    #                  'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
      'custos_mp': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
                     'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
                     'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
@@ -207,7 +203,7 @@ agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
 df_revisao_importada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['compras_importadas']),
                                   sheet_name = arquivos_primarios['compras_importadas_sn'],
                                   usecols = list(tp_dado_arquivos['compras_importadas'].keys()),
-                                  dtype = tp_dado_arquivos['compras_importadas'])
+                                  dtype = tp_dado_arquivos['compras_importadas']).applymap(padronizar)
 df_revisao_importada = df_revisao_importada.rename(columns=rename_dataframes['df_revisao_importada'])
 
 # DataFrame :: Compras nacionais :: importa todas as compras firmes NACIONAIS

@@ -122,26 +122,23 @@ def padronizar(value):
 arquivos_primarios = {
      'unidades_armz': 'depGeolocalizacao.xlsx',
      'unidades_armz_sn': 'depGeolocalizacao',
-     'custos_armz': 'tbDadoPrimarioCustosArmazens.xlsx',
-     'custos_armz_sn': 'tbDadoPrimarioCustosArmazens',
-     'cap_armz':'tbDadoPrimarioCapacidadeArmz.xlsx',
-     'cap_armz_sn': 'tbDadoPrimarioCapacidadeArmz',
+     'custos_armz': 'iptCustosArmazens.xlsx',
+     'custos_armz_sn': 'iptCustosArmazens',
+     'cap_armz':'iptCapOperPlantas.xlsx',
+     'cap_armz_sn': 'iptCapOperPlantas',
      'template_hand_armz': 'tmpCustosHandlingArmz.xlsx',
      'template_var_armz': 'tmpCustosVaiaveisArmz.xlsx',
-     'template_cap_armz': 'tmpCapacidadeArmz.xlsx',
+     'template_cap_armz': 'tmpCapacidadeArmazenagem.xlsx',
 }
 
 tp_dado_arquivos = {
      'unidades_armz':{'Unidade':str,'Nome-Unidade':str, 'Abrev-P02':str, 'Estado':str},
      'custos_armz': {'Estado':str, 'Terceiro':str, 'Armazenagem (R$/ton)':np.float64, 'Handling (R$/ton)':np.float64},
-     'cap_armz': {'Unidade':str, 'Local':str, 'Capacidade Armazenagem':np.int64},
+     #'cap_armz': {'Unidade':str, 'Local':str, 'Capacidade Armazenagem':np.int64},
+     'cap_armz': {'Unidade':str, 'Nome Unidade':str, 'Quantidade':np.int64, 'Agrupador':str, 'Local':str},
      'template_hand_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Recebimento':np.float64, 'Expedição':np.float64},
      'template_var_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Valor':np.float64, 'Custo Financeiro':np.float64, 'Custo Variável':np.float64},
      'template_cap_armz': {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.float64, 'Volume Máximo':np.float64},
-}
-
-rename_dataframes = {
-    'df_periodos':{'NOME_PERIODO':'Periodo_VCM', 'PERIODO':'Nome'},
 }
 
 
@@ -156,7 +153,6 @@ df_unidades_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['un
                          sheet_name= arquivos_primarios['unidades_armz_sn'],
                          usecols=list(tp_dado_arquivos['unidades_armz'].keys()),
                          dtype=tp_dado_arquivos['unidades_armz'])
-#df_unidades_armz = df_unidades_armz.rename(columns=rename_dataframes['df_periodos'])
 
 # DataFrame :: DADO PRIMARIO DE ARMAZENAGEM E HANDLING
 df_custos_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custos_armz']),
@@ -171,7 +167,7 @@ df_cap_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_arm
                          dtype=tp_dado_arquivos['cap_armz']).applymap(padronizar)
 
 # DataFrame :: TEMPLATE DE CUSTO DE HANDLING PARA ARMAZÉNS EXTERNOS
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
 df_template_hand_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']),
                          usecols=list(tp_dado_arquivos['template_hand_armz'].keys()),
                          dtype=tp_dado_arquivos['template_hand_armz'])
@@ -179,7 +175,7 @@ df_template_hand_armz['Recebimento'] = 0.0
 df_template_hand_armz['Expedição'] = 0.0
 
 # DataFrame :: TEMPLATE DE CUSTOS VARIAVEIS PARA ARMAZÉNS EXTERNOS
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
 df_template_var_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_var_armz']),
                          usecols=list(tp_dado_arquivos['template_var_armz'].keys()),
                          dtype=tp_dado_arquivos['template_var_armz'])
@@ -188,7 +184,7 @@ df_template_var_armz['Custo Financeiro'] = 0.0
 df_template_var_armz['Custo Variável'] = 0.0
 
 # DataFrame :: TEMPLATE DE CAPACIDADE DE ARMAZENAGEM
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']))
 df_template_cap_amrz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']),
                          usecols=list(tp_dado_arquivos['template_cap_armz'].keys()),
                          dtype=tp_dado_arquivos['template_cap_armz'])
@@ -201,7 +197,7 @@ df_template_cap_amrz['Volume Máximo'] = 0.0
 # =======================================================================================================================
 
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║ Etapa 01/02: Preenchimento de Custos de Handling e Armazenagem                                                            ║')
+print('║ Etapa 01/02: Preenchimento de Custos de Handling e Armazenagem                                                 ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 # ==========================================
 # >>>>>>>>> POR ESTADO TÁ ERRADO!! <<<<<<<<<
@@ -224,8 +220,6 @@ df_template_hand_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosHandling
 left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
 left_outer_join(df_template_var_armz,df_custos_armz,left_on='Estado', right_on='Estado')
 df_template_var_armz['Custo Variável'] = df_template_var_armz['Armazenagem (R$/ton)'].fillna(0.0)
-# Tópico 2: Usando Custos Paliativos de FTO.
-# Custos de FHG: 'Custo Paliativo':[50, 100, 1, 80] (msm sigla, msm ordem)
 # (03/12/2024) Como pedido pelo Ricardo, caso o custo variável esteja zerado, preencher com um valor específico para cada unidade.
 df_template_var_armz['ID'] = df_template_var_armz['Unidade'].str[:3]
 custo_paliativo = {'ID':['AEX', 'APO', 'AIN', 'TER'],\
@@ -243,9 +237,10 @@ print('\n')
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
 print('║ Etapa 02/02: Preenchimento de Capacidades de Armazenagem                                                       ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+df_cap_armz = df_cap_armz.loc[df_cap_armz['Agrupador']=='CAPACIDADE ARMAZENAGEM']
 df_cap_armz = df_cap_armz.merge(df_unidades_armz, how = 'left', left_on = 'Unidade', right_on='Abrev-P02')
 left_outer_join(df_template_cap_amrz,df_cap_armz,left_on='Unidade', right_on='Unidade_y')
-df_template_cap_amrz['Vol. Max. Aj.'] = df_template_cap_amrz.apply(lambda x: x['Capacidade Armazenagem'] if x['Capacidade Armazenagem'] > 0.0 else x['Volume Máximo'], axis = 1)
+df_template_cap_amrz['Vol. Max. Aj.'] = df_template_cap_amrz.apply(lambda x: x['Quantidade'] if x['Quantidade'] > 0.0 else x['Volume Máximo'], axis = 1)
 cols = ['Unidade','Periodo','Vol. Max. Aj.']
 df_template_cap_amrz = df_template_cap_amrz[cols].rename(columns={'Vol. Max. Aj.':'Limite'})
 # (06/11/2024) Regra para preeencher com 100.000 os Volumes Máximos que forem iguais a 0
