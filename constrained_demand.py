@@ -1,19 +1,19 @@
 print('\n')
-print('╔════════════════════════════════════════════════════════════════════╗')
-print('║                    ATUALIZACAO DE DADOS - VCM                      ║')
-print('║                  >>  constrained_demand.py     <<                  ║')
-print('╠════════════════════════════════════════════════════════════════════╣')
-print('║ Criado por:       Murilo Lima Ribeiro          Data: 21/03/2025    ║')
-print('║ Editado por:      Murilo Lima Ribeiro          Data: 21/03/2025    ║')
-print('╠════════════════════════════════════════════════════════════════════╣')
-print('║ CHANGELOG:                                                         ║')
-print('║ - v1.0.0 (21/03/2025): Criação da primeira versão do script unifi- ║')
-print('║   cado com edições estruturais nos arquivos de depara e dado pri-  ║')
-print('║   mário.                                                           ║')
-print('╠════════════════════════════════════════════════════════════════════╣')
-print('║ Este script é responsável pela atualização:                        ║')
-print('║ >> Demanda Restrita :: Criação do Arquivo Final de Forecast        ║')
-print('╚════════════════════════════════════════════════════════════════════╝')
+print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+print('║                                         ATUALIZACAO DE DADOS - VCM                                             ║')
+print('║                                         >> constrained_demand.py <<                                            ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ Criado  por: Murilo Lima Ribeiro  Data: 10/03/2025                                                             ║')
+print('║ Editado por: Murilo Lima Ribeiro  Data: 02/06/2025                                                             ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ CHANGELOG:                                                                                                     ║')
+print('║ - v1.0.0 (02/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos de  ║')
+print('║                        depara e dado primário.                                                                 ║')
+print('║ - v1.0.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ Este script é responsável pela atualização:                                                                    ║')
+print('║ >> Demanda Restrita :: Criação do Arquivo de Forecast a partir do resultado VCM                                ║')
+print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 print('\n')
 
 # =======================================================================================================================
@@ -51,122 +51,41 @@ exec_log_path = 'Error Logs/'                  # Logs de erros durante a execuç
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
-
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-    print('\n')
-
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-    'arq_demanda_irrestrita': 'iptDemandaIrrestrita.xlsx',
-    'arq_demanda_irrestrita_sn01': 'Demanda',
-    'arq_periodos': 'iptPeriodos.xlsx',
-    'arq_resultados_vcm': 'Resultados.xlsx',
-    'arq_resultados_vcm_sn01': 'Resultados',
-    'arq_tbUpdateCorrentes': 'iptUpdateCorrentes.xlsx',
-    'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.xlsx',
-    'arq_RendEntr_sn01': 'RENDIMENTO_ENTRADA_PROD',
-    'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.xlsx',
-    'arq_RendSaida_sn01': 'RENDIMENTO_SAIDA_PROD',
-    'arq_cadastro': 'depSKU.xlsx',
-    'arq_cadastro_sn01':'CADASTRO',
-    'arq_cadastro_sn02':'AGRUPAMENTO',
-    'arq_tbDeparaMercadoConsumidor': 'depEstruturaComercial.xlsx',
-    'arq_tbDeparaUnidadesProdutoras': 'depUnidadesProdutivas.xlsx'
-
-}
-
-tp_dado_arquivos = {
-    'arq_demanda_irrestrita':{'PERIODO':'datetime64[ns]','DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'UNIDADE PRODUTORA':str,
-               'CULTURA':str,'GRUPO PRODUTO':str,'PRODUTO':str,'CODIGO PRODUTO':str,
-               'RM_PREMIUM_DESCRIPTION_ENG':str,'QUANTIDADE':np.float32,'MP AGRUPADA':str},
-    'arq_periodos':{'NUMERO':str,'PERIODO':'datetime64[ns]', 'NOME_PERIODO':str},
-    'arq_resultados_vcm':{'Corrente-VCM':str,'Produto-VCM':str,'Período-VCM':str, 'Quantidade':np.float64,
-                          'Unidade-Origem-VCM':str,'Unidade-Destino-VCM':str,'Corredor':str},
-    'arq_tbUpdateCorrentes':{'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
-    'arq_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
-    'arq_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
-    'arq_cadastro_sn01':{'PRD-VCM':str,'CODIGO_ITEM':str,'DESCRICAO':str,'TIPO_MATERIAL':str,'CATEGORIA':str},
-    'arq_cadastro_sn02':{'COD_ESPECIFICO':str,'DESCRICAO_ESPECIFICA':str,'CODIGO_AGRUPADO':str,
-                                'AGRUPAMENTO_MP':str},
-    'arq_tbDeparaMercadoConsumidor':{'DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'CENTROID':str,'UF':str,'VCM':str},
-    'arq_tbDeparaUnidadesProdutoras':{'DEPOSITO':str,'PLANTA':str,'DESCRICAO_DEPOSITO':str,'DESCRICAO_PLANTA':str,
-                     'TIPO_UNIDADE':str,'UP_MISTURADORA_VCM':str,'UP_EMBALADORA_VCM':str}
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
+
 print('Iniciando...')
 print('Tabelas carregadas...')
 # DataFrame :: Horizonte (Período) de Otimização
 # applymap(padronizar) não aplicado por se tratar de dados com a estrutura final do VCM
-periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_periodos']), 
-                         usecols=list(tp_dado_arquivos['arq_periodos'].keys()),
-                         dtype=tp_dado_arquivos['arq_periodos']).applymap(padronizar)
+periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']), 
+                         usecols=list(tp_dado_arquivos['periodos'].keys()),
+                         dtype=tp_dado_arquivos['periodos']).applymap(fx.padronizar)
 
 # DataFrame :: cadastro de materiais :: busca toda a lista de materiais (MP, PI, PF) no cadastrados VCM
-cadastro = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_cadastro']),
-                            sheet_name = arquivos_primarios['arq_cadastro_sn01'],
-                            usecols = list(tp_dado_arquivos['arq_cadastro_sn01'].keys()),
-                            dtype = tp_dado_arquivos['arq_cadastro_sn01']).applymap(padronizar)
+cadastro = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
+                            sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
+                            usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
+                            dtype = tp_dado_arquivos['cadastro_produtos_sn01']).applymap(fx.padronizar)
 
 cadastro_pf = cadastro[(cadastro['TIPO_MATERIAL'].str.split('-',expand = True)[0].str.strip() == 'PF')]
 cadastro_mp = cadastro[(cadastro['TIPO_MATERIAL'].str.split('-',expand = True)[0].str.strip() == 'MP')]
 
 # DataFrame :: agrupamento de materiais :: busca todo o de-para de códigos específicos em códigos agrupados
-agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_cadastro']),
-                            sheet_name = arquivos_primarios['arq_cadastro_sn02'],
-                            usecols = list(tp_dado_arquivos['arq_cadastro_sn02'].keys()),
-                            dtype = tp_dado_arquivos['arq_cadastro_sn02']).applymap(padronizar)
+agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
+                            sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
+                            usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
+                            dtype = tp_dado_arquivos['cadastro_produtos_sn02']).applymap(fx.padronizar)
 
 proxy_agrupamento = cadastro[['CODIGO_ITEM','DESCRICAO']]
 proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
@@ -177,24 +96,25 @@ agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECI
 agrupamento_cadastro = agrupamento_produtos.copy()
 
 # DataFrame :: DE-PARA de unidades produtoras em relação aos dados da demanda
-tbDeparaUnidadesProdutoras = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbDeparaUnidadesProdutoras']),
-                             sheet_name = arquivos_primarios['arq_tbDeparaUnidadesProdutoras'].split('.')[0],
-                             usecols = list(tp_dado_arquivos['arq_tbDeparaUnidadesProdutoras'].keys()),
-                             dtype = tp_dado_arquivos['arq_tbDeparaUnidadesProdutoras']).applymap(padronizar)
+tbDeparaUnidadesProdutoras = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
+                             sheet_name = arquivos_primarios['unidades_exp'].split('.')[0],
+                             usecols = list(tp_dado_arquivos['unidades_exp'].keys()),
+                             dtype = tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 
-tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM_2'] = 'TN-' + tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM'].str.split('-',expand=True)[1] + '-' +\
-                                                    tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM'].str.split('-',expand=True)[2]
+# 2025-06-03 :: Não é necessário dar MELT uma vez que as unidades embaladoras foram eliminadas, restanto apenas uma UP
+# tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM_2'] = 'TN-' + tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM'].str.split('-',expand=True)[1] + '-' +\
+#                                                     tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM'].str.split('-',expand=True)[2]
 
-tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.melt(id_vars=list(tbDeparaUnidadesProdutoras.columns)[:-2],
-                                                             value_vars=['UP_EMBALADORA_VCM','UP_EMBALADORA_VCM_2'],
-                                                             var_name = 'TIPO_UNIDADE_VCM',
-                                                             value_name = 'UNIDADE_VCM')
+# tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.melt(id_vars=list(tbDeparaUnidadesProdutoras.columns)[:-2],
+#                                                              value_vars=['UP_EMBALADORA_VCM','UP_EMBALADORA_VCM_2'],
+#                                                              var_name = 'TIPO_UNIDADE_VCM',
+#                                                              value_name = 'UNIDADE_VCM')
 
 # DataFrame :: Mercados Consumidores da Estrutura Comercial
 mercados = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbDeparaMercadoConsumidor']),
                          sheet_name = arquivos_primarios['arq_tbDeparaMercadoConsumidor'].split('.')[0],
                          usecols = list(tp_dado_arquivos['arq_tbDeparaMercadoConsumidor'].keys()),
-                         dtype = tp_dado_arquivos['arq_tbDeparaMercadoConsumidor']).applymap(padronizar)
+                         dtype = tp_dado_arquivos['arq_tbDeparaMercadoConsumidor']).applymap(fx.padronizar)
 
 id_mercados_consumidores = mercados.copy()
 id_mercados_consumidores = id_mercados_consumidores['VCM'].to_frame().rename({'VCM':'ID MC'})
@@ -203,7 +123,7 @@ id_mercados_consumidores = id_mercados_consumidores['VCM'].to_frame().rename({'V
 demanda_irrestrita = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_demanda_irrestrita']),
                         sheet_name = arquivos_primarios['arq_demanda_irrestrita_sn01'],
                         usecols = list(tp_dado_arquivos['arq_demanda_irrestrita'].keys()),
-                        dtype = tp_dado_arquivos['arq_demanda_irrestrita']).applymap(padronizar)
+                        dtype = tp_dado_arquivos['arq_demanda_irrestrita']).applymap(fx.padronizar)
 demanda_irrestrita = demanda_irrestrita.loc[demanda_irrestrita.QUANTIDADE > 0.0,:].reset_index().drop(columns='index')
 
 # DataFrame :: WIZARD_RENDIMENTO_ENTRADA :: Carrega lista técnica que foi utilizada no VCM :: Componentes
@@ -225,31 +145,31 @@ RendSaida = RendSaida.loc[RendSaida['ValorSaida'] == 1.0]
 RendSaida = RendSaida.reset_index().drop(columns='index')
 
 # DataFrame :: Arquivo de Resultados do VCM :: Output da rodada de otimização
-validar_data_arquivo(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']))
+fx.validar_data_arquivo(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']))
 resultados_vcm = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']),
                                sheet_name = arquivos_primarios['arq_resultados_vcm_sn01'],
                                usecols = list(tp_dado_arquivos['arq_resultados_vcm'].keys()),
                                dtype = tp_dado_arquivos['arq_resultados_vcm'],
-                               skiprows = 2).applymap(padronizar)
+                               skiprows = 2).applymap(fx.padronizar)
 
 # DataFrame :: Esqueleto topológico de correntes existentes no VCM
 tbUpdateCorrentes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
                             sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0], 
                             usecols=list(tp_dado_arquivos['arq_tbUpdateCorrentes'].keys()),
-                            dtype=tp_dado_arquivos['arq_tbUpdateCorrentes']).applymap(padronizar)
+                            dtype=tp_dado_arquivos['arq_tbUpdateCorrentes']).applymap(fx.padronizar)
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
 # =======================================================================================================================
-print('╔════════════════════════════════════════════════════════════════════╗')
-print('║                      >>   DEMANDA RESTRITA    <<                   ║')
-print('╠════════════════════════════════════════════════════════════════════╣')
-print('║ # Forecast do Ciclo S&OP a partir dos Resultados VCM               ║')
-print('╚════════════════════════════════════════════════════════════════════╝')
-print('\n')
+print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+print('║  >>  DEMANDA RESTRITA  <<                                                                                      ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ # Forecast do Ciclo S&OP a partir dos Resultados VCM                                                           ║')
+print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+print('Iniciando...')
 
 # DataFrame da Demanda Irrestrita :: Realizar tratamento 
-left_outer_join(demanda_irrestrita, agrupamento_cadastro, left_on = 'CODIGO PRODUTO', right_on = 'COD_ESPECIFICO')
+fx.left_outer_join(demanda_irrestrita, agrupamento_cadastro, left_on = 'CODIGO PRODUTO', right_on = 'COD_ESPECIFICO')
 demanda_irrestrita['CODIGO PRODUTO'] = demanda_irrestrita['CODIGO_AGRUPADO']
 demanda_irrestrita = demanda_irrestrita.drop(columns=['CODIGO_AGRUPADO','COD_ESPECIFICO'])
 demanda_irrestrita['id'] = demanda_irrestrita['PERIODO'].astype('str') + '-' + demanda_irrestrita['CODIGO PRODUTO'].astype('str') + '-' + demanda_irrestrita['GERENCIA'] + '-' + demanda_irrestrita['CONSULTORIA'] 
@@ -303,18 +223,18 @@ deliveries_resultados_vcm = deliveries_resultados_vcm.loc[deliveries_resultados_
 deliveries_resultados_vcm = deliveries_resultados_vcm.reset_index().drop(columns='index')
 esqueleto_explosao = deliveries_resultados_vcm[['Produto-VCM','Unidade-Origem-VCM']].copy()
 proxy_unidade_resultado_vcm = resultados_vcm.copy()
-left_outer_join(proxy_unidade_resultado_vcm, tbDeparaUnidadesProdutoras, left_on = 'Unidade-Origem-VCM', right_on = 'UNIDADE_VCM')
+fx.left_outer_join(proxy_unidade_resultado_vcm, tbDeparaUnidadesProdutoras, left_on = 'Unidade-Origem-VCM', right_on = 'UNIDADE_VCM')
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm.loc[proxy_unidade_resultado_vcm['UNIDADE_VCM'].notnull(),:].reset_index().drop(columns='index')
-left_outer_join(proxy_unidade_resultado_vcm,periodos, left_on = 'Período-VCM', right_on = 'NOME_PERIODO')
+fx.left_outer_join(proxy_unidade_resultado_vcm,periodos, left_on = 'Período-VCM', right_on = 'NOME_PERIODO')
 proxy_unidade_resultado_vcm['proxy_unidade'] = proxy_unidade_resultado_vcm['PERIODO'].astype('str') + '-' + proxy_unidade_resultado_vcm['Produto-VCM'] + '-' + proxy_unidade_resultado_vcm['Unidade-Destino-VCM']
 headers = ['proxy_unidade','PLANTA','DEPOSITO','Quantidade']
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm[headers]
 proxy_unidade_resultado_vcm_total = proxy_unidade_resultado_vcm.groupby('proxy_unidade')['Quantidade'].sum().reset_index()
-left_outer_join(proxy_unidade_resultado_vcm, proxy_unidade_resultado_vcm_total, left_on='proxy_unidade', right_on='proxy_unidade')
+fx.left_outer_join(proxy_unidade_resultado_vcm, proxy_unidade_resultado_vcm_total, left_on='proxy_unidade', right_on='proxy_unidade')
 proxy_unidade_resultado_vcm['perc'] = proxy_unidade_resultado_vcm['Quantidade_x']/proxy_unidade_resultado_vcm['Quantidade_y']
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm[['proxy_unidade','DEPOSITO','PLANTA','perc']].rename(columns={'PLANTA':'UNIDADE_FATURAMENTO','DEPOSITO':'UNIDADE_PRODUTORA'})
 Explosion = RendSaida.copy()
-left_outer_join(Explosion, RendEntr, left_on = ['Unidade','Receita'], right_on = ['Unidade','Receita'])
+fx.left_outer_join(Explosion, RendEntr, left_on = ['Unidade','Receita'], right_on = ['Unidade','Receita'])
 Explosion = Explosion.rename(columns={'Produto_x':'FG','Produto_y':'RM','ValorEntrada':'CompVol'})
 Explosion = Explosion.drop(columns='ValorSaida')
 
@@ -419,6 +339,7 @@ deliveries_resultados_vcm_1_sem_grupo_preencher['QUANTIDADE'] = deliveries_resul
 deliveries_resultados_vcm_1_sem_grupo_preencher = deliveries_resultados_vcm_1_sem_grupo_preencher.drop(columns='perc')
 deliveries_resultados_vcm_1_sem_grupo = pd.concat([deliveries_resultados_vcm_1_sem_grupo_OK,deliveries_resultados_vcm_1_sem_grupo_preencher])
 deliveries_resultados_vcm_1 = pd.concat([deliveries_resultados_vcm_1_com_grupo,deliveries_resultados_vcm_1_sem_grupo])
+
 # 2025-03-25: Inativando as instruções abaixo devido a remoção do "CLIENTE GRC" da demanda irrestrita
 #deliveries_resultados_vcm_1 = deliveries_resultados_vcm_1.merge(di_cliente, how = 'left', on = 'id')
 #deliveries_resultados_vcm_1['perc'] = deliveries_resultados_vcm_1['perc'].fillna(1.0)

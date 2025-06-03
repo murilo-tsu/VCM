@@ -34,6 +34,16 @@ arquivos_primarios = {
      'template_capacidade' : 'tmpCapacidadeArmazenagem.xlsx',
      'unidades_por':'depUnidadesPortuarias.xlsx',
      'unidades_por_sn':'depUnidadesPortuarias',
+     'arq_tbDeparaMercadoConsumidor': 'depEstruturaComercial.xlsx',
+     'arq_demanda_irrestrita': 'iptDemandaIrrestrita.xlsx',
+     'arq_demanda_irrestrita_sn01': 'Demanda',     
+     'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.xlsx',
+     'arq_RendEntr_sn01': 'RENDIMENTO_ENTRADA_PROD',
+     'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.xlsx',
+     'arq_RendSaida_sn01': 'RENDIMENTO_SAIDA_PROD',   
+     'arq_resultados_vcm': 'Resultados.xlsx',
+     'arq_resultados_vcm_sn01': 'RESULTADOS',    
+     'arq_tbUpdateCorrentes': 'iptUpdateCorrentes.xlsx',        
      # Identificar onde usa os elementas abaixo para deprecar
      'portos_armz_apo': 'depUnidadesPortuarias.xlsx',
      'portos_armz_apo_sn': 'depUnidadesPortuarias',
@@ -66,7 +76,16 @@ tp_dado_arquivos = {
      'unidades_por': {'NOME_PORTO_VCM':str, 'NOME_AZ_PORTO_VCM':str, 'PORTO':str, 'UNIDADE':str, 'CORRENTE':str},
      'template_saida': {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
      'template_entrada' : {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
-     'template_capacidade' : {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.int64, 'Volume Máximo':np.int64}
+     'template_capacidade' : {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.int64, 'Volume Máximo':np.int64},
+     'arq_tbDeparaMercadoConsumidor':{'DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'CENTROID':str,'UF':str,'VCM':str},
+     'arq_demanda_irrestrita':{'PERIODO':'datetime64[ns]','DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'UNIDADE PRODUTORA':str,
+               'CULTURA':str,'GRUPO PRODUTO':str,'PRODUTO':str,'CODIGO PRODUTO':str,
+               'RM_PREMIUM_DESCRIPTION_ENG':str,'QUANTIDADE':np.float32,'MP AGRUPADA':str},
+     'arq_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
+     'arq_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
+     'arq_resultados_vcm':{'Corrente-VCM':str,'Produto-VCM':str,'Período-VCM':str, 'Quantidade':np.float64,
+                          'Unidade-Origem-VCM':str,'Unidade-Destino-VCM':str,'Corredor':str},    
+     'arq_tbUpdateCorrentes':{'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str}    
 }
 
 rename_dataframes = {

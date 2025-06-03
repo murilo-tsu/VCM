@@ -52,10 +52,12 @@ class aux_functions_vcm:
             # Exibe a data em um pop-up
             if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
                 messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
+                print(f'Script foi encerrado porque o arquivo {arquivo} está desatualizado.')
                 sys.exit()
         
         except FileNotFoundError: 
             messagebox.showerror("Erro", "Arquivo não encontrado.")
+            
 
     # Função de padronização das colunas
     def padronizar(self,value):
