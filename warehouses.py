@@ -134,7 +134,6 @@ arquivos_primarios = {
 tp_dado_arquivos = {
      'unidades_armz':{'Unidade':str,'Nome-Unidade':str, 'Abrev-P02':str, 'Estado':str},
      'custos_armz': {'Estado':str, 'Terceiro':str, 'Armazenagem (R$/ton)':np.float64, 'Handling (R$/ton)':np.float64},
-     #'cap_armz': {'Unidade':str, 'Local':str, 'Capacidade Armazenagem':np.int64},
      'cap_armz': {'Unidade':str, 'Nome Unidade':str, 'Quantidade':np.int64, 'Agrupador':str, 'Local':str},
      'template_hand_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Recebimento':np.float64, 'Expedição':np.float64},
      'template_var_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Valor':np.float64, 'Custo Financeiro':np.float64, 'Custo Variável':np.float64},
@@ -167,7 +166,7 @@ df_cap_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_arm
                          dtype=tp_dado_arquivos['cap_armz']).applymap(padronizar)
 
 # DataFrame :: TEMPLATE DE CUSTO DE HANDLING PARA ARMAZÉNS EXTERNOS
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
+validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
 df_template_hand_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']),
                          usecols=list(tp_dado_arquivos['template_hand_armz'].keys()),
                          dtype=tp_dado_arquivos['template_hand_armz'])
@@ -175,7 +174,7 @@ df_template_hand_armz['Recebimento'] = 0.0
 df_template_hand_armz['Expedição'] = 0.0
 
 # DataFrame :: TEMPLATE DE CUSTOS VARIAVEIS PARA ARMAZÉNS EXTERNOS
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
+validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
 df_template_var_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_var_armz']),
                          usecols=list(tp_dado_arquivos['template_var_armz'].keys()),
                          dtype=tp_dado_arquivos['template_var_armz'])
@@ -184,7 +183,7 @@ df_template_var_armz['Custo Financeiro'] = 0.0
 df_template_var_armz['Custo Variável'] = 0.0
 
 # DataFrame :: TEMPLATE DE CAPACIDADE DE ARMAZENAGEM
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']))
+validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']))
 df_template_cap_amrz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']),
                          usecols=list(tp_dado_arquivos['template_cap_armz'].keys()),
                          dtype=tp_dado_arquivos['template_cap_armz'])

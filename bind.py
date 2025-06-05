@@ -131,7 +131,6 @@ arquivos_primarios = {
      'compras_importadas_sn': 'iptComprasImportadas',
      'compras_nacionais': 'iptComprasNacionais.xlsx',
      'compras_nacionais_sn': 'iptComprasNacionais',
-     'template_suprimento' : 'tmpSuprimentoFaixa.xlsx',
      'demanda': 'iptDemandaIrrestrita.xlsx',
      'demanda_sn': 'Demanda',
      'unidades_expedicao': 'depUnidadesProdutivas.xlsx',
@@ -163,12 +162,11 @@ tp_dado_arquivos = {
                             'Mês003':np.float32,'Mês004':np.float32,'Mês005':np.float32,'Mês006':np.float32,
                             'Mês007':np.float32,'Mês008':np.float32,'Mês009':np.float32,'Mês010':np.float32,
                             'Mês011':np.float32,'Mês012':np.float32},
-     'template_suprimento':{'Unidade':str, 'Produto':str, 'Periodo':str, 'Suprimento Mínimo':np.float64, 'Suprimento Máximo':np.float64},
      'demanda':{'PERIODO':'datetime64[ns]', 'DIRETORIA':str, 'GERENCIA':str, 'CONSULTORIA':str,
                 'UNIDADE PRODUTORA':str, 'CULTURA':str, 'GRUPO PRODUTO':str, 'PRODUTO':str,
                 'CODIGO PRODUTO':np.int64, 'RM_PREMIUM_DESCRIPTION_ENG':str, 'QUANTIDADE':np.int64, 'MP AGRUPADA':str},
      'unidades_expedicao':{'DEPOSITO':str, 'PLANTA':str, 'DESCRICAO_DEPOSITO':str, 'DESCRICAO_PLANTA':str, 'TIPO_UNIDADE':str,
-                           'UNIDADE_ARMAZENAGEM_VCM':str, 'UP_MISTURADORA_VCM':str, 'UNIDADE_EXPEDICAO_VCM':str}, #esse tá BEM diferntes, vamos ver como se comporta no código (eyes)
+                           'UNIDADE_ARMAZENAGEM_VCM':str, 'UP_MISTURADORA_VCM':str, 'UNIDADE_EXPEDICAO_VCM':str},
      'unidades_terceiras':{'UNIDADE PRODUTORA':str, 'UNIDADE FATURAMENTO':str, 'GERENCIA':str, 'CONSULTORIA':str}, 
      'supervisoes':{'CHAVE':str, 'DIRETORIA':str, 'GERENCIA':str, 'CONSULTORIA':str, 'CENTROID':str, 'VCM':str, 'NOVA GERÊNCIA':str, 'BU':str, 'UF':str},
      'template_demanda':{'Unidade':str, 'Produto':str, 'Periodo':str, 'Demanda Mínima':np.float64, 'Demanda Máxima':np.float64},
@@ -259,11 +257,6 @@ df_compras_nacionais = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                             dtype = tp_dado_arquivos['compras_nacionais']).applymap(padronizar)
 df_compras_nacionais = df_compras_nacionais.rename(columns=rename_dataframes['df_revisao_nacional'])
 
-# DataFrame :: Template Suprimento
-template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
-                            usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
-                            dtype = tp_dado_arquivos['template_suprimento'])
-
 # DataFrame :: 
 df_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
                            sheet_name = arquivos_primarios['demanda_sn'],
@@ -295,15 +288,18 @@ df_dicionario = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicio
                               dtype = tp_dado_arquivos['dicionario'])
 
 # DataFrame :: Template Demanda
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
 template_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
                             usecols = list(tp_dado_arquivos['template_demanda'].keys()),
                             dtype = tp_dado_arquivos['template_demanda'])
 
 # DataFrame :: Template Definição Limites
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_limites']))
 template_limites = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_limites']),\
                               delimiter = ';', encoding = 'utf-8')
 
 # DataFrame :: Template Correntes
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_correntes']))
 template_correntes = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_correntes']),\
                               delimiter = ';', encoding = 'utf-8')
 
@@ -361,32 +357,9 @@ left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO')
 # exec_hist_df_revisao = df_revisao.copy()
 # Linhas acima pegas em supply.py 
 
-df_revisao['Origem-Destino'] = ''
-for j in range(df_revisao.shape[0]):
-    df_revisao['Origem-Destino'][j] = df_revisao['PORTO'][j] + '-' + df_revisao['PLANTA'][j]
-id_produtos = mp_fornecimento_nacional['PRD-VCM-NAC'].to_frame().rename(columns={'PRD-VCM-NAC':'PRD-VCM'})
-df_correntes['ID_correntes'] = ''
-for z in range(df_correntes.shape[0]):
-    df_correntes['ID_correntes'][z] = df_correntes['PORTO'][z] + '-' + df_correntes['UNIDADE'][z]
-id_correntes = df_correntes['CORRENTE']
-
-print('Carregando estrutura topológica...')
-template_suprimento['ID'] = template_suprimento['Unidade'] + '-' + template_suprimento['Produto'] + '-' + template_suprimento['Periodo']
-# Criando o output WIZARD_SUPRIMENTO_FAIXA
-wsf_query = pd.DataFrame(columns=['Unidade','Produto','Periodo','Suprimento Mínimo','Suprimento Máximo'])
-wsf_query['Unidade'] = id_portos['NOME_PORTO_VCM']
-wsf_query = wsf_query.merge(id_periodos, how='cross')
-wsf_query['Periodo'] = wsf_query['NOME_PERIODO']
-wsf_query = wsf_query.drop(columns='NOME_PERIODO')
-wsf_query = wsf_query.merge(id_produtos,how='cross')
-wsf_query['Produto'] = wsf_query['PRD-VCM']
-wsf_query = wsf_query.drop(columns='PRD-VCM')
-df_revisao['ID'] = df_revisao['PORTO'] + '-' + df_revisao['PRD-VCM'] + '-' + df_revisao['NOME_PERIODO']
-
 # MERCADOS CONSUMIDORES
 # =====================
 # Está seção dedica-se ao ETL para a criação dos WIZARDS de MERCADOS CONSUMIDORES
-
 df_agrupamento = df_agrupamento.merge(pf_cadastrada, how = 'left', left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
 df_agrupamento = df_agrupamento[['CODIGO_AGRUPADO','DESCRICAO_ESPECIFICA','PRD-VCM','COD_ESPECIFICO']]
 df_agrupamento = df_agrupamento.dropna(subset = ['PRD-VCM'])
@@ -397,8 +370,6 @@ id_produtos_mc = df_agrupamento.copy()
 id_produtos_mc = id_produtos_mc['PRD-VCM'].to_frame()
 
 df_supervisoes['ID'] = df_supervisoes['GERENCIA'] + '-' + df_supervisoes['CONSULTORIA']
-id_mercados_consumidores = df_supervisoes
-id_mercados_consumidores = id_mercados_consumidores['VCM'].to_frame().rename({'VCM':'ID MC'})
 # RENOMEANDO O NOVO ARQUIVO DE DEMANDA IRRESTRITA PARA OS HEADERS ANTIGOS
 rename_cols = {'CODIGO PRODUTO':'PRODUTO ID','QUANTIDADE':'VOLUME',
                'GERENCIA':'REGIONAL','CONSULTORIA':'SUPERVISAO', 'PERIODO':'PERIODO'}
