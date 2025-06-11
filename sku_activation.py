@@ -4,10 +4,10 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>   sku_activation.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 09/06/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0.0 (26/05/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
+print('║ - v1.0.0 (09/06/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
@@ -34,6 +34,7 @@ warnings.filterwarnings('ignore')
 from pandas.tseries.offsets import MonthEnd
 from pandas.tseries.offsets import MonthBegin
 from unidecode import unidecode
+from tqdm import tqdm
 
 # =======================================================================================================================
 # CONFIGURAÇÕES INICIAIS
@@ -65,9 +66,16 @@ from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
+print('Carregando arquivos... \n')
+#print('Tempo de execução esperado: por volta de 15 segundos \n')
+
+# DataFRame :: Dicionário Generico
+dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
+                       usecols=list(tp_dado_arquivos['dicgen'].keys()),
+                       dtype=tp_dado_arquivos['dicgen']).applymap(fx.padronizar)
 
 # DataFrame :: Horizonte (Período) de Otimização
-df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']), 
+df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
 
@@ -77,19 +85,13 @@ id_periodos = df_periodos['NOME_PERIODO'].to_frame()
 
 # DataFrame :: Chaves identificadores dos Portos
 # DataFrame :: portos :: dado primário
-df_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['portos']), 
+df_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['portos']),
                       sheet_name = arquivos_primarios['portos'].split('.')[0],
                       usecols = list(tp_dado_arquivos['portos'].keys()),
                       dtype = tp_dado_arquivos['portos']).applymap(fx.padronizar)
 
 # DataFrame :: portos_correntes :: granularidade de correntes
 portos_correntes = df_portos.copy()
-
-# ================================
-# TALVEZ NÃO SEJA UNITILIZADO NESSE SCRIPT :) (vamo ver isso ae)
-# DataFrame :: az_portos :: unidades de armazenagem dos portos
-az_portos = df_portos.copy()
-az_portos = df_portos[['NOME_AZ_PORTO_VCM','PORTO']].drop_duplicates()
 
 # DataFrame :: postos :: apenas a nível de PORTO e NOME_PORTO_VCM
 df_portos = df_portos[['NOME_PORTO_VCM','PORTO']].drop_duplicates()
@@ -144,28 +146,24 @@ df_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_dema
                                         sheet_name = arquivos_primarios['arq_demanda_irrestrita_sn01'],
                                         usecols = list(tp_dado_arquivos['arq_demanda_irrestrita'].keys()),
                                         dtype = tp_dado_arquivos['arq_demanda_irrestrita'])
+df_demanda['UNIDADE PRODUTORA'] = df_demanda['UNIDADE PRODUTORA'].replace(list(dicgen['DE']), list(dicgen['PARA']))
 
 # DataFrame :: Unidades de Expedição e Descarga
 df_expedicao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
-                         sheet_name= arquivos_primarios['unidades_exp'].split('.')[0], 
+                         sheet_name= arquivos_primarios['unidades_exp'].split('.')[0],
                        usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
                        dtype=tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 #df_expedicao = df_expedicao['DEPOSITO','PLANTA','DESCRICAO_DEPOSITO','DESCRICAO_PLANTA','TIPO_UNIDADE','UP_MISTURADORA_VCM','UP_EMBALADORA_VCM']
 
 # DataFrame :: Estrutura Comercial
 df_comercial = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbDeparaMercadoConsumidor']),
-                         sheet_name= arquivos_primarios['arq_tbDeparaMercadoConsumidor'].split('.')[0], 
+                         sheet_name= arquivos_primarios['arq_tbDeparaMercadoConsumidor'].split('.')[0],
                        usecols=list(tp_dado_arquivos['arq_tbDeparaMercadoConsumidor'].keys()),
                        dtype=tp_dado_arquivos['arq_tbDeparaMercadoConsumidor']).applymap(fx.padronizar)
 
-# DataFRame :: Dicionário Generico
-dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']), 
-                       usecols=list(tp_dado_arquivos['dicgen'].keys()),
-                       dtype=tp_dado_arquivos['dicgen']).applymap(fx.padronizar)
-
 # DataFrame :: Unidades Terceiras
 df_gerencia = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_terceiras']),
-                        # sheet_name= arquivos_primarios['unidades_terceiras'].split('.')[0], 
+                        # sheet_name= arquivos_primarios['unidades_terceiras'].split('.')[0],
                        usecols=list(tp_dado_arquivos['unidades_terceiras'].keys()),
                        dtype=tp_dado_arquivos['unidades_terceiras']).applymap(fx.padronizar)
 df_gerencia['UNIDADE PRODUTORA'] = df_gerencia['UNIDADE PRODUTORA'].replace(list(dicgen['DE']), list(dicgen['PARA']))
@@ -173,17 +171,9 @@ df_gerencia['UNIDADE FATURAMENTO'] = df_gerencia['UNIDADE FATURAMENTO'].replace(
 
 # DataFrame :: Update Correntes
 up_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
-                         sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0], 
+                         sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0],
                        usecols=list(tp_dado_arquivos['arq_tbUpdateCorrentes'].keys()),
                        dtype=tp_dado_arquivos['arq_tbUpdateCorrentes']).applymap(fx.padronizar)
-
-# DataFrame :: template da Demanda
-# Desativando essa validação por solicitação dos usuários (2024-10-18)
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
-template_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
-                                        sheet_name = arquivos_primarios['template_demanda_sn'],
-                                        usecols = list(tp_dado_arquivos['template_demanda'].keys()),
-                                        dtype = tp_dado_arquivos['template_demanda'])
 
 # DataFrame :: template de Limites
 #fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_limites']))
@@ -236,8 +226,6 @@ fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO')
 # ==============================================================================
 df_revisao['PORTO']=df_revisao['PORTO'].astype('string')
 
-# VERIFICAR NECESSIDADE DESSA ETAPA
-# ===========================================================================================================
 df_revisao['Origem-Destino'] = ''
 for j in range(df_revisao.shape[0]):
     df_revisao['Origem-Destino'][j] = df_revisao['PORTO'][j] + '-' + df_revisao['PLANTA'][j]
@@ -248,7 +236,6 @@ for z in range(portos_correntes.shape[0]):
 
 id_correntes = portos_correntes['CORRENTE']
 id_correntes = id_correntes.drop_duplicates().to_frame()
-# ===========================================================================================================
 
 df_comercial['ID'] = df_comercial['GERENCIA'] + '-' + df_comercial['CONSULTORIA']
 # RENOMEANDO O NOVO ARQUIVO DE DEMANDA IRRESTRITA PARA OS HEADERS ANTIGOS
@@ -262,7 +249,7 @@ df_demanda = df_demanda.dropna(subset = ['CODIGO_AGRUPADO'])
 df_demanda = df_demanda.drop(columns = ['PRODUTO ID','COD_ESPECIFICO'])
 df_demanda = df_demanda.rename(columns = {'CODIGO_AGRUPADO':'PRODUTO ID'})
 unique = df_gerencia['UNIDADE PRODUTORA'].drop_duplicates().to_list()
-df_demanda['proxy.Faturamento'] = df_demanda['UNIDADE PRODUTORA'].apply(lambda x: x if x not in unique else np.NaN)
+df_demanda['proxy.Faturamento'] = df_demanda['UNIDADE PRODUTORA'].apply(lambda x: x if x not in unique else np.nan)
 
 # Separar o arquivo de demanda com base na existência ou não na lista "unique"
 print('Identificando unidades de faturamento próprias da Eurochem...')
@@ -279,18 +266,107 @@ demanda_unidade_standard['UNIDADE FATURAMENTO'] = demanda_unidade_standard['prox
 
 # Recriar a lista agora apenas com as consultorias relevantes para determinar a UNIDADE FATURAMENTO
 unique = df_gerencia.loc[df_gerencia['CONSULTORIA'].notna(),:]['GERENCIA'].drop_duplicates().to_list()
-demanda_unidade_terceira['proxy.Supervisao'] = demanda_unidade_terceira['REGIONAL'].apply(lambda x: np.NaN if x not in unique else x)
+demanda_unidade_terceira['proxy.Supervisao'] = demanda_unidade_terceira['REGIONAL'].apply(lambda x: np.nan if x not in unique else x)
 demanda_unidade_terceira_na = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Supervisao'].isna(),:].reset_index().drop(columns='index')
 demanda_unidade_terceira_notna = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Supervisao'].notna(),:].reset_index().drop(columns='index')
 proxy = df_gerencia.loc[df_gerencia.CONSULTORIA.isna(),:].reset_index().drop(columns='index')
-x0 = demanda_unidade_terceira_na.shape[0]
-fx.left_outer_join(demanda_unidade_terceira_na,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['Unidade Produtora','Gerencia'])
+# x0 = demanda_unidade_terceira_na.shape[0]
+demanda_unidade_terceira_na = demanda_unidade_terceira_na.merge(proxy,how='left',left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['UNIDADE PRODUTORA','GERENCIA'], indicator=True)
+# Desativando aqui pq não precisa manter o msm tmanho (eu acho)
+#fx.left_outer_join(demanda_unidade_terceira_na,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['Unidade Produtora','Gerencia'])
 proxy = df_gerencia.loc[df_gerencia.CONSULTORIA.notna(),:].reset_index().drop(columns='index')
-fx.left_outer_join(demanda_unidade_terceira_notna,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['Unidade Produtora','Gerencia','Consultoria'])
+demanda_unidade_terceira_notna = demanda_unidade_terceira_notna.merge(proxy,how='left',left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['UNIDADE PRODUTORA','GERENCIA','CONSULTORIA'])
+# Desativando aqui pq não precisa manter o msm tmanho (eu acho)
+# fx.left_outer_join(demanda_unidade_terceira_notna,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['Unidade Produtora','Gerencia','Consultoria'])
 df_demanda = pd.concat([demanda_unidade_standard, demanda_unidade_terceira_na, demanda_unidade_terceira_notna])
-df_demanda['UNIDADE-LEFT'] = df_demanda['UNIDADE PRODUTORA'] + '-' + df_demanda['UNIDADE FATURAMENTO']
 
 df_demanda['UNIDADE-LEFT'] = df_demanda['UNIDADE PRODUTORA'] + '-' + df_demanda['UNIDADE FATURAMENTO']
-
 df_expedicao['UNIDADE-RIGHT'] = df_expedicao['DEPOSITO'] + '-' + df_expedicao['PLANTA']
 df_demanda = df_demanda.merge(df_expedicao, left_on = 'UNIDADE-LEFT', right_on = 'UNIDADE-RIGHT', how = 'left')
+df_demanda = df_demanda[['UNIDADE PRODUTORA','UNIDADE FATURAMENTO','REGIONAL','SUPERVISAO','VOLUME','PERIODO','UNIDADE_ARMAZENAGEM_VCM','UNIDADE_EXPEDICAO_VCM','PRD-VCM']] # VER SE É UNIDADE ARMAZENAGEM OU EXPEDIÇÃO
+df_demanda['Regional - Supervisão'] = df_demanda['REGIONAL'] + '-' + df_demanda['SUPERVISAO']
+df_demanda = df_demanda.merge(df_comercial, how='left', left_on='Regional - Supervisão', right_on='ID')
+df_demanda = df_demanda[['UNIDADE PRODUTORA','UNIDADE FATURAMENTO','PERIODO','PRD-VCM','UNIDADE_ARMAZENAGEM_VCM','UNIDADE_EXPEDICAO_VCM','VOLUME','VCM']]
+df_demanda = df_demanda.merge(df_periodos, left_on = 'PERIODO', right_on = 'PERIODO', how = 'left')
+
+# UNICO QUE ACHOU ALGUMA CORRESPONDÊNCIA FOI expediçãoVCM
+df_demanda['ID Origem-Destino'] = df_demanda['UNIDADE_EXPEDICAO_VCM'] + '-' + df_demanda['VCM']
+df_demanda = df_demanda.dropna(subset = ['PRD-VCM'])
+up_correntes['ID'] = up_correntes['Unidade-Origem'] + '-' + up_correntes['Unidade-Destino']
+df_demanda = df_demanda.merge(up_correntes,how='left', left_on='ID Origem-Destino', right_on='ID')
+demanda_corrente_agrupada = df_demanda.groupby(['ConjuntoCorrentes','PERIODO','PRD-VCM'])['VOLUME'].sum().reset_index()
+demanda_corrente_agrupada = demanda_corrente_agrupada.rename(columns={'ConjuntoCorrentes':'Unidade','PERIODO':'Período','PRD-VCM':'Produto','VOLUME':'Limite'})
+demanda_corrente_agrupada['Ativo'] = True
+
+# ##########################################################
+# ##########################################################
+
+# # AMARRAÇÃO DAS CORRENTES DE CONSUMO
+# # ==================================
+df_revisao = df_revisao.merge(portos_correntes, how = 'left', left_on='Origem-Destino',right_on='ID_correntes')
+df_revisao_correntes_grouped = df_revisao.groupby(['CORRENTE','PERIODO','PRD-VCM'])['BALANCE_TONS'].sum().reset_index()
+wizard_suprimento_amarracao = df_revisao_correntes_grouped.copy()
+wizard_suprimento_amarracao = wizard_suprimento_amarracao.rename(columns={'CORRENTE':'Unidade','PERIODO':'Período', 'PRD-VCM':'Produto','BALANCE_TONS':'Limite'})
+wizard_suprimento_amarracao['Ativo'] = True
+# Faz sentido eu adicionar isso? Só é para estar True, onde for >0.0 né?
+# wizard_suprimento_amarracao = wizard_suprimento_amarracao.loc[wizard_suprimento_amarracao['Limite']>0.0]
+wizard_amarracao = pd.concat([demanda_corrente_agrupada,wizard_suprimento_amarracao])
+wizard_amarracao['Período'] =  wizard_amarracao['Período'].astype(str)
+wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['Período'] + wizard_amarracao['Produto']
+
+# ATIVAÇÃO DO DETALHAMENTO POR PRODUTO
+# ====================================
+aux_wizard_amarracao = wizard_amarracao[['Unidade','Ativo']]
+aux_wizard_amarracao = aux_wizard_amarracao.drop_duplicates()
+template_limites = template_limites.merge(aux_wizard_amarracao, how = 'left', left_on = 'Unidade', right_on = 'Unidade')
+template_limites['Ativo'] = template_limites['Ativo'].fillna(False)
+for i in tqdm(range(template_limites.shape[0])):
+    if template_limites['Ativo'][i] == True:
+       template_limites['Nivel Detalhe'][i] = 'Detalhado por Produto'
+    else:
+        template_limites['Nivel Detalhe'][i] = template_limites['Nivel Detalhe'][i]
+
+template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutputDefinicaoLimites.csv'), sep = ';', encoding = 'utf-8-sig', index = False)
+print('Arquivo DefinicaoLimites.xlsx foi Atualizado com Sucesso!')
+print('DefinicaoLimites.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')
+print('Importante atualizar WIZARD CORRENTES INPUT a partir dos dados do VCM!')
+
+
+# >> AMARRAÇÃO DAS CORRENTES DE FORNECIMENTO + CONSUMO <<
+# =================================================
+
+#correntes = 'tbTemplateCorrentes.csv'
+#correntes = pd.read_csv(os.path.join(cwd,path + correntes), delimiter=';', encoding='utf-8')
+# 19/07/2023: Changing the loading type of the csv file to UTF-8 and with delimiter = ,
+# 18/12/2023: Alterado formato do csv para encoding = '1252' e delimiter = ';'
+#correntes = pd.read_csv(os.path.join(cwd,structure_path + correntes), delimiter=';', encoding='1252')
+
+#correntes = correntes.astype({'Limite':str})
+#correntes['Limite'] = correntes['Limite'].str.replace(",",".")
+#correntes['Limite'] = correntes['Limite'].astype(np.float32)
+#correntes['Limite'] = 0.0
+#correntes['Ativo'] = False
+#correntes['ID-LEFT'] = correntes['Unidade'] + correntes['Periodo'] + correntes['Produto']
+#wizard_amarracao = demanda_corrente_agrupada.append(wizard_suprimento_amarracao, ignore_index=True)
+#wizard_amarracao = pd.concat([demanda_corrente_agrupada,wizard_suprimento_amarracao])
+#wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['Período'] + wizard_amarracao['Produto']
+#correntes = correntes.merge(wizard_amarracao, how = 'left', right_on = 'ID-RIGHT', left_on = 'ID-LEFT')
+#correntes = correntes.astype({'Limite_y':np.float32,'Limite_x':np.float32})
+#correntes['Limite_y'] = correntes['Limite_y'].fillna(0.0)
+#for i in tqdm(range(correntes.shape[0])):
+#    if correntes['Limite_y'][i] > 0.0:
+#        correntes['Limite_x'][i] = correntes['Limite_y'][i]
+#        correntes['Ativo_x'][i] = True
+#dict_cols = {'Unidade_x':'Unidade','Produto_x':'Produto','Limite_x':'Limite','Ativo_x':'Ativo'}
+#correntes = correntes[['Unidade_x','Período','Produto_x','Limite_x','Ativo_x']].rename(columns = dict_cols)
+#decimals_kg = 2
+#correntes['Limite'] = correntes['Limite'].apply(lambda x: round(x, decimals_kg))
+
+# Deprecado a exportação para excel e alterado para csv
+# encoding = '1252' e delimiter = ';'
+#correntes.to_excel(os.path.join(cwd,output_path + 'Wizard_Amarracao.xlsx'), index = False)
+#correntes.to_csv(os.path.join(cwd,output_path + 'Wizard de Limites.csv'), index = False, encoding = '1252', sep = ';')
+#print('Wizard de Limites :: Atualizado com Sucesso!')
+
+end_time = time.time()
+print(f'Tempo de Execução: {round(end_time - start_time,2)} segundos')
