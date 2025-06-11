@@ -25,6 +25,7 @@ arquivos_primarios = {
      'cap_prod_sn': 'iptCapOperPlantas',
      'cap_desc' : 'iptCapOperPlantas.xlsx',
      'cap_desc_sn' : 'iptCapOperPlantas',
+     'bom':'iptListaTecnica.csv',
      # Unidades Armazenagem / Produtivas / Expedição
      'unidades_exp':'depUnidadesProdutivas.xlsx',
      'unidades_exp_sn': 'depUnidadesProdutivas',
@@ -33,13 +34,17 @@ arquivos_primarios = {
      'template_entrada' : 'tmpEntrada.csv',
      'template_capacidade' : 'tmpCapacidadeArmazenagem.xlsx',
      'template_demanda' : 'tmpDemanda.xlsx',
-     'template_demanda_sn' : 'SPOT_DEMANDA_PRODUTO_FAIXA',
+     'template_demanda_sn01':'SPOT_DEMANDA_PRODUTO_FAIXA',
      'template_limites' : 'tmpDefinicaoLimites.csv',
+     'template_RendEntr':'tmpReceitasEntrada.xlsx',
+     'template_RendEntr_sn01':'RENDIMENTO_ENTRADA_PROD',
+     'template_RendSaida':'tmpReceitasSaida.xlsx',
+     'template_RendSaida_sn01':'RENDIMENTO_SAIDA_PROD',
      'unidades_por':'depUnidadesPortuarias.xlsx',
      'unidades_por_sn':'depUnidadesPortuarias',
-     'arq_tbDeparaMercadoConsumidor': 'depEstruturaComercial.xlsx',
-     'arq_demanda_irrestrita': 'iptDemandaIrrestrita.xlsx',
-     'arq_demanda_irrestrita_sn01': 'Demanda',
+     'mercados': 'depEstruturaComercial.xlsx',
+     'demanda': 'iptDemandaIrrestrita.xlsx',
+     'demanda_sn': 'Demanda',
      'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.xlsx',
      'arq_RendEntr_sn01': 'RENDIMENTO_ENTRADA_PROD',
      'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.xlsx',
@@ -48,11 +53,12 @@ arquivos_primarios = {
      'arq_resultados_vcm_sn01': 'RESULTADOS',
      'arq_tbUpdateCorrentes': 'iptUpdateCorrentes.xlsx',
      'arq_tbUpdateCorrentes_sn': 'iptUpdateCorrentes',
-     # Identificar onde usa os elementas abaixo para deprecar
-     # 'portos_armz_apo': 'depUnidadesPortuarias.xlsx',
-     # 'portos_armz_apo_sn': 'depUnidadesPortuarias',
-     # 'cap_portos' : 'iptCapacidadePortuaria.xlsx',
-     # 'cap_portos_sn' : 'iptCapacidadePortuaria',
+     'unidades_produtoras':'depUnidadesProdutivas.xlsx',
+     'demanda_cmiss':'RESULTADOS_CMISS.xlsx',
+     'demanda_cmiss_sn':'Layout_DEMANDA',
+     'produtos_cmiss':'depSKU_CMISS.xlsx',
+     'produtos_cmiss_sn01':'CADASTRO PRODUTOS VCM',
+     'produtos_cmiss_sn02':'AGRUPAMENTO'
 }
 
 tp_dado_arquivos = {
@@ -79,15 +85,19 @@ tp_dado_arquivos = {
      'cap_portos': {'PERIODO':'datetime64[ns]', '__default__':np.float64},
      'unidades_exp': {'DEPOSITO':'str','PLANTA':str, 'DESCRICAO_DEPOSITO':str, 'DESCRICAO_PLANTA':str, 'TIPO_UNIDADE':'str',
                       'UNIDADE_ARMAZENAGEM_VCM':str,'UP_MISTURADORA_VCM':str,'UNIDADE_EXPEDICAO_VCM':str},
-     'unidades_terceiras':{'UNIDADE PRODUTORA':str, 'UNIDADE FATURAMENTO':str, 'GERENCIA':str, 'CONSULTORIA':str},          
+     'unidades_terceiras':{'UNIDADE PRODUTORA':str, 'UNIDADE FATURAMENTO':str, 'GERENCIA':str, 'CONSULTORIA':str},
      'unidades_por': {'NOME_PORTO_VCM':str, 'NOME_AZ_PORTO_VCM':str, 'PORTO':str, 'UNIDADE':str, 'CORRENTE':str},
      'template_saida': {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
      'template_entrada' : {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
      'template_capacidade' : {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.int64, 'Volume Máximo':np.int64},
-     'arq_tbDeparaMercadoConsumidor':{'DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'CENTROID':str,'UF':str,'VCM':str},
-     'arq_demanda_irrestrita':{'PERIODO':'datetime64[ns]','DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'UNIDADE PRODUTORA':str,
+     'mercados':{'DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'CENTROID':str,'UF':str,'VCM':str},
+     'demanda':{'PERIODO':'datetime64[ns]','DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'UNIDADE PRODUTORA':str,
                'CULTURA':str,'GRUPO PRODUTO':str,'PRODUTO':str,'CODIGO PRODUTO':str,
                'RM_PREMIUM_DESCRIPTION_ENG':str,'QUANTIDADE':np.float32,'MP AGRUPADA':str},
+     
+     'template_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
+     'template_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
+
      'arq_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
      'arq_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
      'arq_resultados_vcm':{'Corrente-VCM':str,'Produto-VCM':str,'Período-VCM':str, 'Quantidade':np.float64,
@@ -95,6 +105,15 @@ tp_dado_arquivos = {
      'arq_tbUpdateCorrentes':{'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
      'template_demanda':{'Unidade':str, 'Produto':str, 'Periodo':str, 'Demanda Mínima':np.float64, 'Demanda Máxima':np.float64},
      'template_limites':{'Unidade':str, 'Nivel Detalhe':str},
+     'bom':{'PLANT_CODE':str,'PRODUCTION_SITE':str,'FG_CODE':str,'FINISHED_GOOD':str,
+           'RM_CODE':str,'RM_DESCRIPTION':str,'COMPONENT_QTY':np.float64,'UOM_FORMULA':str,
+           'RECIPE_CODE':str,'RECIPE_VERSION':str,'PREFERENCE':str,'FORMULA_CODE':str,
+           'FORMULA_VERSION':str,'COMPANY_CODE':str},
+     'demanda_cmiss':{'Produto-VCM':str, 'Produto':str, 'Período':'datetime64[ns]', 'Unidade-Destino-VCM':str,
+                         'DIRETORIA':str, 'Gerencia':str, 'Consultoria':str, 'Indicador 2': str,
+                         'Quantidade':np.float64},
+     'produtos_cmiss_sn01':{'PRD-VCM':str, 'ITEM_CODE':str, 'ITEM_DESCRIPTION':str, 'Produto':str,
+                            'Processo':str, 'Unidade VCM':str}
 }
 
 rename_dataframes = {

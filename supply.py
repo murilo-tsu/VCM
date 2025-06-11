@@ -4,12 +4,12 @@ print('║                                         ATUALIZACAO DE DADOS - VCM   
 print('║                                               >> supply.py <<                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado  por: Murilo Lima Ribeiro  Data: 10/03/2025                                                             ║')
-print('║ Editado por: Murilo Lima Ribeiro  Data: 10/03/2025                                                             ║')
+print('║ Editado por: Murilo Lima Ribeiro  Data: 30/05/2025                                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (02/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos de  ║')
 print('║                        depara e dado primário.                                                                 ║')
-print('║                                                                                                                ║')
+print('║ - v1.0.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Plano de Compras                                                                                            ║')
@@ -158,6 +158,18 @@ correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['correntes
                           usecols = list(tp_dado_arquivos['correntes'].keys()),
                           dtype = tp_dado_arquivos['correntes']).applymap(fx.padronizar)
 
+# DataFrame :: Suprimento Intercompany Fornecido por CMISS
+suprimento_cmiss =  pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['demanda_cmiss']),
+                                 sheet_name = arquivos_primarios['demanda_cmiss_sn'],
+                                 skiprows = 1, usecols = list(tp_dado_arquivos['demanda_cmiss'].keys()),
+                                 dtype = tp_dado_arquivos['demanda_cmiss'])
+
+# DataFrame :: Cadastro de Produtos VCM - CMISS
+produtos_cmiss = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['produtos_cmiss']),
+                               sheet_name = arquivos_primarios['produtos_cmiss_sn01'],
+                               usecols = list(tp_dado_arquivos['produtos_cmiss_sn01'].keys()),
+                               dtype = tp_dado_arquivos['produtos_cmiss_sn01'])
+
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
 # =======================================================================================================================
@@ -182,10 +194,12 @@ companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
 df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
-fx.left_outer_join(df_revisao_importada,agrupamento_produtos,left_on='CODIGO_MP',right_on='COD_ESPECIFICO',
-                   name_left='REVISAO CHEGADAS', name_right='AGRUPAMENTO PRODUTOS')
-fx.left_outer_join(df_revisao_importada, periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO')
-fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada,agrupamento_produtos,left_on='CODIGO_MP',right_on='COD_ESPECIFICO',
+                       name_left='Revisão de Chegadas >>Importada<<', name_right='Agrupamento de Produtos')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO',
+                       name_left='Revisão de Chegadas >>Importada<<', name_right='Períodos')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                       name_left='Revisão de Chegadas >>Importada<<', name_right='Cadastro de Produtos VCM')
 
 # 2.2. NACIONAL
 id_vars = ['PORTO','PLANTA','MP','STATUS','COMPANY','CODIGO_MP']
@@ -193,9 +207,12 @@ df_revisao_nacional = df_revisao_nacional.melt(id_vars = id_vars, var_name = 'PR
                                                value_name = 'BALANCE_TONS')
 df_revisao_nacional['COMPANY'] = df_revisao_nacional['COMPANY'].replace(companies)
 df_revisao_nacional['PORTO'] = df_revisao_nacional['PORTO'] + '-' + df_revisao_nacional['PLANTA']
-fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO')
-fx.left_outer_join(df_revisao_nacional, periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO')
-fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO',
+                      name_left='Revisão de Chegadas >>Nacional<<', name_right='Agrupamento de Produtos')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO',
+                      name_left='Revisão de Chegadas >>Nacional<<',name_right='Períodos')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                      name_left='Revisão de Chegadas >>Nacional<<',name_right='Cadstro de Produtos VCM')
 
 # 3. DataFrame de Compras Completo :: Importado + Nacional
 cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO','PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
@@ -203,7 +220,8 @@ df_revisao_importada = df_revisao_importada[cols]
 df_revisao_nacional = df_revisao_nacional[cols]
 df_revisao = pd.concat([df_revisao_importada,df_revisao_nacional])
 df_revisao = df_revisao.reset_index().drop(columns='index')
-fx.left_outer_join(df_revisao, portos, left_on = 'PORTO', right_on = 'PORTO')
+df_revisao = fx.left_outer_join(df_revisao, portos, left_on = 'PORTO', right_on = 'PORTO',
+             name_left='Revisão de Chegadas >>ALL<<', name_right='Portos')
 
 # Salvando um dataframe com o histórico da execução para log_futuro
 exec_hist_df_revisao = df_revisao.copy()
@@ -215,7 +233,44 @@ print('Inserindo dados na estrutura topológica...')
 wizard_suprimento_faixa['Suprimento Mínimo'] = 0.0
 wizard_suprimento_faixa['Suprimento Máximo'] = 0.0
 wizard_suprimento_faixa['pk_left'] = wizard_suprimento_faixa['Unidade'] + '-' + wizard_suprimento_faixa['Produto'] + '-' + wizard_suprimento_faixa['Periodo']
-fx.left_outer_join(wizard_suprimento_faixa,df_revisao, left_on = 'pk_left', right_on = 'pk_right')
+wizard_suprimento_faixa = fx.left_outer_join(wizard_suprimento_faixa,df_revisao, left_on = 'pk_left', right_on = 'pk_right',
+                          name_left='Template Suprimento Faixa', name_right='Revisão de Chegadas')
+suprimento_cmiss = suprimento_cmiss[(suprimento_cmiss['Indicador 2'] == 'B2B')].reset_index().drop(columns='index')
+suprimento_cmiss = fx.left_outer_join(suprimento_cmiss, produtos_cmiss[['PRD-VCM','ITEM_CODE']], 
+                                      left_on = 'Produto-VCM', right_on = 'PRD-VCM',
+                                      name_left = 'Suprimento Atendido CMISS', name_right = 'Produtos VCM')
+suprimento_cmiss = fx.left_outer_join(suprimento_cmiss, agrupamento_produtos,
+                                      left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO',
+                                      name_left = 'Suprimento Atendido CMISS',
+                                      name_right = 'Agrupamento de Produtos')
+suprimento_cmiss = fx.left_outer_join(suprimento_cmiss, cadastro_mp[['CODIGO_ITEM','PRD-VCM']],
+                                      left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                                      name_left = 'Suprimento Atendido CMISS',
+                                      name_right = 'Cadastro VCM')
+suprimento_cmiss = fx.left_outer_join(suprimento_cmiss, periodos, left_on = 'Período', right_on = 'PERIODO',
+                   name_left = 'Suprimento Atendido CMISS', name_right = 'Períodos')
+unidades_for = {
+    'FOR-NAC-PNA':'MC-PNO',
+    'FOR-NAC-RND':'MC-RNO',
+    'FOR-NAC-SPA':'MC-SPA',
+    'FOR-NAC-SNO':'MC-SNO',
+    'FOR-NAC-ARA':'MC-ARO',
+    'FOR-NAC-CTA':'MC-CTO',
+    'FOR-NAC-QRE':'MC-QRO',
+    'FOR-NAC-BCA':'MC-BCO',
+    'FOR-NAC-SLU':'MC-SLO'
+}
+suprimento_cmiss = suprimento_cmiss.replace(unidades_for.values(),unidades_for.keys())
+suprimento_cmiss = suprimento_cmiss[['Unidade-Destino-VCM','PRD-VCM_y','NOME_PERIODO','Quantidade']]
+suprimento_cmiss = suprimento_cmiss.rename(columns = {'Unidade-Destino-VCM':'Unidade','PRD-VCM_y':'Produto','NOME_PERIODO':'Periodo'})
+suprimento_cmiss = suprimento_cmiss.groupby(by=['Unidade','Produto','Periodo'])['Quantidade'].sum().reset_index()
+wizard_suprimento_faixa = fx.left_outer_join(wizard_suprimento_faixa, suprimento_cmiss,
+                                             left_on = ['Unidade','Produto','Periodo'],
+                                             right_on = ['Unidade','Produto','Periodo'],
+                                             name_left = 'Template Suprimento', name_right = 'Suprimento Atendido CMISS')
+wizard_suprimento_faixa['Quantidade'] = wizard_suprimento_faixa['Quantidade'].fillna(0.0)
+wizard_suprimento_faixa['BALANCE_TONS'] = wizard_suprimento_faixa['BALANCE_TONS'].fillna(0.0)
+wizard_suprimento_faixa['BALANCE_TONS'] = wizard_suprimento_faixa['BALANCE_TONS'] + wizard_suprimento_faixa['Quantidade']
 print('\nAplicando premissas para compras firmes...')
 print(' >> Horizonte Compras Importadas: M+0 até M+3')
 print(' >> Horizonte Compras Nacionais: M+0 até M+1')
@@ -262,7 +317,6 @@ wizard_suprimento_faixa = wizard_suprimento_faixa.fillna(0.0)
 wizard_suprimento_faixa = wizard_suprimento_faixa.round({'Suprimento Mínimo':2,'Suprimento Máximo':2}) # arredonda com duas casas decimais
 wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path+'WIZARD_SUPRIMENTO_FAIXA.xlsx'),sheet_name='SUPRIMENTO_FAIXA',index = False)
 print('Arquivo WIZARD_SUPRIMENTO_FAIXA.xlsx foi Atualizado com Sucesso!')
-
 # =============================================================================================================
 # 2025-05-30 :: LINHAS DEPRECADAS porque as capacidades portuárias serão atualizadas pelo script de limites
 # =============================================================================================================

@@ -78,12 +78,16 @@ class aux_functions_vcm:
             return 0.0
 
     # LEFT JOIN personalizado para indicar o progresso, tabelas e resultado do join
-    def left_outer_join(self,df_left, df_right, left_on, right_on, name_left=None, name_right=None):
+    def left_outer_join(self,df_left, df_right, left_on, right_on, name_left=None, name_right=None, struct = True):
         try:
             msg_inicial = f"INICIO DO LEFT JOIN :: {name_left} x {name_right}"
             msg_final = f"FIM DO LEFT JOIN :: Resultado = "
             #tamanho_final = max(len(msg_inicial) , len(msg_final) + 3)
             tamanho_final = 110
+            
+            # Resetar os índices dos DataFrames
+            df_left = df_left.reset_index().drop(columns='index')
+            df_right = df_right.reset_index().drop(columns='index')
             
             # Criar as bordas do JOIN
             borda_superior = '╔' + '═' * (tamanho_final + 2) + '╗'
@@ -94,24 +98,33 @@ class aux_functions_vcm:
             x1 = df_left.shape[0]
             print(f'║ A quantidade de linhas antes do join é {x1}'.ljust(tamanho_final + 3) + '║')
             merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
+            
+            
             # Limpar o DataFrame original e aplicar as novas colunas
-            df_left.drop(df_left.columns, axis=1, inplace=True) 
-            for col in merged_df.columns:
-                df_left[col] = merged_df[col]  # Copiar colunas do merged_df
+            #df_left.drop(df_left.columns, axis=1, inplace=True) 
+            #df_left = pd.DataFrame()
+            #df_left.index = merged_df.index
+            #for col in merged_df.columns:
+            #    df_left[col] = merged_df[col]  # Copiar colunas do merged_df
 
-            x2 = df_left.shape[0]
+
+            x2 = merged_df.shape[0]
             print(f'║ A quantidade de linhas após o join é {x2}'.ljust(tamanho_final + 3) + '║')
-            if x1 == x2:
+            if struct and x1 == x2:
                 y = '√'
                 print(f'║ {msg_final}{y}'.ljust(tamanho_final + 3) + '║')
-                print(borda_inferior)
+            
+            elif struct == False and x2 > x1:
+                y = '√'
+                print(f'║ {msg_final}{y}'.ljust(tamanho_final + 3) + '║')       
             else:
                 y = 'X'
                 print(f'║ Checar por duplicidades em {name_right}'.ljust(tamanho_final + 3) + '║')
                 print(f'║ {msg_final}{y}'.ljust(tamanho_final + 3) + '║')
-                print(borda_inferior)
                 raise LookupError()
-           
+            
+            print(borda_inferior)
+            return merged_df
         except Exception as erro:
             print(f'║ Erro de mesclagem identificado :: {str(erro)}'.ljust(tamanho_final + 3) + '║')
             print('║ SCRIPT FINALIZADO.'.ljust(tamanho_final + 3) + '║')

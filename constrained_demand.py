@@ -68,7 +68,7 @@ print('Iniciando...')
 print('Tabelas carregadas...')
 # DataFrame :: Horizonte (Período) de Otimização
 # applymap(padronizar) não aplicado por se tratar de dados com a estrutura final do VCM
-periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']), 
+periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos']).applymap(fx.padronizar)
 
@@ -101,29 +101,25 @@ tbDeparaUnidadesProdutoras = pd.read_excel(os.path.join(cwd, path + arquivos_pri
                              usecols = list(tp_dado_arquivos['unidades_exp'].keys()),
                              dtype = tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 
-# 2025-06-03 :: Não é necessário dar MELT uma vez que as unidades embaladoras foram eliminadas, restanto apenas uma UP
-# tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM_2'] = 'TN-' + tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM'].str.split('-',expand=True)[1] + '-' +\
-#                                                     tbDeparaUnidadesProdutoras['UP_EMBALADORA_VCM'].str.split('-',expand=True)[2]
+tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras[(tbDeparaUnidadesProdutoras['TIPO_UNIDADE'] == 'UNIDADE PRODUTORA')|\
+                             (tbDeparaUnidadesProdutoras['TIPO_UNIDADE'] == 'ARMAZEM PRODUTOR')|\
+                             (tbDeparaUnidadesProdutoras['TIPO_UNIDADE'] == 'TOLLING')].copy()
 
-# tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.melt(id_vars=list(tbDeparaUnidadesProdutoras.columns)[:-2],
-#                                                              value_vars=['UP_EMBALADORA_VCM','UP_EMBALADORA_VCM_2'],
-#                                                              var_name = 'TIPO_UNIDADE_VCM',
-#                                                              value_name = 'UNIDADE_VCM')
-
+tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.drop(columns=['UNIDADE_ARMAZENAGEM_VCM'])
 # DataFrame :: Mercados Consumidores da Estrutura Comercial
-mercados = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbDeparaMercadoConsumidor']),
-                         sheet_name = arquivos_primarios['arq_tbDeparaMercadoConsumidor'].split('.')[0],
-                         usecols = list(tp_dado_arquivos['arq_tbDeparaMercadoConsumidor'].keys()),
-                         dtype = tp_dado_arquivos['arq_tbDeparaMercadoConsumidor']).applymap(fx.padronizar)
+mercados = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['mercados']),
+                         sheet_name = arquivos_primarios['mercados'].split('.')[0],
+                         usecols = list(tp_dado_arquivos['mercados'].keys()),
+                         dtype = tp_dado_arquivos['mercados']).applymap(fx.padronizar)
 
 id_mercados_consumidores = mercados.copy()
 id_mercados_consumidores = id_mercados_consumidores['VCM'].to_frame().rename({'VCM':'ID MC'})
 
 # DataFramme :: Demanda Irrestrita
-demanda_irrestrita = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_demanda_irrestrita']),
-                        sheet_name = arquivos_primarios['arq_demanda_irrestrita_sn01'],
-                        usecols = list(tp_dado_arquivos['arq_demanda_irrestrita'].keys()),
-                        dtype = tp_dado_arquivos['arq_demanda_irrestrita']).applymap(fx.padronizar)
+demanda_irrestrita = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
+                        sheet_name = arquivos_primarios['demanda_sn'],
+                        usecols = list(tp_dado_arquivos['demanda'].keys()),
+                        dtype = tp_dado_arquivos['demanda']).applymap(fx.padronizar)
 demanda_irrestrita = demanda_irrestrita.loc[demanda_irrestrita.QUANTIDADE > 0.0,:].reset_index().drop(columns='index')
 
 # DataFrame :: WIZARD_RENDIMENTO_ENTRADA :: Carrega lista técnica que foi utilizada no VCM :: Componentes
@@ -143,18 +139,23 @@ RendSaida = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['ar
 
 RendSaida = RendSaida.loc[RendSaida['ValorSaida'] == 1.0]
 RendSaida = RendSaida.reset_index().drop(columns='index')
-
 # DataFrame :: Arquivo de Resultados do VCM :: Output da rodada de otimização
 fx.validar_data_arquivo(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']))
 resultados_vcm = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']),
                                sheet_name = arquivos_primarios['arq_resultados_vcm_sn01'],
                                usecols = list(tp_dado_arquivos['arq_resultados_vcm'].keys()),
-                               dtype = tp_dado_arquivos['arq_resultados_vcm'],
-                               skiprows = 2).applymap(fx.padronizar)
+                               # 2025-06-03 :: REMOVIDO SKIPROWS
+                               #dtype = tp_dado_arquivos['arq_resultados_vcm'], skiprows = 2).applymap(fx.padronizar)
+                               dtype = tp_dado_arquivos['arq_resultados_vcm']).applymap(fx.padronizar)
+# DataFrame :: Esqueleto topológico de correntes existentes no VCM
+tbUpdateCorrentes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
+                            sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0],
+                            usecols=list(tp_dado_arquivos['arq_tbUpdateCorrentes'].keys()),
+                            dtype=tp_dado_arquivos['arq_tbUpdateCorrentes']).applymap(fx.padronizar)
 
 # DataFrame :: Esqueleto topológico de correntes existentes no VCM
 tbUpdateCorrentes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
-                            sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0], 
+                            sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0],
                             usecols=list(tp_dado_arquivos['arq_tbUpdateCorrentes'].keys()),
                             dtype=tp_dado_arquivos['arq_tbUpdateCorrentes']).applymap(fx.padronizar)
 
@@ -168,12 +169,13 @@ print('║ # Forecast do Ciclo S&OP a partir dos Resultados VCM                 
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 print('Iniciando...')
 
-# DataFrame da Demanda Irrestrita :: Realizar tratamento 
-fx.left_outer_join(demanda_irrestrita, agrupamento_cadastro, left_on = 'CODIGO PRODUTO', right_on = 'COD_ESPECIFICO')
+# DataFrame da Demanda Irrestrita :: Realizar tratamento
+demanda_irrestrita = fx.left_outer_join(demanda_irrestrita, agrupamento_cadastro, left_on = 'CODIGO PRODUTO', right_on = 'COD_ESPECIFICO',
+                     name_left='Demanda Irrestrita',name_right='Agrupamento de Produtos')
 demanda_irrestrita['CODIGO PRODUTO'] = demanda_irrestrita['CODIGO_AGRUPADO']
 demanda_irrestrita = demanda_irrestrita.drop(columns=['CODIGO_AGRUPADO','COD_ESPECIFICO'])
-demanda_irrestrita['id'] = demanda_irrestrita['PERIODO'].astype('str') + '-' + demanda_irrestrita['CODIGO PRODUTO'].astype('str') + '-' + demanda_irrestrita['GERENCIA'] + '-' + demanda_irrestrita['CONSULTORIA'] 
-demanda_irrestrita['id_highlevel'] = demanda_irrestrita['CODIGO PRODUTO'].astype('str') + '-' + demanda_irrestrita['GERENCIA'] + '-' + demanda_irrestrita['CONSULTORIA'] 
+demanda_irrestrita['id'] = demanda_irrestrita['PERIODO'].astype('str') + '-' + demanda_irrestrita['CODIGO PRODUTO'].astype('str') + '-' + demanda_irrestrita['GERENCIA'] + '-' + demanda_irrestrita['CONSULTORIA']
+demanda_irrestrita['id_highlevel'] = demanda_irrestrita['CODIGO PRODUTO'].astype('str') + '-' + demanda_irrestrita['GERENCIA'] + '-' + demanda_irrestrita['CONSULTORIA']
 di_cultura = demanda_irrestrita.groupby(['id','CULTURA'])['QUANTIDADE'].sum().reset_index()
 di_cultura_hl = demanda_irrestrita.groupby(['id_highlevel','CULTURA'])['QUANTIDADE'].sum().reset_index()
 di_cultura_cons = demanda_irrestrita.groupby(['CONSULTORIA','CULTURA'])['QUANTIDADE'].sum().reset_index()
@@ -205,6 +207,7 @@ di_grupoprod = di_grupoprod[['id','GRUPO PRODUTO','perc']]
 di_grupoprod_hl = di_grupoprod_hl[['id_highlevel','GRUPO PRODUTO','perc']]
 di_grupoprod_prod = di_grupoprod_prod[['CODIGO PRODUTO','GRUPO PRODUTO','perc']].drop_duplicates()
 
+# ================================================= DEPRECADO ============================================================
 # 2025-03-25: etapas desativadas devido à ausência de CLIENTE_GRC no arquivo de demanda
 #di_cliente = demanda_irrestrita.groupby(['id','CLIENTE GRC'])['QUANTIDADE'].sum().reset_index()
 #di_cliente_hl = demanda_irrestrita.groupby(['id_highlevel','CLIENTE GRC'])['QUANTIDADE'].sum().reset_index()
@@ -216,6 +219,7 @@ di_grupoprod_prod = di_grupoprod_prod[['CODIGO PRODUTO','GRUPO PRODUTO','perc']]
 #di_cliente_hl['perc'] = di_cliente_hl['QUANTIDADE_x']/di_cliente_hl['QUANTIDADE_y']
 #di_cliente = di_cliente[['id','CLIENTE GRC','perc']]
 #di_cliente_hl = di_cliente_hl[['id_highlevel','CLIENTE GRC','perc']]
+# ================================================= DEPRECADO ============================================================
 
 # DataFrame de Resultados VCM :: mesclagem de dados primários
 deliveries_resultados_vcm = resultados_vcm.loc[resultados_vcm['Unidade-Destino-VCM'].str[:2] == 'MC',:]
@@ -223,21 +227,30 @@ deliveries_resultados_vcm = deliveries_resultados_vcm.loc[deliveries_resultados_
 deliveries_resultados_vcm = deliveries_resultados_vcm.reset_index().drop(columns='index')
 esqueleto_explosao = deliveries_resultados_vcm[['Produto-VCM','Unidade-Origem-VCM']].copy()
 proxy_unidade_resultado_vcm = resultados_vcm.copy()
-fx.left_outer_join(proxy_unidade_resultado_vcm, tbDeparaUnidadesProdutoras, left_on = 'Unidade-Origem-VCM', right_on = 'UNIDADE_VCM')
+# CORRIGINDO NOME!!!!!!!!!!
+tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.rename(columns={'UNIDADE_EXPEDICAO_VCM':'UNIDADE_VCM'})
+proxy_unidade_resultado_vcm = fx.left_outer_join(proxy_unidade_resultado_vcm, tbDeparaUnidadesProdutoras,
+                              left_on = 'Unidade-Origem-VCM', right_on = 'UNIDADE_VCM',
+                              name_left='Unidades VCM no Resultado', name_right='Depara Unidades VCM')
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm.loc[proxy_unidade_resultado_vcm['UNIDADE_VCM'].notnull(),:].reset_index().drop(columns='index')
-fx.left_outer_join(proxy_unidade_resultado_vcm,periodos, left_on = 'Período-VCM', right_on = 'NOME_PERIODO')
+proxy_unidade_resultado_vcm = fx.left_outer_join(proxy_unidade_resultado_vcm,periodos, left_on = 'Período-VCM', right_on = 'NOME_PERIODO',
+                              name_left='Unidades VCM no Resultado', name_right='Períodos')
 proxy_unidade_resultado_vcm['proxy_unidade'] = proxy_unidade_resultado_vcm['PERIODO'].astype('str') + '-' + proxy_unidade_resultado_vcm['Produto-VCM'] + '-' + proxy_unidade_resultado_vcm['Unidade-Destino-VCM']
 headers = ['proxy_unidade','PLANTA','DEPOSITO','Quantidade']
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm[headers]
 proxy_unidade_resultado_vcm_total = proxy_unidade_resultado_vcm.groupby('proxy_unidade')['Quantidade'].sum().reset_index()
-fx.left_outer_join(proxy_unidade_resultado_vcm, proxy_unidade_resultado_vcm_total, left_on='proxy_unidade', right_on='proxy_unidade')
+proxy_unidade_resultado_vcm = fx.left_outer_join(proxy_unidade_resultado_vcm, proxy_unidade_resultado_vcm_total, 
+                              left_on='proxy_unidade', right_on='proxy_unidade',
+                              name_left='Unidades VCM no Resultado', name_right='Unidades VCM Agrupado')
 proxy_unidade_resultado_vcm['perc'] = proxy_unidade_resultado_vcm['Quantidade_x']/proxy_unidade_resultado_vcm['Quantidade_y']
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm[['proxy_unidade','DEPOSITO','PLANTA','perc']].rename(columns={'PLANTA':'UNIDADE_FATURAMENTO','DEPOSITO':'UNIDADE_PRODUTORA'})
 Explosion = RendSaida.copy()
-fx.left_outer_join(Explosion, RendEntr, left_on = ['Unidade','Receita'], right_on = ['Unidade','Receita'])
+Explosion = fx.left_outer_join(Explosion, RendEntr, left_on = ['Unidade','Receita'], right_on = ['Unidade','Receita'],
+            name_left='Rendimento Saída', name_right='Rendimento Entrada')
 Explosion = Explosion.rename(columns={'Produto_x':'FG','Produto_y':'RM','ValorEntrada':'CompVol'})
 Explosion = Explosion.drop(columns='ValorSaida')
 
+# ================================================= DEPRECADO ============================================================
 # Lista técnica na demanda :: exceções pela ausência de lista técnica
 # 25/03/2025: Removendo "CODIGO MP" & "MATERIA PRIMA" devido a alteração do layout
 # da demanda irrestrita a partir do ciclo de 2025-03
@@ -257,6 +270,7 @@ Explosion = Explosion.drop(columns='ValorSaida')
 #explosion_di_hl = explosion_di_hl[['CODIGO PRODUTO','MATERIA PRIMA','CODIGO MP','perc']]
 #explosion_di = explosion_di.astype({'CODIGO MP':'str'})
 #explosion_di_hl = explosion_di_hl.astype({'CODIGO MP':'str'}
+# ================================================= DEPRECADO ============================================================
 
 # Framework para explosão do resultado
 esqueleto_explosao['id'] = esqueleto_explosao['Produto-VCM'] + '-' + esqueleto_explosao['Unidade-Origem-VCM']
@@ -274,7 +288,6 @@ esqueleto_explosao_mix = esqueleto_explosao_mix.merge(Explosion, how = 'left', l
 esqueleto_explosao_mix = esqueleto_explosao_mix[['id','Produto-VCM','Unidade-Origem-VCM','Unidade-Origem','Unidade-Destino','Receita_y','FG_x','RM_y','CompVol_y']]
 esqueleto_explosao_mix = esqueleto_explosao_mix.rename(columns={'FG_x':'FG','RM_y':'RM','Receita_y':'Receita','CompVol_y':'CompVol'})
 esqueleto_explosao = pd.concat([esqueleto_explosao_simples,esqueleto_explosao_mix])
-
 # Deliveries a partir do VCM
 deliveries_resultados_vcm = deliveries_resultados_vcm.merge(mercados, how = 'left', left_on = 'Unidade-Destino-VCM', right_on = 'VCM')
 deliveries_resultados_vcm = deliveries_resultados_vcm.merge(periodos, how = 'left', left_on = 'Período-VCM', right_on = 'NOME_PERIODO')
@@ -290,9 +303,8 @@ deliveries_resultados_vcm_1 = deliveries_resultados_vcm.loc[deliveries_resultado
 # Impossível de Explodir (2)
 # As etapas subsequentes em (2) serão inativadas devido a ausência de lista técnica na demanda
 deliveries_resultados_vcm_2 = deliveries_resultados_vcm.loc[deliveries_resultados_vcm['CompVol'].isna(),:].reset_index().drop(columns='index')
-
 # FOCO: (1)
-deliveries_resultados_vcm_1 = deliveries_resultados_vcm_1.merge(tbDeparaUnidadesProdutoras, how = 'left', left_on='Unidade-Origem', right_on = 'UNIDADE_VCM')
+deliveries_resultados_vcm_1 = deliveries_resultados_vcm_1.merge(tbDeparaUnidadesProdutoras, how = 'left', left_on='Unidade-Origem', right_on = 'UP_MISTURADORA_VCM')
 headers = ['PERIODO','DIRETORIA','GERENCIA','CONSULTORIA','DEPOSITO','PLANTA','Unidade-Destino-VCM','Unidade-Origem','Unidade-Destino','Receita','FG','RM','CompVol','Quantidade']
 deliveries_resultados_vcm_1 = deliveries_resultados_vcm_1[headers]
 deliveries_resultados_vcm_1.loc[deliveries_resultados_vcm_1['DEPOSITO'].isna(),:]
@@ -340,6 +352,7 @@ deliveries_resultados_vcm_1_sem_grupo_preencher = deliveries_resultados_vcm_1_se
 deliveries_resultados_vcm_1_sem_grupo = pd.concat([deliveries_resultados_vcm_1_sem_grupo_OK,deliveries_resultados_vcm_1_sem_grupo_preencher])
 deliveries_resultados_vcm_1 = pd.concat([deliveries_resultados_vcm_1_com_grupo,deliveries_resultados_vcm_1_sem_grupo])
 
+# ================================================= DEPRECADO ============================================================
 # 2025-03-25: Inativando as instruções abaixo devido a remoção do "CLIENTE GRC" da demanda irrestrita
 #deliveries_resultados_vcm_1 = deliveries_resultados_vcm_1.merge(di_cliente, how = 'left', on = 'id')
 #deliveries_resultados_vcm_1['perc'] = deliveries_resultados_vcm_1['perc'].fillna(1.0)
@@ -438,6 +451,8 @@ deliveries_resultados_vcm_1 = pd.concat([deliveries_resultados_vcm_1_com_grupo,d
 #headers = ['PERIODO','DIRETORIA','GERENCIA','CONSULTORIA','CULTURA','UNIDADE PRODUTORA','UNIDADE FATURAMENTO','GRUPO PRODUTO','PRODUTO','CODIGO PRODUTO','MATERIA PRIMA','CODIGO MP','CLIENTE GRC','QUANTIDADE']
 #deliveries_resultados_vcm_2 = deliveries_resultados_vcm_2[headers]
 #deliveries_resultados_vcm = pd.concat([deliveries_resultados_vcm_1,deliveries_resultados_vcm_2])
+# ================================================= DEPRECADO ============================================================
+
 deliveries_resultados_vcm = pd.concat([deliveries_resultados_vcm_1])
 deliveries_resultados_vcm = deliveries_resultados_vcm.drop(columns=['id','id_highlevel'])
 deliveries_resultados_vcm['PERIODO'] = deliveries_resultados_vcm['PERIODO'].dt.date
