@@ -517,10 +517,11 @@ wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure.app
 wizard_custo_frete_structure = wizard_custo_frete_structure.drop(columns={'CorrenteOut','ValorMedia','_merge'})
 
 # (11/06/2025) Para os casos que temos menos de 2 meses populados, mas temos pelo menos um valor, replicar esse valor.
+limite = wizard_custo_frete_structure.shape[0]
 for i in range(wizard_custo_frete_structure.shape[0]):
     if i!=0 and wizard_custo_frete_structure['ValorVariavel'][i]==0.0 and wizard_custo_frete_structure['Corrente'][i]==wizard_custo_frete_structure['Corrente'][i-1] and wizard_custo_frete_structure['ValorVariavel'][i-1]!=0.0:
         wizard_custo_frete_structure['ValorVariavel'][i] = wizard_custo_frete_structure['ValorVariavel'][i-1]
-    elif wizard_custo_frete_structure['ValorVariavel'][i]==0.0 and wizard_custo_frete_structure['Corrente'][i]==wizard_custo_frete_structure['Corrente'][i+1] and wizard_custo_frete_structure['ValorVariavel'][i+1]!=0.0:
+    elif i!=limite-1 and wizard_custo_frete_structure['ValorVariavel'][i]==0.0 and wizard_custo_frete_structure['Corrente'][i]==wizard_custo_frete_structure['Corrente'][i+1] and wizard_custo_frete_structure['ValorVariavel'][i+1]!=0.0:
         wizard_custo_frete_structure['ValorVariavel'][i] = wizard_custo_frete_structure['ValorVariavel'][i+1]
 
 # ==========================================================================
