@@ -124,7 +124,8 @@ arquivos_primarios = {
      'unidades_armz': 'depUnidadesProdutivas.xlsx',
      'unidades_armz_sn': 'depUnidadesProdutivas',
      'template_estoques': 'tmpEstoque.xlsx',
-     'template_estoques_sn': 'VOLUME_INICIAL'
+     'template_estoques_sn': 'VOLUME_INICIAL',
+     'dicgen': 'depDicionarioGenerico.xlsx',
 }
 
 tp_dado_arquivos = {
@@ -134,11 +135,17 @@ tp_dado_arquivos = {
                            'LOCATOR_DESCRIPTION':str, 'ACTUAL_STOCK':str, 'UOM':str},
      'unidades_armz': {'PLANTA':str, 'DESCRICAO_DEPOSITO':str, 'UNIDADE_ARMAZENAGEM_VCM':str}, 
      'template_estoques': {'Unidade':str, 'Produto':str, 'Valor':'float64'},
+     'dicgen':{'DE':str,'PARA':str},
 }
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES 
 # =======================================================================================================================
+
+# DataFRame :: Dicionário Generico
+dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
+                       usecols=list(tp_dado_arquivos['dicgen'].keys()),
+                       dtype=tp_dado_arquivos['dicgen']).applymap(padronizar)
 
 # Dataframe :: Template Estoques
 validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_estoques']))
@@ -155,6 +162,9 @@ estoques_iniciais = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['e
 estoques_iniciais['ACTUAL_STOCK'] = estoques_iniciais['ACTUAL_STOCK'].replace('', pd.NA)
 estoques_iniciais['ACTUAL_STOCK'] = estoques_iniciais['ACTUAL_STOCK'].fillna('0')
 estoques_iniciais['ACTUAL_STOCK'] = estoques_iniciais['ACTUAL_STOCK'].astype(float)
+estoques_iniciais['PRODUCTION_UNIT'] = estoques_iniciais['PRODUCTION_UNIT'].replace(list(dicgen['DE']), list(dicgen['PARA']))
+estoques_iniciais['INVOICING_UNIT'] = estoques_iniciais['INVOICING_UNIT'].replace(list(dicgen['DE']), list(dicgen['PARA']))
+
 
 # Dataframe :: Unidade Armazenagem
 depara_armazens = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_armz']),

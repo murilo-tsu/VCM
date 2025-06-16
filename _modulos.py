@@ -129,4 +129,5 @@ class aux_functions_vcm:
             print(f'║ Erro de mesclagem identificado :: {str(erro)}'.ljust(tamanho_final + 3) + '║')
             print('║ SCRIPT FINALIZADO.'.ljust(tamanho_final + 3) + '║')
             print(borda_inferior)
+            sys.exit()
             
