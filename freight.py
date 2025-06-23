@@ -530,6 +530,7 @@ for i in range(wizard_custo_frete_structure.shape[0]):
 wizard_custo_frete_structure = wizard_custo_frete_structure.fillna(0.0)
 # (21/01/2025) Como solicitado, adicionando o 1M para todos os valores zerados (incluindo outbound).
 wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure['ValorVariavel'].replace(0.0,1000000.00)
+wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure['ValorVariavel'].round(2)
 
 wizard_custo_frete_structure.to_excel(os.path.join(cwd,output_path + 'WIZARD_CUSTO_FRETE.xlsx'), index = False, sheet_name = 'FRETES_PERIODOS')
 fretes_outbound_nao_listados = fretes_outbound_nao_listados.to_excel(os.path.join(cwd,exec_log_path + 'LOG ERROR - Erros Frete Outbound.xlsx'), index = False, sheet_name = 'Erros')

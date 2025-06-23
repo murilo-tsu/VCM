@@ -271,7 +271,7 @@ wizard_spot_demanda_produto_faixa['QUANTIDADE'] = wizard_spot_demanda_produto_fa
 x = 0.005
 wizard_spot_demanda_produto_faixa['Demanda Mínima'] = 0.0
 wizard_spot_demanda_produto_faixa['Demanda Mínima'] = np.where(wizard_spot_demanda_produto_faixa['QUANTIDADE'] > 0.0,
-                                                               wizard_spot_demanda_produto_faixa['QUANTIDADE']*(1-x),
+                                                               wizard_spot_demanda_produto_faixa['QUANTIDADE']*(1),
                                                                wizard_spot_demanda_produto_faixa['Demanda Mínima'])
 
 wizard_spot_demanda_produto_faixa['Demanda Máxima'] = 0.0

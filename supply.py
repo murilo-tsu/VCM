@@ -305,11 +305,12 @@ for i in tqdm(range(wizard_suprimento_faixa.shape[0]), desc = 'Processando...', 
         # Caso 3.3: Fornecimento Nacional está fora do Horizonte de Fornecimento Nacional Congelado
         elif wizard_suprimento_faixa['Produto'][i] in mp_list_nac:
             wizard_suprimento_faixa['Suprimento Mínimo'][i] = wizard_suprimento_faixa['BALANCE_TONS'][i]
-            wizard_suprimento_faixa['Suprimento Máximo'][i] = 10000.0
+            wizard_suprimento_faixa['Suprimento Máximo'][i] = 100000.0
         # Caso 3.4: Material não consta na lista de MPs adquiridas nacionalmente
         else:
             wizard_suprimento_faixa['Suprimento Mínimo'][i] = wizard_suprimento_faixa['BALANCE_TONS'][i]    
-            wizard_suprimento_faixa['Suprimento Máximo'][i] = 0.0
+            # wizard_suprimento_faixa['Suprimento Máximo'][i] = 0.0
+            wizard_suprimento_faixa['Suprimento Máximo'][i] = wizard_suprimento_faixa['Suprimento Mínimo'][i]
 
 columns = ['Unidade','Produto','Periodo','Suprimento Mínimo','Suprimento Máximo']
 wizard_suprimento_faixa = wizard_suprimento_faixa[columns]
