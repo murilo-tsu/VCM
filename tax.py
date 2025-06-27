@@ -102,6 +102,7 @@ def left_outer_join(df_left, df_right, left_on, right_on):
         y = 'X'
         print(f'Checar por duplicidades em {name_right}')
     print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
+    return merged_df
 
 def padronizar(value):
     if isinstance(value, str):
@@ -141,7 +142,7 @@ tp_dado_arquivos = {
      'agrupamento': {'COD_ESPECIFICO':str, 'CODIGO_AGRUPADO':str},
      'up_correntes': {'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
      'lista_preco': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str, 'LISTA':str},
+                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':np.float64, 'PRECO':np.float64, 'LISTA':str},
      'custo_reposicao': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
                          'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
                          'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
@@ -252,20 +253,21 @@ df_valor_compra = df_valor_compra.loc[df_valor_compra.Validar == True]
 df_valor_compra = df_valor_compra.reset_index().drop(columns=['index','Validar','Data Inicial','Data Final'])
 
 # Ajustes de dados da base de preços de lista
-df_valor_venda['Código do Produto'] = df_valor_venda['Código do Produto'].str.replace("'","")
-df_valor_venda = df_valor_venda.astype({'Preço':str,'Ptax USD':str})
-df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
-df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
-df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
-df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
+# df_valor_venda['Código do Produto'] = df_valor_venda['Código do Produto'].str.replace("'","")
+# df_valor_venda = df_valor_venda.astype({'Preço':str,'Ptax USD':str})
+# df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
+# df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
+# df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
+# df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
+# df_valor_venda = df_valor_venda.astype({"Preço" : float, "Ptax USD" : float})
 
 df_valor_venda = df_valor_venda.merge(df_periodos[['PERIODO','Periodo_VCM']], how = 'cross')
 df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data Inicio']) & (df_valor_venda['PERIODO'] <= df_valor_venda['Data fim'])
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
-left_outer_join(df_valor_compra,agrupamento_mp,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO')
+df_valor_compra = left_outer_join(df_valor_compra,agrupamento_mp,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO')
 df_valor_compra = df_valor_compra.dropna(subset = 'COD_ESPECIFICO')
-left_outer_join(df_valor_venda,agrupamento_mp,left_on='Código do Produto',right_on='COD_ESPECIFICO')
+df_valor_venda = left_outer_join(df_valor_venda,agrupamento_mp,left_on='Código do Produto',right_on='COD_ESPECIFICO')
 df_valor_venda = df_valor_venda.dropna(subset = 'COD_ESPECIFICO')
 df_valor_compra.rename(columns = {"CODIGO_AGRUPADO": "ITEM_CODE"},
                        inplace=True)
@@ -313,13 +315,13 @@ valor_compra_medio.rename(columns = {"Preço Compra": "Preço Compra Médio"}, i
 
 # Estrutura do Valor venda
 # Convertendo os preços para números
-df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
-df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
+# df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
+# df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
 
-df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
-df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
+# df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
+# df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
 
-df_valor_venda = df_valor_venda.astype({"Preço" : float, "Ptax USD" : float})
+# df_valor_venda = df_valor_venda.astype({"Preço" : float, "Ptax USD" : float})
 
 # Convertendo de dólares para reais quando necessário
 df_valor_venda["Preço Venda"] = np.where(df_valor_venda["Moeda"] == "BRL",
@@ -405,14 +407,14 @@ print(df_base_saida_periodos.columns)
 # Ideia: pegar todas as linhas que apareçam no template e usar apenas o valor novo calculado
 df_template_icms_saida.drop(labels="Base de Cálculo", axis=1, inplace=True) 
 
-left_outer_join(df_template_icms_saida,df_base_saida_periodos,left_on=["Unidade Origem", "Unidade Destino",
+df_template_icms_saida = left_outer_join(df_template_icms_saida,df_base_saida_periodos,left_on=["Unidade Origem", "Unidade Destino",
                                          "Corrente", "Produto", "Período"],right_on=["Unidade Origem", "Unidade Destino",
                                          "Corrente", "Produto", "Período"])
 
 df_template_icms_saida.fillna(0, inplace = True)
 
 # Inserindo a matriz de balanço de impostos para entrada
-left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Origem',right_on='Unidades')
+df_template_icms_saida = left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Origem',right_on='Unidades')
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -420,7 +422,7 @@ df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
 df_template_icms_saida = df_template_icms_saida.rename(columns={'Zerar entrada':'ORG-IN','Zerar saída':'ORG-OUT'})
 
 # Inserindo a matriz de balanço de impostos para saída
-left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Destino',right_on='Unidades')
+df_template_icms_saida = left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Destino',right_on='Unidades')
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -429,17 +431,18 @@ df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
 df_template_icms_saida = df_template_icms_saida.rename(columns={'Zerar entrada':'DEST-IN','Zerar saída':'DEST-OUT'})
 df_template_icms_saida = df_template_icms_saida.astype({'ORG-OUT':np.float64,'DEST-IN':np.float64,'Base de Cálculo':np.float64})
 df_template_icms_saida['Tax.Check'] = df_template_icms_saida['ORG-OUT'] + df_template_icms_saida['DEST-IN']
-df_template_icms_saida['Tax.Check'] = df_template_icms_saida['Tax.Check'].replace(0.0,np.NaN)
+df_template_icms_saida['Tax.Check'] = df_template_icms_saida['Tax.Check'].replace(0.0,np.nan)
 df_template_icms_saida['Tax.Check'] = df_template_icms_saida['Tax.Check'].replace([1.0,2.0],0.0)
 df_template_icms_saida['Tax.Check'] = df_template_icms_saida['Tax.Check'].fillna(1.0)
 df_template_icms_saida['Base de Cálculo'] = df_template_icms_saida['Base de Cálculo']*df_template_icms_saida['Tax.Check']
+df_template_icms_saida['Base de Cálculo'] = df_template_icms_saida['Base de Cálculo'].round(2)
 
 # Ajustando a ordem das colunas
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST"]]
 
-print(df_template_icms_saida.shape)
+#print(df_template_icms_saida.shape)
 
 # Criando arquivo output para ICMS de Saída
 # 12/04/2024: Alterando encoding para utf-8 e delimitador (sep) para >> ; <<
@@ -467,20 +470,22 @@ df_base_entrada = df_base_entrada[(df_base_entrada["Tipo"] == "INBOUND") | (df_b
                               (df_base_entrada["Tipo"] == "OUTBOUND") |
                               (df_base_entrada["Tipo"] == "TRANSFERENCIA")]
 
+#USAR LEFT-JOIN NESSAS MESCLAGENS (na atualização para oo)
+
 # Trazendo os produtos presentes em cada uma das correntes
 df_base_entrada = df_base_entrada.merge(df_corrente_produto, on="Corrente",
                                         how = "left")
-print(df_base_entrada.shape)
+#print(df_base_entrada.shape)
 df_base_entrada = df_base_entrada.merge(df_periodos[['Periodo_VCM']], how = 'cross')
-print(df_base_entrada.shape)
+#print(df_base_entrada.shape)
 df_base_entrada = df_base_entrada.merge(df_valor_compra, how = "left", 
                                     on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
 df_base_entrada["Preço Compra"] = df_base_entrada["Preço Compra"].fillna(0)
-print(df_base_entrada.shape)
+#print(df_base_entrada.shape)
 df_base_entrada = df_base_entrada.merge(valor_compra_medio, how = "left", 
                                     on = "PRD-VCM")
 df_base_entrada["Preço Compra Médio"] = df_base_entrada["Preço Compra Médio"].fillna(0)
-print(df_base_entrada.shape)
+#print(df_base_entrada.shape)
 df_base_entrada_periodos = df_base_entrada.copy()
 
 # Atribuindo o valor da base de cálculo a partir do custo de reposição ou do estoque
@@ -513,7 +518,7 @@ df_template_icms_entrada.fillna(0, inplace = True)
 
 # Dados de Entrada
 df_pontos_balanco = df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']]
-left_outer_join(df_template_icms_entrada,df_pontos_balanco,
+df_template_icms_entrada = left_outer_join(df_template_icms_entrada,df_pontos_balanco,
                 left_on='Unidade Origem',right_on='Unidades')
 
 df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
@@ -523,7 +528,7 @@ df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
 df_template_icms_entrada = df_template_icms_entrada.rename(columns={'Zerar entrada':'ORG-IN','Zerar saída':'ORG-OUT'})
 
 # Inserindo a matriz de balanço de impostos para saída
-left_outer_join(df_template_icms_entrada,df_pontos_balanco,left_on='Unidade Destino',right_on='Unidades')
+df_template_icms_entrada = left_outer_join(df_template_icms_entrada,df_pontos_balanco,left_on='Unidade Destino',right_on='Unidades')
 df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -532,10 +537,11 @@ df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
 df_template_icms_entrada = df_template_icms_entrada.rename(columns={'Zerar entrada':'DEST-IN','Zerar saída':'DEST-OUT'})
 df_template_icms_entrada = df_template_icms_entrada.astype({'ORG-OUT':np.float64,'DEST-IN':np.float64,'Base de Cálculo':np.float64})
 df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['ORG-OUT'] + df_template_icms_entrada['DEST-IN']
-df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['Tax.Check'].replace(0.0,np.NaN)
+df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['Tax.Check'].replace(0.0,np.nan)
 df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['Tax.Check'].replace([1.0,2.0],0.0)
 df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['Tax.Check'].fillna(1.0)
 df_template_icms_entrada['Base de Cálculo'] = df_template_icms_entrada['Base de Cálculo']*df_template_icms_entrada['Tax.Check']
+df_template_icms_entrada['Base de Cálculo'] =df_template_icms_entrada['Base de Cálculo'].round(2)
 
 
 # Dados de Entrada

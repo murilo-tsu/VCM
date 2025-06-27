@@ -284,8 +284,7 @@ bom_alt = bom_alt.sort_values(by=['FG_CODE','FORMULA_CODE'], ascending = True)
 bom_alt = bom_alt[['PLANT_CODE','PRODUCTION_SITE','FG_CODE','FINISHED_GOOD']]
 bom_alt = bom_alt.drop_duplicates().reset_index().drop(columns='index')
 print('Obtendo lista técnica alternativa...')
-bom_alt = fx.left_outer_join(bom_alt, proxy_bom, left_on = 'FG_CODE', right_on = 'FG_CODE',
-                             )
+bom_alt = fx.left_outer_join(bom_alt, proxy_bom, left_on = 'FG_CODE', right_on = 'FG_CODE', struct=False)
 print('Eliminando valores vazios após a mesclagem...')
 bom_alt = bom_alt.dropna(subset='FORMULA_CODE').reset_index().drop(columns='index')
 bom_alt = bom_alt.sort_values(by=['FG_CODE','FORMULA_CODE'], ascending=True)
@@ -424,3 +423,6 @@ for i in tqdm(range(template_entrada.shape[0]), desc = 'Preenchimento do Templat
 template_entrada = template_entrada[['Unidade','Receita','Produto','ValorEntrada']]
 template_entrada.to_excel(os.path.join(cwd,output_path + 'WIZARD_RENDIMENTO_ENTRADA.xlsx'),
                           index = False, sheet_name = 'RENDIMENTO_ENTRADA_PROD')
+
+end_time = time.time()
+print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

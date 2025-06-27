@@ -139,9 +139,9 @@ tp_dado_arquivos = {
      'agrupamento': {'COD_ESPECIFICO':str, 'CODIGO_AGRUPADO':str},
      'up_correntes': {'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str},
      'lista_preco': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
+                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':np.float64, 'PRECO':np.float64},
      'unidades_rec_mov': {'UNIDADE':str, 'DESC_UNIDADE':str},
-     'template_rec_mov_sn': {'Origem':str, 'Destino':str, 'Corrente':str, 'Produto':str, 'Periodo':str, 'Valor':'float32'},
+     'template_rec_mov_sn': {'Origem':str, 'Destino':str, 'Corrente':str, 'Produto':str, 'Periodo':str, 'Valor':np.float32},
      'template_rec_mov_corrente' : {'Corrente':str, 'Produto':str},
 }
 
@@ -215,10 +215,10 @@ df_corrente_produto = df_corrente_produto.rename(columns = {'Produto':'PRD-VCM'}
 # EXECUÇÃO DE SCRIPTS
 # =======================================================================================================================
 
-df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
-df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
-df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
-df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
+# df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
+# df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
+# df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
+# df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
 df_valor_venda = df_valor_venda.merge(df_periodos[['PERIODO', 'NOME_PERIODO']], how = 'cross')
 df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data Inicio']) & (df_valor_venda['PERIODO'] <= df_valor_venda['Data fim'])
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
@@ -315,6 +315,7 @@ df_receita_movimentacao_periodos = df_receita_movimentacao_periodos.merge(
                                    how = "right")
 df_receita_movimentacao_periodos.fillna(0, inplace = True)
 
+df_receita_movimentacao_periodos['Valor'] = df_receita_movimentacao_periodos['Valor'].round(2)
 # 12/04/2024: Alterando enconding para utf-8 como alinhado com o time da OP2B
 df_receita_movimentacao_periodos.to_csv(os.path.join(cwd,output_path + "Receita Movimentacao Para VCM.csv"),
                                           sep = ';', encoding = 'utf-8-sig', index = False)
