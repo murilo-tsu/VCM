@@ -439,6 +439,9 @@ custos_mp = custos_mp.groupby(by=['NOME_PERIODO','PRD-VCM','Custo VCM (BRL/ton)'
 wizard_custo_suprimento_faixa = template_suprimento.drop(columns = ['Suprimento Mínimo', 'Suprimento Máximo'])
 wizard_custo_suprimento_faixa['ID-LEFT'] = wizard_custo_suprimento_faixa['Unidade'] + '-' + wizard_custo_suprimento_faixa['Periodo']
 
+# (04/07/2025) Retirando duplicatas por PRD-VCM, pois isso estava alterando a estrutura do template.
+agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset=['PRD-VCM'])
+
 demurrage = demurrage.merge(df_periodos, how = 'left', left_on = 'Periodo', right_on = 'PERIODO')
 demurrage = demurrage.merge(df_portos, how = 'left', left_on = 'Porto', right_on = 'PORTO')
 demurrage['ID-RIGHT'] = demurrage['NOME_PORTO_VCM'] + '-' + demurrage['NOME_PERIODO']

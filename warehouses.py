@@ -127,7 +127,7 @@ arquivos_primarios = {
      'cap_armz':'iptCapOperPlantas.xlsx',
      'cap_armz_sn': 'iptCapOperPlantas',
      'template_hand_armz': 'tmpCustosHandlingArmz.xlsx',
-     'template_var_armz': 'tmpCustosVaiaveisArmz.xlsx',
+     'template_var_armz': 'tmpCustosVariaveisArmz.xlsx',
      'template_cap_armz': 'tmpCapacidadeArmazenagem.xlsx',
 }
 

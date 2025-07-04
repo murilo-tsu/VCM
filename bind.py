@@ -181,7 +181,7 @@ rename_dataframes = {
     'df_revisao_importada':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Mês Entrega':'DT_REMESSA',
                    'BALANCE (TONS)':'BALANCE_TONS','Status':'STATUS','COMPANY':'COMPANY','RAW MATERIAL COD.':'CODIGO_MP'},
     'df_revisao_nacional':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Status':'STATUS','COMPANY':'COMPANY',
-                            'RAW MATERIAL COD.':'CODIGO_MP'}
+                            'RAW MATERIAL COD.':'CODIGO_MP'},
 }
 
 # =======================================================================================================================

@@ -10,6 +10,7 @@ print('║ CHANGELOG:                                                           
 print('║ - v1.0.0 (27/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (02/07/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> ICMS de Entrada                                                                                             ║')
@@ -204,13 +205,13 @@ df_corrente_produto = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
                                             dtype=tp_dado_arquivos['template_corrente_produto'])
 
 # Dataframe :: Template Impostos Entrada
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
 df_template_icms_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']), delimiter = ';',
                        encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_entrada'].keys()),
                        dtype=tp_dado_arquivos['template_imp_entrada'])
 
 # Dataframe :: Template Impostos Saida
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']))
 df_template_icms_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']), delimiter = ';',
                        encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
                        dtype=tp_dado_arquivos['template_imp_saida'])

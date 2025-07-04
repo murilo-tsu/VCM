@@ -201,7 +201,7 @@ df_pontos_venda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['uni
 df_pontos_venda = df_pontos_venda.rename(columns=rename_dataframes['df_pontos_venda'])
 
 # DataFrame :: Template Receita Movimentação
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['unidades_rec_mov']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['unidades_rec_mov']))
 df_template_rmov = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_rec_mov']), delimiter = ';', encoding = 'utf-8', 
                                usecols=list(tp_dado_arquivos['template_rec_mov_sn'].keys()), dtype=tp_dado_arquivos['template_rec_mov_sn'])
 
@@ -316,6 +316,8 @@ df_receita_movimentacao_periodos = df_receita_movimentacao_periodos.merge(
 df_receita_movimentacao_periodos.fillna(0, inplace = True)
 
 df_receita_movimentacao_periodos['Valor'] = df_receita_movimentacao_periodos['Valor'].round(2)
+# (03/07/2025) Zerando receita movimentação pois já usamos preço fixo para isso.
+df_receita_movimentacao_periodos['Valor'] = 0.0
 # 12/04/2024: Alterando enconding para utf-8 como alinhado com o time da OP2B
 df_receita_movimentacao_periodos.to_csv(os.path.join(cwd,output_path + "Receita Movimentacao Para VCM.csv"),
                                           sep = ';', encoding = 'utf-8-sig', index = False)

@@ -142,10 +142,10 @@ capacidade_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['c
                                   dtype = tp_dado_arquivos['capacidade_portos']).applymap(fx.padronizar)
 
 # DataFrame :: Demanda Irrestrita
-df_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_demanda_irrestrita']),
-                                        sheet_name = arquivos_primarios['arq_demanda_irrestrita_sn01'],
-                                        usecols = list(tp_dado_arquivos['arq_demanda_irrestrita'].keys()),
-                                        dtype = tp_dado_arquivos['arq_demanda_irrestrita'])
+df_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
+                                        sheet_name = arquivos_primarios['demanda_sn'],
+                                        usecols = list(tp_dado_arquivos['demanda'].keys()),
+                                        dtype = tp_dado_arquivos['demanda'])
 df_demanda['UNIDADE PRODUTORA'] = df_demanda['UNIDADE PRODUTORA'].replace(list(dicgen['DE']), list(dicgen['PARA']))
 
 # DataFrame :: Unidades de Expedição e Descarga
@@ -156,10 +156,10 @@ df_expedicao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidad
 #df_expedicao = df_expedicao['DEPOSITO','PLANTA','DESCRICAO_DEPOSITO','DESCRICAO_PLANTA','TIPO_UNIDADE','UP_MISTURADORA_VCM','UP_EMBALADORA_VCM']
 
 # DataFrame :: Estrutura Comercial
-df_comercial = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbDeparaMercadoConsumidor']),
-                         sheet_name= arquivos_primarios['arq_tbDeparaMercadoConsumidor'].split('.')[0],
-                       usecols=list(tp_dado_arquivos['arq_tbDeparaMercadoConsumidor'].keys()),
-                       dtype=tp_dado_arquivos['arq_tbDeparaMercadoConsumidor']).applymap(fx.padronizar)
+df_comercial = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['mercados']),
+                         sheet_name= arquivos_primarios['mercados'].split('.')[0],
+                       usecols=list(tp_dado_arquivos['mercados'].keys()),
+                       dtype=tp_dado_arquivos['mercados']).applymap(fx.padronizar)
 
 # DataFrame :: Unidades Terceiras
 df_gerencia = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_terceiras']),
@@ -200,9 +200,9 @@ companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
 df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
-fx.left_outer_join(df_revisao_importada, agrupamento_produtos, left_on='CODIGO_MP', right_on='COD_ESPECIFICO')
-fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO')
-fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, agrupamento_produtos, left_on='CODIGO_MP', right_on='COD_ESPECIFICO')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
 
 # 2.2. Nacional
 id_vars = ['PORTO','PLANTA','MP','STATUS','COMPANY','CODIGO_MP']
@@ -210,9 +210,9 @@ df_revisao_nacional = df_revisao_nacional.melt(id_vars = id_vars, var_name = 'PR
                                                value_name = 'BALANCE_TONS')
 df_revisao_nacional['COMPANY'] = df_revisao_nacional['COMPANY'].replace(companies)
 df_revisao_nacional['PORTO'] = df_revisao_nacional['PORTO'] + '-' + df_revisao_nacional['PLANTA']
-fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO')
-fx.left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO')
-fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
 
 # 3. DataFrame de Compras Completo :: Importado + Nacional
 cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO','PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
@@ -220,7 +220,7 @@ df_revisao_importada = df_revisao_importada[cols]
 df_revisao_nacional = df_revisao_nacional[cols]
 df_revisao = pd.concat([df_revisao_importada,df_revisao_nacional])
 df_revisao = df_revisao.reset_index().drop(columns='index')
-fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO')
+df_revisao = fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO')
 
 # Parte acima pega de supply, resto é de warehouses!
 # ==============================================================================
@@ -242,8 +242,8 @@ df_comercial['ID'] = df_comercial['GERENCIA'] + '-' + df_comercial['CONSULTORIA'
 rename_cols = {'CODIGO PRODUTO':'PRODUTO ID','QUANTIDADE':'VOLUME',
                'GERENCIA':'REGIONAL','CONSULTORIA':'SUPERVISAO', 'PERIODO':'PERIODO'}
 df_demanda = df_demanda.rename(columns = rename_cols)
-fx.left_outer_join(df_demanda,agrupamento_produtos,left_on='PRODUTO ID',right_on='COD_ESPECIFICO')
-fx.left_outer_join(df_demanda, cadastro_pf, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_demanda = fx.left_outer_join(df_demanda,agrupamento_produtos,left_on='PRODUTO ID',right_on='COD_ESPECIFICO')
+df_demanda = fx.left_outer_join(df_demanda, cadastro_pf, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
 df_demanda = df_demanda.drop_duplicates(subset=['PERIODO','DIRETORIA','REGIONAL','PRODUTO ID'])
 df_demanda = df_demanda.dropna(subset = ['CODIGO_AGRUPADO'])
 df_demanda = df_demanda.drop(columns = ['PRODUTO ID','COD_ESPECIFICO'])
@@ -324,7 +324,7 @@ for i in tqdm(range(template_limites.shape[0])):
     if template_limites['Ativo'][i] == True:
        template_limites['Nivel Detalhe'][i] = 'Detalhado por Produto'
     else:
-        template_limites['Nivel Detalhe'][i] = template_limites['Nivel Detalhe'][i]
+        template_limites['Nivel Detalhe'][i] = 'Sem Definição'
 
 template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutputDefinicaoLimites.csv'), sep = ';', encoding = 'utf-8-sig', index = False)
 print('Arquivo DefinicaoLimites.xlsx foi Atualizado com Sucesso!')
