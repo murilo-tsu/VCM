@@ -47,6 +47,11 @@ arquivos_primarios = {
      'template_corrente_produto': 'tmpCorrenteProduto.xlsx',
      'template_imp_entrada': 'tmpImpostosEntrada.csv',
      'template_imp_saida': 'tmpImpostosSaida.csv',
+     'template_rec_mov': 'tmpReceitaMovimentacao.csv',
+     'template_preco': 'tmpPrecoExato.xlsx',
+     'template_hand_armz': 'tmpCustosHandlingArmz.xlsx',
+     'template_var_armz': 'tmpCustosVariaveisArmz.xlsx',
+     'template_correntes': 'tmpCorrentes.csv',
      'unidades_por':'depUnidadesPortuarias.xlsx',
      'unidades_por_sn':'depUnidadesPortuarias',
      'mercados': 'depEstruturaComercial.xlsx',
@@ -80,6 +85,10 @@ arquivos_primarios = {
      'lista_preco_sn' : 'iptListaPreco',
      'unidades_icms': 'depAtvcBalancosFin.xlsx',
      'unidades_icms_sn': 'depAtvcBalancosFin',
+     'demurrage': 'iptDemurrage.xlsx',
+     'demurrage_sn': 'iptDemurrage',
+     'custos_armz': 'iptCustosArmazens.xlsx',
+     'custos_armz_sn': 'iptCustosArmazens',
 }
 
 tp_dado_arquivos = {
@@ -89,6 +98,7 @@ tp_dado_arquivos = {
      'cadastro_produtos_sn02': {'COD_ESPECIFICO':str,'DESCRICAO_ESPECIFICA':str,'CODIGO_AGRUPADO':str,
                                 'AGRUPAMENTO_MP':str},
      'portos': {'NOME_PORTO_VCM':str,'NOME_AZ_PORTO_VCM':str,'PORTO':str,'UNIDADE':str,'CORRENTE':str},
+     'portos_correntes':{'NOME_PORTO_VCM':str,'PORTO':str,'UNIDADE':str,'CORRENTE':str},
      'df_revisao_importada':{'Porto':str,'Fábrica':str,'Matéria-prima':str,'Mês Entrega':'datetime64[ns]',
                    'BALANCE (TONS)':np.float32,'Status':str,'COMPANY':str,'RAW MATERIAL COD.':str},
      'df_revisao_nacional':{'Porto':str,'Fábrica':str,'Matéria-prima':str,'Status':str,'COMPANY':str,
@@ -111,14 +121,16 @@ tp_dado_arquivos = {
      'template_saida': {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
      'template_entrada' : {'Unidade':str, 'Periodo':str, 'Limite':str, 'Ativo':str},
      'template_capacidade' : {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.int64, 'Volume Máximo':np.int64},
+     'template_rec_mov_sn': {'Origem':str, 'Destino':str, 'Corrente':str, 'Produto':str, 'Periodo':str, 'Valor':np.float32},
+     'template_preco': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Preço Exato':np.float64},
+     'template_hand_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Recebimento':np.float64, 'Expedição':np.float64},
+     'template_var_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Valor':np.float64, 'Custo Financeiro':np.float64, 'Custo Variável':np.float64},
      'mercados':{'DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'CENTROID':str,'UF':str,'VCM':str},
      'demanda':{'PERIODO':'datetime64[ns]','DIRETORIA':str,'GERENCIA':str,'CONSULTORIA':str,'UNIDADE PRODUTORA':str,
                'CULTURA':str,'GRUPO PRODUTO':str,'PRODUTO':str,'CODIGO PRODUTO':str,
                'RM_PREMIUM_DESCRIPTION_ENG':str,'QUANTIDADE':np.float32,'MP AGRUPADA':str},
-     
      'template_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
      'template_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
-
      'arq_RendSaida':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorSaida':np.float64},
      'arq_RendEntr':{'Unidade':str, 'Receita':str, 'Produto':str, 'ValorEntrada':np.float64},
      'arq_resultados_vcm':{'Corrente-VCM':str,'Produto-VCM':str,'Período-VCM':str, 'Quantidade':np.float64,
@@ -148,12 +160,15 @@ tp_dado_arquivos = {
      'template_imp_saida' : {'Unidade Destino':str, 'Unidade Origem':str, 'Corrente':str, 'Produto':str, 'Período':str,
                                'Base de Cálculo':'float64', 'ICMS-SUBST':'int64', 'ICMS-ST':'int64'},
      'custo_reposicao': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
-                         'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
+                         'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str, 
                          'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
-     'lista_preco': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':np.float64, 'PRECO':np.float64, 'LISTA':str},
-     'unidades_icms' : {'UNIDADE':str, 'DESC_UNIDADE':str, 'ZERAR_ENT':'int64', 'ZERAR_SAI':'int64', 'LOCALIZACAO':str},   
-
+     'lista_preco': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]',
+                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str, 'LISTA':str}, 
+     'unidades_icms' : {'UNIDADE':str, 'DESC_UNIDADE':str, 'ZERAR_ENT':'int64', 'ZERAR_SAI':'int64', 'LOCALIZACAO':str},
+     'demurrage': {'Porto':str, 'Terminal':str},
+     'ptax': {'Cotação (BRL/USD)': np.float64},
+     'custos_armz': {'Estado':str, 'Terceiro':str, 'Armazenagem (R$/ton)':np.float64, 'Handling (R$/ton)':np.float64},
+     'template_correntes':{'Unidade':str, 'Periodo':str, 'Produto':str, 'Limite':str, 'Ativo':str},
 }
 
 rename_dataframes = {
@@ -162,6 +177,7 @@ rename_dataframes = {
     'df_revisao_nacional':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Status':'STATUS','COMPANY':'COMPANY',
                             'RAW MATERIAL COD.':'CODIGO_MP'},
     'df_periodos':{'NUMERO':'Numero','NOME_PERIODO':'Nome VCM', 'PERIODO':'Nome'},
+    'df_periodos_price':{'NOME_PERIODO':'Periodo_VCM', 'PERIODO':'Nome'},
     'df_produtos':{'CODIGO_ITEM':'ITEM_CODE'},
     'df_correntes':{'ConjuntoCorrentes':'Corrente','Unidade-Origem':'Origem','Unidade-Destino':'Destino'},
     'df_valor_compra':{'ConjuntoCorrentes':'Cód. Mat. Prima','DT_INICIAL':'Data Inicial','DT_FINAL':'Data Final',
@@ -171,4 +187,5 @@ rename_dataframes = {
                    'DH_FINAL':'Data fim','MOEDA':'Moeda','LISTA':'Nome da Lista'},
      'unidades_icms' : {'UNIDADE':'Unidades', 'DESC_UNIDADE':'Desc. Empresa', 'ZERAR_ENT':'Zerar entrada', 'ZERAR_SAI':'Zerar saída', 'LOCALIZACAO':'Localização'},
      'df_periodos_tax':{'NUMERO':'Número','NOME_PERIODO':'Periodo_VCM'},
+     'df_pontos_venda':{'UNIDADE':'Origem','DESC_UNIDADE':'Origem EC'},
 }

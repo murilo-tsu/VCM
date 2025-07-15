@@ -4,12 +4,15 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  warehouses.py  <<                                              ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 23/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 24/04/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (24/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (08/07/2025): Trazendo o trecho de capacidade de armazenagem do script de limits.                     ║')
+print('║                                                                                                                ║')
+print('║ - v1.0.2 (08/07/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Custos de Armazenagem e Handling                                                                            ║')
@@ -63,110 +66,64 @@ logging.info("Iniciando execução do script.")
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
-
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-
-# PADRONIZAR STRINGS
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
-
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'unidades_armz': 'depGeolocalizacao.xlsx',
-     'unidades_armz_sn': 'depGeolocalizacao',
-     'custos_armz': 'iptCustosArmazens.xlsx',
-     'custos_armz_sn': 'iptCustosArmazens',
-     'cap_armz':'iptCapOperPlantas.xlsx',
-     'cap_armz_sn': 'iptCapOperPlantas',
-     'template_hand_armz': 'tmpCustosHandlingArmz.xlsx',
-     'template_var_armz': 'tmpCustosVariaveisArmz.xlsx',
-     'template_cap_armz': 'tmpCapacidadeArmazenagem.xlsx',
-}
-
-tp_dado_arquivos = {
-     'unidades_armz':{'Unidade':str,'Nome-Unidade':str, 'Abrev-P02':str, 'Estado':str},
-     'custos_armz': {'Estado':str, 'Terceiro':str, 'Armazenagem (R$/ton)':np.float64, 'Handling (R$/ton)':np.float64},
-     'cap_armz': {'Unidade':str, 'Nome Unidade':str, 'Quantidade':np.int64, 'Agrupador':str, 'Local':str},
-     'template_hand_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Recebimento':np.float64, 'Expedição':np.float64},
-     'template_var_armz': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Valor':np.float64, 'Custo Financeiro':np.float64, 'Custo Variável':np.float64},
-     'template_cap_armz': {'Unidade':str, 'Periodo':str, 'Volume Mínimo':np.float64, 'Volume Máximo':np.float64},
-}
-
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
+
 print('Carregando arquivos necessários... \n')
 #print('Tempo de execução esperado: por volta de 20s \n')
 
+# DataFrame ::  Dicionário Genérico
+dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
+                       sheet_name = arquivos_primarios['dicgen'].split('.')[0],
+                       usecols = list(tp_dado_arquivos['dicgen'].keys()),
+                       dtype = tp_dado_arquivos['dicgen'])
+
 # DataFrame :: DEPARA UNIDADES DE ARMAZENAGEM
-df_unidades_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_armz']),
-                         sheet_name= arquivos_primarios['unidades_armz_sn'],
-                         usecols=list(tp_dado_arquivos['unidades_armz'].keys()),
-                         dtype=tp_dado_arquivos['unidades_armz'])
+df_unidades_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['localizacao']),
+                         sheet_name= arquivos_primarios['localizacao_sn'],
+                         usecols=list(tp_dado_arquivos['localizacao'].keys()),
+                         dtype=tp_dado_arquivos['localizacao'])
 
 # DataFrame :: DADO PRIMARIO DE ARMAZENAGEM E HANDLING
 df_custos_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custos_armz']),
                          sheet_name= arquivos_primarios['custos_armz_sn'],
                          usecols=list(tp_dado_arquivos['custos_armz'].keys()),
-                         dtype=tp_dado_arquivos['custos_armz']).applymap(padronizar)
+                         dtype=tp_dado_arquivos['custos_armz']).applymap(fx.padronizar)
 
 # DataFrame :: DADO PRIMARIO DE CAPACIDADE DE ARMAZENAGEM INTERNA E EXTERNA
-df_cap_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_armz']),
-                         sheet_name= arquivos_primarios['cap_armz_sn'],
-                         usecols=list(tp_dado_arquivos['cap_armz'].keys()),
-                         dtype=tp_dado_arquivos['cap_armz']).applymap(padronizar)
+df_cap_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_prod']),
+                         sheet_name= arquivos_primarios['cap_prod_sn'],
+                         usecols=list(tp_dado_arquivos['cap_prod'].keys()),
+                         dtype=tp_dado_arquivos['cap_prod']).applymap(fx.padronizar)
+
+df_cap_arm_maxmin = df_cap_armz.copy()
+
+# DataFrame :: Unidades de Expedição e Descarga
+# DataFrame :: Depara Unidades Produtivas / Armazenagem / Expedição
+df_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
+                         sheet_name= arquivos_primarios['unidades_exp_sn'], 
+                       usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
+                       dtype=tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
+unid_arm = df_unidades[['DEPOSITO','PLANTA','UNIDADE_ARMAZENAGEM_VCM']]
+
+# DataFrame :: Horizonte (Período) de Otimização
+df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
+                         usecols=list(tp_dado_arquivos['periodos'].keys()),
+                         dtype=tp_dado_arquivos['periodos'])
+df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
 
 # DataFrame :: TEMPLATE DE CUSTO DE HANDLING PARA ARMAZÉNS EXTERNOS
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
 df_template_hand_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']),
                          usecols=list(tp_dado_arquivos['template_hand_armz'].keys()),
                          dtype=tp_dado_arquivos['template_hand_armz'])
@@ -174,7 +131,7 @@ df_template_hand_armz['Recebimento'] = 0.0
 df_template_hand_armz['Expedição'] = 0.0
 
 # DataFrame :: TEMPLATE DE CUSTOS VARIAVEIS PARA ARMAZÉNS EXTERNOS
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
 df_template_var_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_var_armz']),
                          usecols=list(tp_dado_arquivos['template_var_armz'].keys()),
                          dtype=tp_dado_arquivos['template_var_armz'])
@@ -182,21 +139,20 @@ df_template_var_armz['Valor'] = 0.0
 df_template_var_armz['Custo Financeiro'] = 0.0
 df_template_var_armz['Custo Variável'] = 0.0
 
-# DataFrame :: TEMPLATE DE CAPACIDADE DE ARMAZENAGEM
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']))
-df_template_cap_amrz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_cap_armz']),
-                         usecols=list(tp_dado_arquivos['template_cap_armz'].keys()),
-                         dtype=tp_dado_arquivos['template_cap_armz'])
-df_template_cap_amrz['Volume Mínimo'] = 0.0
-df_template_cap_amrz['Volume Máximo'] = 0.0
-
+# DataFrame :: Template Capacidade
+#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
+template_capacidade = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
+                       usecols=list(tp_dado_arquivos['template_capacidade'].keys()),
+                       dtype=tp_dado_arquivos['template_capacidade'])
+template_capacidade['Volume Mínimo'] = 0.0
+template_capacidade['Volume Máximo'] = 0.0
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
 # =======================================================================================================================
 
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║ Etapa 01/02: Preenchimento de Custos de Handling e Armazenagem                                                 ║')
+print('║ >> Etapa 01/02: Preenchimento de Custos de Handling e Armazenagem <<                                           ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 # ==========================================
 # >>>>>>>>> POR ESTADO TÁ ERRADO!! <<<<<<<<<
@@ -206,18 +162,18 @@ print('╚═══════════════════════�
 # Faria sentido puxar isso por unidade direto? 
 # (Sem passar pelo estado, mas ai ia ter que vir a unidade no dado de custo)
 
-left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
+df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
 # Substituindo o nome pela sigla.
 df_custos_armz['Estado'] = df_custos_armz['Estado'].replace(['BAHIA', 'ESPIRITO SANTO', 'GOIAS',
                     'PARANA', 'RIO GRANDE DO SUL', 'SANTA CATARINA', 'SAO PAULO', 'SERGIPE',],\
                     ['BA', 'ES', 'GO', 'PR', 'RS', 'SC', 'SP', 'SE'])
-left_outer_join(df_template_hand_armz,df_custos_armz,left_on='Estado', right_on='Estado')
+df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_custos_armz,left_on='Estado', right_on='Estado')
 df_template_hand_armz['Recebimento'] = df_template_hand_armz['Handling (R$/ton)'].fillna(0.0)
 df_template_hand_armz = df_template_hand_armz[['Unidade','Produto','Periodo','Recebimento','Expedição']]
 df_template_hand_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosHandlingArmz.xlsx'),index=False, sheet_name='HANDLING')
 
-left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
-left_outer_join(df_template_var_armz,df_custos_armz,left_on='Estado', right_on='Estado')
+df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
+df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_custos_armz,left_on='Estado', right_on='Estado')
 df_template_var_armz['Custo Variável'] = df_template_var_armz['Armazenagem (R$/ton)'].fillna(0.0)
 # (03/12/2024) Como pedido pelo Ricardo, caso o custo variável esteja zerado, preencher com um valor específico para cada unidade.
 df_template_var_armz['ID'] = df_template_var_armz['Unidade'].str[:3]
@@ -232,21 +188,54 @@ df_template_var_armz = df_template_var_armz[['Unidade','Produto','Periodo','Valo
 df_template_var_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosVariaveisArmz.xlsx'),index=False, sheet_name='CUSTOS_VARIAVEIS')
 print('\nFinalizado: Wizard de Custos de Armazenagem')
 
-print('\n')
+# (08/07/2025) Como conversado com o Matheus, adicionando a etapa abaixo 
+# nesse script, que antes estava em limits.
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║ Etapa 02/02: Preenchimento de Capacidades de Armazenagem                                                       ║')
+print('║  >> Etapa 02/02:  LIMITES DE CAPACIDADE MÍNIMO E MÁXIMO  <<                                                    ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ # Popula a capacidade de armazenagem interno (AIN) e externo (AEX)                                             ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
-df_cap_armz = df_cap_armz.loc[df_cap_armz['Agrupador']=='CAPACIDADE ARMAZENAGEM']
-df_cap_armz = df_cap_armz.merge(df_unidades_armz, how = 'left', left_on = 'Unidade', right_on='Abrev-P02')
-left_outer_join(df_template_cap_amrz,df_cap_armz,left_on='Unidade', right_on='Unidade_y')
-df_template_cap_amrz['Vol. Max. Aj.'] = df_template_cap_amrz.apply(lambda x: x['Quantidade'] if x['Quantidade'] > 0.0 else x['Volume Máximo'], axis = 1)
-cols = ['Unidade','Periodo','Vol. Max. Aj.']
-df_template_cap_amrz = df_template_cap_amrz[cols].rename(columns={'Vol. Max. Aj.':'Limite'})
-# (06/11/2024) Regra para preeencher com 100.000 os Volumes Máximos que forem iguais a 0
-df_template_cap_amrz['Limite'] = df_template_cap_amrz.apply(lambda x: 100000 if x['Limite'] == 0.0 and x['Unidade'][:3]!='APO' else x['Limite'], axis = 1)
-df_template_cap_amrz = df_template_cap_amrz.loc[df_template_cap_amrz['Limite']!=0.0]
-df_template_cap_amrz.to_excel(os.path.join(cwd,output_path+'tbOutCapacidadeArmazenagem.xlsx'),
-                                      index = False, sheet_name = 'VOLUME_AGRUPADO')
+
+# (08/07/2025) Como conversado com o Matheus, retirando a coluna de 
+# data de referência para armazenagem, para evitar problemas.
+df_cap_arm_maxmin = df_cap_arm_maxmin.loc[df_cap_arm_maxmin['Agrupador']=='CAPACIDADE ARMAZENAGEM'].copy()
+df_cap_arm_maxmin['Unidade'] = df_cap_arm_maxmin['Unidade'].replace(list(dicgen['DE']),list(dicgen['PARA']))
+unid_arm['Local'] = np.where(unid_arm['UNIDADE_ARMAZENAGEM_VCM'].str[:3] == 'AIN','INTERNO','EXTERNO')
+unid_arm = unid_arm.drop_duplicates(subset=['PLANTA'])
+df_cap_arm_maxmin = df_cap_arm_maxmin[['Unidade','Quantidade','Local']]
+# (08/07/2025) Desativando a ideia de média.
+# (25/06/2025) Fazendo uma média das quantidades por unidade, para tirar as duplicatas.
+# df_cap_arm_maxmin = df_cap_arm_maxmin.groupby(by=['Unidade','Local'])['Quantidade'].mean().round(2)
+# df_cap_arm_maxmin = df_cap_arm_maxmin.to_frame()
+# df_cap_arm_maxmin.reset_index(inplace = True)
+df_cap_arm_maxmin = fx.left_outer_join(df_cap_arm_maxmin, unid_arm, left_on=['Unidade','Local'], right_on = ['PLANTA','Local'],
+                   name_left='Capacidade de Armazenagem INTERNO e EXTERNO', name_right='Depara de Unidades')
+# (08/07/2025) Adicionando o período como cross, pq cada linha precisa de uma referência de período para o template!
+df_cap_arm_maxmin = df_cap_arm_maxmin.merge(df_periodos, how='cross')
+template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin, left_on=['Unidade','Periodo'], right_on=['UNIDADE_ARMAZENAGEM_VCM','Nome VCM'],                   name_left = 'Template Capacidade', name_right = 'Capacidade de Armazenagem INTERNO e EXTERNO')
+template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
+template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
+template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
+template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(0.0)
+template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
+
+# (08/07/2025) Como conversado com o Matheus, desativando o trecho abaixo,
+# pois estamos usando a lógica que estava em limits.
+# print('\n')
+# print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+# print('║ Etapa 02/02: Preenchimento de Capacidades de Armazenagem                                                       ║')
+# print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+# df_cap_armz = df_cap_armz.loc[df_cap_armz['Agrupador']=='CAPACIDADE ARMAZENAGEM']
+# df_cap_armz = df_cap_armz.merge(df_unidades_armz, how = 'left', left_on = 'Unidade', right_on='Abrev-P02')
+# left_outer_join(df_template_cap_amrz,df_cap_armz,left_on='Unidade', right_on='Unidade_y')
+# df_template_cap_amrz['Vol. Max. Aj.'] = df_template_cap_amrz.apply(lambda x: x['Quantidade'] if x['Quantidade'] > 0.0 else x['Volume Máximo'], axis = 1)
+# cols = ['Unidade','Periodo','Vol. Max. Aj.']
+# df_template_cap_amrz = df_template_cap_amrz[cols].rename(columns={'Vol. Max. Aj.':'Limite'})
+# # (06/11/2024) Regra para preeencher com 100.000 os Volumes Máximos que forem iguais a 0
+# df_template_cap_amrz['Limite'] = df_template_cap_amrz.apply(lambda x: 100000 if x['Limite'] == 0.0 and x['Unidade'][:3]!='APO' else x['Limite'], axis = 1)
+# df_template_cap_amrz = df_template_cap_amrz.loc[df_template_cap_amrz['Limite']!=0.0]
+# df_template_cap_amrz.to_excel(os.path.join(cwd,output_path+'tbOutCapacidadeArmazenagem.xlsx'),
+#                                       index = False, sheet_name = 'VOLUME_AGRUPADO')
 print('\nFinalizado: Wizard de Capacidade de Armazenagem')
 end_time = time.time()
 print(f'Tempo de Execução: {round(end_time - start_time,2)} segundos')

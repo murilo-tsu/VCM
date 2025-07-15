@@ -4,12 +4,13 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  inventories.py  <<                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 14/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 20/03/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 02/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (20/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (02/07/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Estoques Contábeis                                                                                          ║')
@@ -60,83 +61,14 @@ logging.info("Iniciando execução do script.")
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-
-# PADRONIZAR STRINGS
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
-        
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'cadastro_produtos': 'depSKU.xlsx',
-     'cadastro_produtos_sn': 'CADASTRO',
-     'agrupamento_sn':'AGRUPAMENTO',
-     'estoques_iniciais': 'iptEstoque.xlsx',
-     'estoques_iniciais_sn': 'iptEstoque',
-     'unidades_armz': 'depUnidadesProdutivas.xlsx',
-     'unidades_armz_sn': 'depUnidadesProdutivas',
-     'template_estoques': 'tmpEstoque.xlsx',
-     'template_estoques_sn': 'VOLUME_INICIAL',
-     'dicgen': 'depDicionarioGenerico.xlsx',
-}
-
-tp_dado_arquivos = {
-     'cadastro_produtos': {'PRD-VCM':str,'CODIGO_ITEM':str,'DESCRICAO':str, 'TIPO_MATERIAL':str, 'CATEGORIA':str},
-     'agrupamento': {'COD_ESPECIFICO':str, 'DESCRICAO_ESPECIFICA':str, 'CODIGO_AGRUPADO':str, 'AGRUPAMENTO_MP':str},
-     'estoques_iniciais': {'PRODUCTION_UNIT':str, 'INVOICING_UNIT':str ,'ITEM_CODE':str, 'SUBINVENTORY':str,
-                           'LOCATOR_DESCRIPTION':str, 'ACTUAL_STOCK':str, 'UOM':str},
-     'unidades_armz': {'PLANTA':str, 'DESCRICAO_DEPOSITO':str, 'UNIDADE_ARMAZENAGEM_VCM':str}, 
-     'template_estoques': {'Unidade':str, 'Produto':str, 'Valor':'float64'},
-     'dicgen':{'DE':str,'PARA':str},
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES 
@@ -145,10 +77,10 @@ tp_dado_arquivos = {
 # DataFRame :: Dicionário Generico
 dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
                        usecols=list(tp_dado_arquivos['dicgen'].keys()),
-                       dtype=tp_dado_arquivos['dicgen']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['dicgen']).applymap(fx.padronizar)
 
 # Dataframe :: Template Estoques
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_estoques']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_estoques']))
 wizard_volumes_iniciais = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_estoques']),
                                         sheet_name = arquivos_primarios['template_estoques_sn'],
                                         usecols = list(tp_dado_arquivos['template_estoques'].keys()),
@@ -158,7 +90,7 @@ wizard_volumes_iniciais = pd.read_excel(os.path.join(cwd, path + arquivos_primar
 estoques_iniciais = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['estoques_iniciais']),
                                   sheet_name = arquivos_primarios['estoques_iniciais_sn'],
                                   usecols = list(tp_dado_arquivos['estoques_iniciais'].keys()),
-                                  dtype = tp_dado_arquivos['estoques_iniciais']).applymap(padronizar)
+                                  dtype = tp_dado_arquivos['estoques_iniciais']).applymap(fx.padronizar)
 estoques_iniciais['ACTUAL_STOCK'] = estoques_iniciais['ACTUAL_STOCK'].replace('', pd.NA)
 estoques_iniciais['ACTUAL_STOCK'] = estoques_iniciais['ACTUAL_STOCK'].fillna('0')
 estoques_iniciais['ACTUAL_STOCK'] = estoques_iniciais['ACTUAL_STOCK'].astype(float)
@@ -167,26 +99,27 @@ estoques_iniciais['INVOICING_UNIT'] = estoques_iniciais['INVOICING_UNIT'].replac
 
 
 # Dataframe :: Unidade Armazenagem
-depara_armazens = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_armz']),
-                                  sheet_name = arquivos_primarios['unidades_armz_sn'],
-                                  usecols = list(tp_dado_arquivos['unidades_armz'].keys()),
-                                  dtype = tp_dado_arquivos['unidades_armz']).applymap(padronizar)
+depara_armazens = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
+                                  sheet_name = arquivos_primarios['unidades_exp_sn'],
+                                  usecols = list(tp_dado_arquivos['unidades_exp'].keys()),
+                                  dtype = tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 
 # Dataframe :: Cadastro Produtos
 mp_cadastrada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['cadastro_produtos_sn'],
-                                  usecols = list(tp_dado_arquivos['cadastro_produtos'].keys()),
-                                  dtype = tp_dado_arquivos['cadastro_produtos'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 
 pf_pvo_cadastrada = mp_cadastrada.copy()
 
 # Dataframe :: Agrupamento
 mp_estoques = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['agrupamento_sn'],
-                                  usecols = list(tp_dado_arquivos['agrupamento'].keys()),
-                                  dtype = tp_dado_arquivos['agrupamento'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
 
 mp_estoques = mp_estoques[['COD_ESPECIFICO','CODIGO_AGRUPADO']]
+
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
@@ -240,9 +173,9 @@ estoques_iniciais_pvo = estoques_iniciais_pvo.merge(pf_pvo_cadastrada, how = 'le
 # ==============================================================================================================
 
 # Matérias-primas
-estoques_iniciais = estoques_iniciais.merge(mp_estoques, how = 'left', left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO')
+estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_estoques, left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO')
 estoques_iniciais = estoques_iniciais.drop(columns = ['ITEM_CODE','COD_ESPECIFICO']).rename(columns = {'CODIGO_AGRUPADO':'ITEM_CODE'})
-estoques_iniciais = estoques_iniciais.merge(mp_cadastrada, how = 'left', right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE')
+estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_cadastrada, right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE')
 
 # Utilizar o pd.concat para agrupar os relatórios de PVO e de MPs
 estoques_iniciais_agrupados = pd.concat([estoques_iniciais,estoques_iniciais_pvo])
@@ -254,7 +187,7 @@ estoques_iniciais_agrupados = estoques_iniciais_agrupados.reset_index()
 estoques_iniciais_agrupados['ID'] = estoques_iniciais_agrupados['UNIDADE_ARMAZENAGEM_VCM'] + estoques_iniciais_agrupados['PRD-VCM']
 wizard_volumes_iniciais['ID'] = wizard_volumes_iniciais['Unidade'] + wizard_volumes_iniciais['Produto']
 
-wizard_volumes_iniciais = wizard_volumes_iniciais.merge(estoques_iniciais_agrupados, how = 'left', right_on = 'ID', left_on = 'ID')
+wizard_volumes_iniciais = fx.left_outer_join(wizard_volumes_iniciais, estoques_iniciais_agrupados, right_on = 'ID', left_on = 'ID')
 wizard_volumes_iniciais['Valor'] = 0.0
 for i in range(wizard_volumes_iniciais.shape[0]):
     if wizard_volumes_iniciais['ACTUAL_STOCK'][i] > 0.0:

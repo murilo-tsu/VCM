@@ -4,12 +4,13 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  fixed_price.py  <<                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 11/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 23/04/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 15/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (23/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (15/07/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Precificação                                                                                                ║')
@@ -63,100 +64,15 @@ logging.info("Iniciando execução do script.")
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
-
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-
-# PADRONIZAR STRINGS
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
 
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'periodos': 'iptPeriodos.xlsx',
-     'periodos_sn': 'Períodos de Otimização',
-     'localizacao': 'depGeolocalizacao.xlsx',
-     'localizacao_sn': 'depGeolocalizacao',
-     'cadastro_produtos': 'depSKU.xlsx',
-     'cadastro_produtos_sn': 'CADASTRO',     
-     'agrupamento_sn':'AGRUPAMENTO',
-     'up_correntes':'iptUpdateCorrentes.xlsx',
-     'up_correntes_sn': 'iptUpdateCorrentes',
-     'lista_preco' : 'iptListaPreco.xlsx',
-     'lista_preco_sn' : 'iptListaPreco',
-     'unidades_rec_mov' : 'depAtvcBalancosFin.xlsx',
-     'unidades_rec_mov_sn' : 'depAtvcBalancosFin',
-     'fretes': 'iptTabelaFretes.xlsx',
-     'fretes_sn': 'iptTabelaFretes',
-     'template_preco': 'tmpPrecoExato.xlsx',
-}
-
-tp_dado_arquivos = {
-     'periodos':{'NUMERO':np.int64,'PERIODO':'datetime64[ns]', 'NOME_PERIODO':str},
-     'localizacao': {'Unidade':str, 'Estado':str, 'Município':str},
-     'cadastro_produtos': {'PRD-VCM':str,'CODIGO_ITEM':str,'DESCRICAO':str, 'TIPO_MATERIAL':str, 'CATEGORIA':str},
-     'agrupamento': {'COD_ESPECIFICO':str, 'CODIGO_AGRUPADO':str},
-     'up_correntes': {'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
-     'lista_preco': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 'LISTA':str, 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':str, 'PRECO':str},
-     'unidades_rec_mov': {'UNIDADE':str, 'DESC_UNIDADE':str},
-     'fretes': {'data_inicio':'datetime64[ns]','rota':str,'Valor':'float64', },
-     'template_preco': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Preço Exato':np.float64},
-}
-
-rename_dataframes = {
-    'df_periodos':{'NOME_PERIODO':'Periodo_VCM', 'PERIODO':'Nome'},
-    'df_pontos_venda':{'UNIDADE':'Origem','DESC_UNIDADE':'Origem EC'},
-    'df_valor_venda' :{'ITEM':'Código do Produto', 'PRECO':'Preço', 'PTAX':'Ptax USD', 'DH_INICIAL':'Data Inicio',
-                       'DH_FINAL':'Data fim', 'MOEDA':'Moeda', 'LISTA':'Nome da Lista'},
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 
 # =======================================================================================================================
@@ -169,46 +85,46 @@ print('Carregando arquivos... \n')
 df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
-df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
+df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos_price'])
 
 # DataFrame :: Geolocalizacao
 df_localizacao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['localizacao']),
                          sheet_name= arquivos_primarios['localizacao_sn'], 
                        usecols=list(tp_dado_arquivos['localizacao'].keys()),
-                       dtype=tp_dado_arquivos['localizacao']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['localizacao']).applymap(fx.padronizar)
 
 # Dataframe :: Cadastro Produtos
 df_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['cadastro_produtos_sn'],
-                                  usecols = list(tp_dado_arquivos['cadastro_produtos'].keys()),
-                                  dtype = tp_dado_arquivos['cadastro_produtos'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 
 # Dataframe :: Agrupamento
 agrupamento_pf = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['agrupamento_sn'],
-                                  usecols = list(tp_dado_arquivos['agrupamento'].keys()),
-                                  dtype = tp_dado_arquivos['agrupamento'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
 
 # DataFrame :: Update de Correntes
-df_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['up_correntes']),
-                         sheet_name= arquivos_primarios['up_correntes_sn'], 
-                       usecols=list(tp_dado_arquivos['up_correntes'].keys()),
-                       dtype=tp_dado_arquivos['up_correntes']).rename(columns = {'ConjuntoCorrentes':'Corrente',\
-                                            'Unidade-Origem':'Origem', 'Unidade-Destino':'Destino'}).applymap(padronizar)
+df_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['correntes']),
+                         sheet_name= arquivos_primarios['correntes_sn'], 
+                       usecols=list(tp_dado_arquivos['correntes'].keys()),
+                       dtype=tp_dado_arquivos['correntes']).rename(columns = {'ConjuntoCorrentes':'Corrente',\
+                                            'Unidade-Origem':'Origem', 'Unidade-Destino':'Destino'}).applymap(fx.padronizar)
 unidades_interesse = df_correntes.copy()
 
 # DataFrame :: Lista Preço
 df_valor_venda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['lista_preco']),
                          sheet_name= arquivos_primarios['lista_preco_sn'], 
                        usecols=list(tp_dado_arquivos['lista_preco'].keys()),
-                       dtype=tp_dado_arquivos['lista_preco']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['lista_preco']).applymap(fx.padronizar)
 df_valor_venda = df_valor_venda.rename(columns=rename_dataframes['df_valor_venda'])
 
 # DataFrame :: Unidades Receita Movimentação
-df_pontos_venda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_rec_mov']),
-                         sheet_name= arquivos_primarios['unidades_rec_mov_sn'], 
-                       usecols=list(tp_dado_arquivos['unidades_rec_mov'].keys()),
-                       dtype=tp_dado_arquivos['unidades_rec_mov']).applymap(padronizar)
+df_pontos_venda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_icms']),
+                         sheet_name= arquivos_primarios['unidades_icms_sn'], 
+                       usecols=list(tp_dado_arquivos['unidades_icms'].keys()),
+                       dtype=tp_dado_arquivos['unidades_icms']).applymap(fx.padronizar)
 df_pontos_venda = df_pontos_venda.rename(columns=rename_dataframes['df_pontos_venda'])
 
 # DataFrame :: Dados de Frete
@@ -217,7 +133,7 @@ df_fretes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['fretes'])
                        dtype=tp_dado_arquivos['fretes'])
 
 # DataFrame :: Template Preço Exato
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_preco']))
+# fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_preco']))
 df_template_rmov = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_preco']),
                        usecols=list(tp_dado_arquivos['template_preco'].keys()),
                        dtype=tp_dado_arquivos['template_preco'])
@@ -233,12 +149,14 @@ df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace("'","")
 df_valor_venda["Preço"] = df_valor_venda["Preço"].str.replace(",",".")
 df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
 df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
+
 df_valor_venda = df_valor_venda.merge(df_periodos[['Nome','Periodo_VCM']], how = 'cross')
 df_valor_venda['Validar'] = (df_valor_venda['Nome'] >= df_valor_venda['Data Inicio']) & (df_valor_venda['Nome'] <= df_valor_venda['Data fim'])
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
 agrupamento_pf = agrupamento_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
-df_valor_venda = df_valor_venda.merge(agrupamento_pf, how = 'left', left_on = 'Código do Produto', right_on = 'COD_ESPECIFICO')
+df_valor_venda = fx.left_outer_join(df_valor_venda, agrupamento_pf, left_on = 'Código do Produto', right_on = 'COD_ESPECIFICO',
+name_left = 'Lista Preço', name_right = 'Agrupamento de Produtos')
 df_valor_venda.rename(columns = {"CODIGO_AGRUPADO": "CODIGO_ITEM"}, inplace=True)
 
 df_valor_venda = df_valor_venda.astype({'Ptax USD':np.float32,'Preço':np.float32})
@@ -250,10 +168,10 @@ df_valor_venda["Preço Venda"] = np.where(df_valor_venda["Moeda"] == "BRL", df_v
 
 # (22/01/2025) Juntando o UpdateCorrentes com o UnidadesRecMov para descobrir o nome da lista,
 # a partir disso, juntar o UnidadesRecMov com o novo template. :)
-df_pontos_venda = df_pontos_venda.merge(df_correntes, on = "Origem", how = "left")
+df_pontos_venda = fx.left_outer_join(df_pontos_venda, df_correntes, left_on="Origem", right_on="Origem", struct=False)
 # 14/05/2024 - Incluindo uma etapa de exclusão de NaN
 df_pontos_venda = df_pontos_venda.dropna()
-df_corrente_mc = df_corrente_mc.merge(df_pontos_venda, how='left', left_on='Unidade', right_on='Destino')
+df_corrente_mc = fx.left_outer_join(df_corrente_mc, df_pontos_venda, left_on='Unidade', right_on='Destino', struct=False)
 df_corrente_mc = df_corrente_mc.dropna()
 df_corrente_mc['Desc. Empresa'] = df_corrente_mc['Origem EC']
 df_corrente_mc = df_corrente_mc.drop(columns={'Destino','Corrente','Origem','Origem EC'})
@@ -270,14 +188,16 @@ valor_venda_medio.rename(columns = {"Preço Venda": "Preço Venda Médio"}, inpl
 
 # Trazendo os preços praticados por cada empresa para cada produtos
 # df_receita_movimentacao = df_pontos_venda.merge(df_valor_venda, on = ["Desc. Empresa", "PRD-VCM","Periodo_VCM"], how = "left")
-df_receita_movimentacao = df_corrente_mc.merge(df_valor_venda, on = ["Desc. Empresa", "PRD-VCM","Periodo_VCM"], how = "left")
+df_receita_movimentacao = fx.left_outer_join(df_corrente_mc, df_valor_venda, left_on = ["Desc. Empresa", "PRD-VCM","Periodo_VCM"], right_on=["Desc. Empresa", "PRD-VCM","Periodo_VCM"])
 df_receita_movimentacao["Preço Venda"] = (df_receita_movimentacao["Preço Venda"].fillna(0))
+
 # Trazendo preços médios para quando não houver preços específicos
-df_receita_movimentacao = df_receita_movimentacao.merge(valor_venda_medio, on = ["PRD-VCM"], how = "left")
+df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao, valor_venda_medio, left_on = ["PRD-VCM"], right_on='PRD-VCM')
 df_receita_movimentacao["Preço Venda Médio"] = (df_receita_movimentacao["Preço Venda Médio"].fillna(0))
+
 # Classificação de produtos para eliminar o que não é produto final
-df_receita_movimentacao = df_receita_movimentacao.merge(df_produtos[["PRD-VCM", "TIPO_MATERIAL"]],
-                                                        on = "PRD-VCM", how = "left")
+df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao, df_produtos[["PRD-VCM", "TIPO_MATERIAL"]],
+                                                        left_on = "PRD-VCM", right_on='PRD-VCM')
 
 
 # O que não é produto final fica com preço zerado
@@ -331,19 +251,18 @@ unidades_interesse = unidades_interesse.loc[(unidades_interesse.Filtro == 'MC'),
 depara_localizacao = df_localizacao[['Unidade','Estado','Município']]
 depara_localizacao['ID Origem-Destino'] = depara_localizacao['Município'] + '-' + depara_localizacao['Estado']
 
-
 id_periodos = df_periodos['Periodo_VCM'].to_frame()
 df_periodos = df_periodos.astype({'NUMERO':str})
 periodos_fretes = df_periodos.copy()
 #periodos_fretes['Data_Fim'] = periodos_fretes['Nome'] + MonthEnd(0)
 periodos_fretes['Data_Inicio'] = periodos_fretes['Nome'] + MonthBegin(0)
-df_fretes = df_fretes.merge(periodos_fretes, how = 'left', left_on = 'data_inicio', right_on = 'Data_Inicio')
+df_fretes = fx.left_outer_join(df_fretes, periodos_fretes, left_on = 'data_inicio', right_on = 'Data_Inicio')
 df_fretes = df_fretes.dropna()
 
-left_outer_join(unidades_interesse,depara_localizacao,left_on='Origem', right_on='Unidade')
+unidades_interesse = fx.left_outer_join(unidades_interesse,depara_localizacao,left_on='Origem', right_on='Unidade')
 unidades_interesse = unidades_interesse[['Corrente','Origem','Destino','Unidade','ID Origem-Destino']]
 unidades_interesse = unidades_interesse.rename(columns={'ID Origem-Destino':'Cidade (Origem)'})
-left_outer_join(unidades_interesse,depara_localizacao,left_on='Destino', right_on='Unidade')
+unidades_interesse = fx.left_outer_join(unidades_interesse,depara_localizacao,left_on='Destino', right_on='Unidade')
 unidades_interesse = unidades_interesse[['Corrente','Origem','Destino','Cidade (Origem)','ID Origem-Destino']]
 unidades_interesse = unidades_interesse.rename(columns = {'ID Origem-Destino':'Cidade (Destino)'})
 
@@ -354,7 +273,7 @@ df_fretes['Destino'] = df_fretes['rota'].str.split(' x ').str[1]
 df_fretes['ID-RIGHT'] = df_fretes['Origem'] + '-' + df_fretes['Destino'] + '-' + df_fretes['Periodo_VCM']
 df_fretes = df_fretes.groupby(by = ['Periodo_VCM','Data_Inicio','rota','Origem','Destino','ID-RIGHT'])['Valor'].mean()
 df_fretes = df_fretes.reset_index()
-unidades_interesse = unidades_interesse.merge(df_fretes, how = 'left', left_on = 'ID-LEFT', right_on = 'ID-RIGHT')
+unidades_interesse = fx.left_outer_join(unidades_interesse, df_fretes, left_on = 'ID-LEFT', right_on = 'ID-RIGHT')
 unidades_interesse = unidades_interesse.drop(columns={'Corrente','Origem_x','Cidade (Origem)','Cidade (Destino)','NUMERO',
                                             'ID-LEFT','rota','Data_Inicio_x','Origem_y','Destino_y','ID-RIGHT','Nome','Periodo_VCM_y','Data_Inicio_y'})
 unidades_interesse = unidades_interesse.rename(columns={'Periodo_VCM_x':'PeriodoFrete','Destino_x':'Unidade-Destino'})
@@ -368,12 +287,11 @@ unidades_interesse = unidades_interesse.groupby(['Unidade-Destino','PeriodoFrete
 unidades_interesse['Valor'] = unidades_interesse['Valor'].fillna(0.0)
 media = unidades_interesse.groupby(['Unidade-Destino'])['Valor'].mean().reset_index()
 media = media.rename(columns={'Unidade-Destino':'UnidadeMedia','Valor':'ValorMedia'})
-
-unidades_interesse = unidades_interesse.merge(media, how='left', left_on='Unidade-Destino', right_on='UnidadeMedia')
+unidades_interesse = fx.left_outer_join(unidades_interesse, media, left_on='Unidade-Destino', right_on='UnidadeMedia')
 unidades_interesse['ValorMedia'] = unidades_interesse['ValorMedia'].fillna(0.0)
 unidades_interesse['Valor'] = unidades_interesse.apply(lambda x: x['ValorMedia'] if x['Valor']==0.0 and x['ValorMedia']!=0.0 else x['Valor'], axis=1)
 unidades_interesse = unidades_interesse.drop(columns={'UnidadeMedia','ValorMedia'})
-df_receita_movimentacao_periodos = df_receita_movimentacao_periodos.merge(unidades_interesse, how='left',
+df_receita_movimentacao_periodos = fx.left_outer_join(df_receita_movimentacao_periodos, unidades_interesse,
                                         left_on=['Unidade', 'Periodo'], right_on=['Unidade-Destino', 'PeriodoFrete'])
 df_receita_movimentacao_periodos['Preço Exato'] = df_receita_movimentacao_periodos.apply(lambda x: x['Preço Exato'] + x['Valor']
                                                                                     if x['Preço Exato']!=0.0 else x['Preço Exato'], axis=1)
@@ -381,7 +299,7 @@ df_receita_movimentacao_periodos = df_receita_movimentacao_periodos.round({'Pre�
 
 # Comparação com o template gerado pelo VCM
 df_template_rmov.drop(labels="Preço Exato", axis=1, inplace=True)
-left_outer_join(df_template_rmov,df_receita_movimentacao_periodos,left_on=["Unidade", "Produto", "Periodo"],
+df_template_rmov = fx.left_outer_join(df_template_rmov,df_receita_movimentacao_periodos,left_on=["Unidade", "Produto", "Periodo"],
                 right_on=["Unidade", "Produto", "Periodo"])
 df_template_rmov.fillna(0.0, inplace = True)
 df_template_rmov = df_template_rmov.drop(columns={'Unidade-Destino', 'PeriodoFrete', 'Valor'})

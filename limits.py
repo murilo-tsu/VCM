@@ -17,7 +17,7 @@ print('╠═══════════════════════�
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Limites de Descarga                                                                                         ║')
 print('║ >> Limites de Produção                                                                                         ║')
-print('║ >> Limites de Portos                                                                                           ║')
+# print('║ >> Limites de Portos                                                                                           ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 print('\n')
 
@@ -120,7 +120,6 @@ df_cap_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['capac
                          sheet_name= arquivos_primarios['capacidade_portos_sn'],
                        dtype=tp_dado_arquivos['capacidade_portos']).applymap(fx.padronizar)
 
-
 # DataFrame :: Template Saída
 #fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_saida']))
 template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_saida']),
@@ -198,6 +197,7 @@ df_cap_arm['Unidade'] = df_cap_arm['Unidade'].replace(list(dicgen['DE']), list(d
 df_cap_arm = df_cap_arm.merge(df_periodos, how = 'cross')
 df_cap_arm['DEPOSITO'] = '1001'
 df_cap_arm['Ativo'] = True
+# (08/07/2025) Desativar a média!! :)
 # (25/06/2025) Fazendo uma média das quantidades por unidade, para tirar as duplicatas.
 df_cap_arm = df_cap_arm.groupby(by=['Unidade','DEPOSITO','Nome VCM','Ativo'])['Quantidade'].mean().round(2)
 df_cap_arm = df_cap_arm.to_frame()
@@ -214,29 +214,36 @@ template_entrada['Ativo'] = template_entrada['Ativo'].fillna('False')
 template_entrada['Limite'] = template_entrada['Limite'].fillna(0.0)
 template_entrada.to_csv(os.path.join(cwd,output_path+'tmpOutEntrada.csv'), index=False, sep=';', encoding='utf-8-sig')
 
-print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
-print('║  >>  LIMITES DE CAPACIDADE MÍNIMO E MÁXIMO  <<                                                                 ║')
-print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
-print('║ # Popula a capacidade de armazenagem interno (AIN) e externo (AEX)                                             ║')
-print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+# (08/07/2025) Como conversado com o Matheus, estou desativando a etapa 
+# abaixo no script de limites e levando-a para warehouses.
+# print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+# print('║  >>  LIMITES DE CAPACIDADE MÍNIMO E MÁXIMO  <<                                                                 ║')
+# print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+# print('║ # Popula a capacidade de armazenagem interno (AIN) e externo (AEX)                                             ║')
+# print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 
-df_cap_arm_maxmin = df_cap_arm_maxmin.loc[df_cap_arm_maxmin['Agrupador']=='CAPACIDADE ARMAZENAGEM'].copy()
-df_cap_arm_maxmin['Unidade'] = df_cap_arm_maxmin['Unidade'].replace(list(dicgen['DE']),list(dicgen['PARA']))
-unid_arm['Local'] = np.where(unid_arm['UNIDADE_ARMAZENAGEM_VCM'].str[:3] == 'AIN','INTERNO','EXTERNO')
-# (25/06/2025) Fazendo uma média das quantidades por unidade, para tirar as duplicatas.
-df_cap_arm_maxmin = df_cap_arm_maxmin.groupby(by=['Unidade','Local','Dt/Ref'])['Quantidade'].mean().round(2)
-df_cap_arm_maxmin = df_cap_arm_maxmin.to_frame()
-df_cap_arm_maxmin.reset_index(inplace = True)
-df_cap_arm_maxmin = fx.left_outer_join(df_cap_arm_maxmin, unid_arm, left_on=['Unidade','Local'], right_on = ['PLANTA','Local'],
-                   name_left='Capacidade de Armazenagem INTERNO e EXTERNO', name_right='Depara de Unidades')
-df_cap_arm_maxmin = fx.left_outer_join(df_cap_arm_maxmin, df_periodos, left_on = 'Dt/Ref', right_on = 'Nome',
-                   name_left = 'Capacidade de Armazenagem INTERNO e EXTERNO', name_right = 'Períodos')
-template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin, left_on=['Unidade','Periodo'], right_on=['UNIDADE_ARMAZENAGEM_VCM','Nome VCM'],
-                   name_left = 'Template Capacidade', name_right = 'Capacidade de Armazenagem INTERNO e EXTERNO')
-template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
-template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
-template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
-template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(0.0)
-template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
+# # (08/07/2025) Como conversado com o Matheus, retirando a coluna de 
+# # data de referência para armazenagem, para evitar problemas.
+# df_cap_arm_maxmin = df_cap_arm_maxmin.loc[df_cap_arm_maxmin['Agrupador']=='CAPACIDADE ARMAZENAGEM'].copy()
+# df_cap_arm_maxmin['Unidade'] = df_cap_arm_maxmin['Unidade'].replace(list(dicgen['DE']),list(dicgen['PARA']))
+# unid_arm['Local'] = np.where(unid_arm['UNIDADE_ARMAZENAGEM_VCM'].str[:3] == 'AIN','INTERNO','EXTERNO')
+# unid_arm = unid_arm.drop_duplicates(subset=['PLANTA'])
+# df_cap_arm_maxmin = df_cap_arm_maxmin[['Unidade','Quantidade','Local']]
+# # (08/07/2025) Desativando a ideia de média.
+# # (25/06/2025) Fazendo uma média das quantidades por unidade, para tirar as duplicatas.
+# # df_cap_arm_maxmin = df_cap_arm_maxmin.groupby(by=['Unidade','Local'])['Quantidade'].mean().round(2)
+# # df_cap_arm_maxmin = df_cap_arm_maxmin.to_frame()
+# # df_cap_arm_maxmin.reset_index(inplace = True)
+# df_cap_arm_maxmin = fx.left_outer_join(df_cap_arm_maxmin, unid_arm, left_on=['Unidade','Local'], right_on = ['PLANTA','Local'],
+#                    name_left='Capacidade de Armazenagem INTERNO e EXTERNO', name_right='Depara de Unidades')
+# # (08/07/2025) Adicionando o período como cross, pq cada linha precisa de uma referência de período para o template!
+# df_cap_arm_maxmin = df_cap_arm_maxmin.merge(df_periodos, how='cross')
+# template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin, left_on=['Unidade','Periodo'], right_on=['UNIDADE_ARMAZENAGEM_VCM','Nome VCM'],
+#                    name_left = 'Template Capacidade', name_right = 'Capacidade de Armazenagem INTERNO e EXTERNO')
+# template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
+# template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
+# template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
+# template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(0.0)
+# template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 end_time = time.time()
 print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

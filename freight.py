@@ -4,12 +4,13 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                               >>  freight.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 10/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 13/03/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 26/06/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (13/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (26/06/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Tabela de Fretes Rodoviários Outbound                                                                       ║')
@@ -59,103 +60,29 @@ logging.basicConfig(
 
 logging.info("Iniciando execução do script.")
 
+
 # =======================================================================================================================
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
 
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-# LEFT JOIN
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-
-# PADRONIZAR STRINGS
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
-        
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'periodos': 'iptPeriodos.xlsx',
-     'fretes': 'iptTabelaFretes.xlsx',
-     'fretes_sn': 'iptTabelaFretes',
-     'up_correntes':'iptUpdateCorrentes.xlsx',
-     'up_correntes_sn': 'iptUpdateCorrentes',
-     'localizacao': 'depGeolocalizacao.xlsx',
-     'localizacao_sn': 'depGeolocalizacao',
-     'unidades_expedicao': 'depUnidadesProdutivas.xlsx',
-     'unidades_expedicao_sn': 'depUnidadesProdutivas',
-     'portos': 'depUnidadesPortuarias.xlsx',
-     'portos_sn': 'depUnidadesPortuarias',
-     'custo_internalizacao': 'iptCustoInternalizacao.xlsx',
-     'custo_internalizacao_sn': 'iptCustoInternalizacao',
-     'template_fretes': 'tmpFretes.xlsx'
-}
-
-tp_dado_arquivos = {
-     'periodos':{'NUMERO':str,'PERIODO':'datetime64[ns]', 'NOME_PERIODO':str},
-     'fretes': {'data_inicio':'datetime64[ns]','rota':str,'Valor':'float64'},
-     'up_correntes': {'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
-     'localizacao': {'Unidade':str, 'Estado':str, 'Município':str},
-     'unidades_expedicao': {'PLANTA':str, 'UNIDADE_EXPEDICAO_VCM':str},
-     'portos': {'PORTO':str,'NOME_PORTO_VCM':str},
-     'custo_internalizacao': {'MODAL':str, 'Origem':str, 'Origem Rodo':str, 'Destino':str, 'Corrente VCM':str}, #, 'Periodo':'datetime64[ns]'
-     'template_fretes': {'Origem':str, 'Destino':str, 'Corrente':str, 'Periodo':str, 'ValorVariavel':'float64', 'ValorContainer':'float64'},
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
-
 print('Carregando arquivos necessários... \n')
 
 # DataFrame :: Horizonte (Período) de Otimização
-periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
+periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']), 
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
 
@@ -163,10 +90,12 @@ id_periodos = periodos['NOME_PERIODO'].to_frame()
 periodos_fretes = periodos.copy()
 periodos_fretes['Data_Inicio'] = periodos_fretes['PERIODO'] + MonthBegin(0)
 
+
 # DataFrame :: Chaves identificadores dos Portos
-porto = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['portos']), 
-                      usecols = list(tp_dado_arquivos['portos'].keys()),
-                      dtype = tp_dado_arquivos['portos'])
+porto = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_por']),
+                      sheet_name= arquivos_primarios['unidades_por_sn'],  
+                      usecols = list(tp_dado_arquivos['unidades_por'].keys()),
+                      dtype = tp_dado_arquivos['unidades_por'])
 
 id_portos = porto.drop(columns=['PORTO']).drop_duplicates()
 id_portos_inbound = id_portos.copy()
@@ -177,17 +106,17 @@ id_portos_inbound = id_portos_inbound[1].drop_duplicates().tolist()
 # DataFrame :: Dados de Frete
 fretes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['fretes']),
                        usecols=list(tp_dado_arquivos['fretes'].keys()),
-                       dtype=tp_dado_arquivos['fretes']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['fretes']).applymap(fx.padronizar)
 
 new = fretes['rota'].str.split(" X ", n=2, expand=True)
 fretes['Origem'] = new[0]
 fretes['Destino'] = new[1]
 
 # DataFrame :: Update de Correntes
-correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['up_correntes']),
-                         sheet_name= arquivos_primarios['up_correntes_sn'], 
-                       usecols=list(tp_dado_arquivos['up_correntes'].keys()),
-                       dtype=tp_dado_arquivos['up_correntes']).applymap(padronizar)
+correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['correntes']),
+                         sheet_name= arquivos_primarios['correntes_sn'], 
+                       usecols=list(tp_dado_arquivos['correntes'].keys()),
+                       dtype=tp_dado_arquivos['correntes']).applymap(fx.padronizar)
 
 correntes['ID'] = correntes['Unidade-Origem'] + '-' + correntes['Unidade-Destino']
 unidades_interesse = correntes.copy()
@@ -196,15 +125,15 @@ unidades_interesse = correntes.copy()
 localizacao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['localizacao']),
                          sheet_name= arquivos_primarios['localizacao_sn'], 
                        usecols=list(tp_dado_arquivos['localizacao'].keys()),
-                       dtype=tp_dado_arquivos['localizacao']).applymap(padronizar)
+                       dtype=tp_dado_arquivos['localizacao']).applymap(fx.padronizar)
 
 localizacao['ID Origem-Destino'] = localizacao['Município'] + '-' + localizacao['Estado']
 
 # DataFrame :: Depara Unidades
-depara_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_expedicao']),
-                        sheet_name= arquivos_primarios['unidades_expedicao_sn'],
-                       usecols=list(tp_dado_arquivos['unidades_expedicao'].keys()),
-                       dtype=tp_dado_arquivos['unidades_expedicao'])
+depara_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
+                        sheet_name= arquivos_primarios['unidades_exp_sn'],
+                       usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
+                       dtype=tp_dado_arquivos['unidades_exp'])
 
 id_unidades = depara_unidades['UNIDADE_EXPEDICAO_VCM'].str.split("-", n=2, expand = True)
 id_unidades = id_unidades[1].drop_duplicates().tolist()
@@ -212,8 +141,9 @@ id_unidades = id_unidades[1].drop_duplicates().tolist()
 # DataFrame :: Custos de Frete Inbound Ferroviário e Hidroviário
 frete_inbound_ferro_hidro = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custo_internalizacao']),
                         sheet_name= arquivos_primarios['custo_internalizacao_sn'],
-                       #usecols=list(tp_dado_arquivos['custo_internalizacao'].keys()), (desativado pois não faz sentido copiar os nomes das colunas que sempre trocam)
-                       dtype=tp_dado_arquivos['custo_internalizacao'])
+                        # (desativado pois não faz sentido copiar os nomes das colunas que sempre trocam)
+                        # usecols=list(tp_dado_arquivos['custo_internalizacao'].keys())
+                        dtype=tp_dado_arquivos['custo_internalizacao'])
 
 frete_inbound_ferro_hidro = pd.melt(frete_inbound_ferro_hidro, id_vars = ['MODAL','Origem','Origem Rodo','Destino','Corrente VCM'],
                                                                var_name = 'Periodo',
@@ -233,7 +163,7 @@ exclude_routes = pd.melt(exclude_routes, id_vars = ['MODAL','Origem','Origem Rod
 exclude_routes = exclude_routes[['Corrente VCM','MODAL']].drop_duplicates()
 
 # DataFrame :: Template de Fretes
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_fretes']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_fretes']))
 template_fretes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_fretes']),
                        usecols=list(tp_dado_arquivos['template_fretes'].keys()),
                        dtype=tp_dado_arquivos['template_fretes'])
@@ -256,24 +186,28 @@ unidades_interesse = unidades_interesse.loc[(unidades_interesse.Filtro=='MC'),:]
 
 fretes = fretes.merge(periodos_fretes, how='left', left_on='data_inicio', right_on='Data_Inicio')
 fretes = fretes.dropna()
-unidades_interesse = unidades_interesse.merge(localizacao, how='left', left_on='Unidade-Origem', right_on='Unidade')
+unidades_interesse = fx.left_outer_join(unidades_interesse, localizacao, left_on='Unidade-Origem', right_on='Unidade',
+                                        name_left='Unidades de Interesse - Origem', name_right='De-para Geolocalização')
 unidades_interesse = unidades_interesse[['ConjuntoCorrentes', 'Unidade-Origem', 'Unidade-Destino', 'Unidade', 'ID Origem-Destino']]
 unidades_interesse = unidades_interesse.rename(columns={'ID Origem-Destino':'Cidade (Origem)'})
-unidades_interesse = unidades_interesse.merge(localizacao, how='left', left_on='Unidade-Destino', right_on='Unidade')
+unidades_interesse = fx.left_outer_join(unidades_interesse, localizacao, left_on='Unidade-Destino', right_on='Unidade',
+                                        name_left='Unidades de Interesse - Destino', name_right='De-para Geolocalização')
 unidades_interesse = unidades_interesse[['ConjuntoCorrentes','Unidade-Origem','Unidade-Destino','Cidade (Origem)','ID Origem-Destino']]
 unidades_interesse = unidades_interesse.rename(columns = {'ID Origem-Destino':'Cidade (Destino)'})
+print('Adicionando o periodo às unidades de interesse...')
 unidades_interesse = unidades_interesse.merge(periodos_fretes, how = 'cross')
 unidades_interesse['ID-LEFT'] = unidades_interesse['Cidade (Origem)'] + '-' + unidades_interesse['Cidade (Destino)'] + '-' + unidades_interesse['NOME_PERIODO']
 fretes['ID-RIGHT'] = fretes['Origem'] + '-' + fretes['Destino'] + '-' + fretes['NOME_PERIODO']
 fretes = fretes.groupby(by = ['NOME_PERIODO','Data_Inicio','rota','Origem','Destino','ID-RIGHT'])['Valor'].mean().reset_index()
-unidades_interesse = unidades_interesse.merge(fretes, how = 'left', left_on = 'ID-LEFT', right_on = 'ID-RIGHT')
+unidades_interesse = fx.left_outer_join(unidades_interesse, fretes, left_on = 'ID-LEFT', right_on = 'ID-RIGHT',
+                                        name_left='Unidades de Interesse', name_right='Tabela Fretes')
 
 # Abaixo, não são preenchidos valores proibitivos para os custos de frete
 frete_outbound = unidades_interesse.dropna()
 frete_outbound = frete_outbound[['ConjuntoCorrentes', 'Unidade-Origem', 'Unidade-Destino', 'NOME_PERIODO_x', 'Valor']]
-frete_outbound = frete_outbound.rename(columns={'ConjuntoCorrentes':'Corrente', 'Unidade-Origem':'Origem', 'Unidade-Destino':'Destino', 'NOME_PERIODO_x':'Periodo_VCM', 'Valor':'Frete Médio (BRL/ton)'})
+frete_outbound = frete_outbound.rename(columns={'ConjuntoCorrentes':'Corrente', 'Unidade-Origem':'Origem', 'Unidade-Destino':'Destino',
+                                                'NOME_PERIODO_x':'Periodo_VCM', 'Valor':'Frete Médio (BRL/ton)'})
 fretes_outbound_nao_listados = unidades_interesse.loc[(unidades_interesse.Valor.isnull()),:]
-
 frete_outbound['Modal'] = 'Rodoviário'
 frete_outbound['ValorContainer'] = 0
 frete_outbound = frete_outbound[['Origem','Destino','Corrente','Periodo_VCM','Modal','Frete Médio (BRL/ton)','ValorContainer']]
@@ -283,6 +217,7 @@ frete_outbound = frete_outbound.rename(columns={'Periodo_VCM':'Periodo','Frete M
 unidades_interesse_inbound = correntes.copy()
 unidades_interesse_inbound = unidades_interesse_inbound.loc[unidades_interesse_inbound.Tipo == 'INBOUND']
 unidades_interesse_inbound = unidades_interesse_inbound.reset_index().drop(columns = 'index')
+
 
 # (13/03/2025) Etapa comentada pois estava sendo desnecessária.
 
@@ -386,19 +321,21 @@ unidades_interesse_inbound = unidades_interesse_inbound.reset_index().drop(colum
 #                                       unidade_interesse_inbound_6])
 
 unidade_interesse_inbound = unidades_interesse_inbound.copy()
-unidade_interesse_inbound = unidade_interesse_inbound.merge(localizacao, how = 'left', left_on = 'Unidade-Origem', right_on = 'Unidade')
-unidade_interesse_inbound = unidade_interesse_inbound.merge(localizacao, how = 'left', left_on = 'Unidade-Destino', right_on = 'Unidade')
+unidade_interesse_inbound = fx.left_outer_join(unidade_interesse_inbound, localizacao, left_on = 'Unidade-Origem', right_on = 'Unidade',
+                                               name_left='Unidades de Interesse Inbound - Origem', name_right='De-para Geolocalização')
+unidade_interesse_inbound = fx.left_outer_join(unidade_interesse_inbound, localizacao, left_on = 'Unidade-Destino', right_on = 'Unidade',
+                                                            name_left='Unidades de Interesse Inbound - Destino', name_right='De-para Geolocalização')
 unidade_interesse_inbound = unidade_interesse_inbound.rename(columns = {'ID Origem-Destino_x':'Cidade (Origem)',
                                                                         'ID Origem-Destino_y':'Cidade (Destino)'})
-
 unidade_interesse_inbound = unidade_interesse_inbound[['ConjuntoCorrentes','Unidade-Origem','Unidade-Destino','Cidade (Origem)','Cidade (Destino)']]
+print('Adicionando o periodo às unidades de interesse inbound...')
 unidade_interesse_inbound = unidade_interesse_inbound.merge(periodos_fretes, how = 'cross')
 unidade_interesse_inbound = unidade_interesse_inbound[['ConjuntoCorrentes','Unidade-Origem','Unidade-Destino','Cidade (Origem)','Cidade (Destino)','NOME_PERIODO']]
 unidade_interesse_inbound['ID-LEFT'] = unidade_interesse_inbound['Cidade (Origem)'] + '-' + \
                                         unidade_interesse_inbound['Cidade (Destino)'] + '-' + \
                                         unidade_interesse_inbound['NOME_PERIODO']
-
-unidade_interesse_inbound = unidade_interesse_inbound.merge(fretes, how = 'left', left_on = 'ID-LEFT', right_on = 'ID-RIGHT')
+unidade_interesse_inbound = fx.left_outer_join(unidade_interesse_inbound, fretes, left_on = 'ID-LEFT', right_on = 'ID-RIGHT',
+                                                            name_left='Unidades de Interesse Inbound', name_right='Tabela Fretes')
 wizard_frete_rodoviario_inbound = unidade_interesse_inbound.dropna()
 
 # Gerar o LOG de erros para fretes que não estão mapeados
@@ -415,7 +352,8 @@ wizard_frete_rodoviario_inbound['Modal'] = 'Rodoviário'
 wizard_frete_rodoviario_inbound['ValorContainer'] = 0
 wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound[['Origem','Destino','Corrente','Periodo_VCM','Modal','Frete Médio (BRL/ton)','ValorContainer']]
 wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.rename(columns={'Periodo_VCM':'Periodo','Frete Médio (BRL/ton)':'ValorVariavel'})
-wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.merge(exclude_routes, how = 'left', left_on = 'Corrente', right_on = 'Corrente VCM')
+wizard_frete_rodoviario_inbound = fx.left_outer_join(wizard_frete_rodoviario_inbound, exclude_routes, left_on = 'Corrente', right_on = 'Corrente VCM',
+                                                     name_left='Inbound Rodoviário')
 wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.loc[wizard_frete_rodoviario_inbound['Corrente VCM'].isna()]
 wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound[['Origem','Destino','Corrente','Periodo','Modal','ValorVariavel','ValorContainer']]
 wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.reset_index().drop(columns = 'index')
@@ -423,17 +361,16 @@ wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.reset_index().
 # Criando uma lista de correntes a serem expurgadas
 id_correntes_expurgar = frete_inbound_ferro_hidro[['Corrente VCM','MODAL']].drop_duplicates()
 
-frete_inbound_ferro_hidro = frete_inbound_ferro_hidro.merge(periodos, how = 'left', left_on = 'Periodo', right_on = 'PERIODO')
+frete_inbound_ferro_hidro = fx.left_outer_join(frete_inbound_ferro_hidro, periodos, left_on = 'Periodo', right_on = 'PERIODO',
+                                               name_left='Inbound Ferro/Hidro', name_right='Periodos')
 frete_inbound_ferro_hidro = frete_inbound_ferro_hidro.dropna()
 frete_inbound_ferro_hidro = frete_inbound_ferro_hidro.drop(columns = ['NUMERO','PERIODO'])
 
-wizard_frete_inbound_ferro_hidro = frete_inbound_ferro_hidro
+wizard_frete_inbound_ferro_hidro = frete_inbound_ferro_hidro.copy()
 wizard_frete_inbound_ferro_hidro = wizard_frete_inbound_ferro_hidro[['MODAL','Corrente VCM','NOME_PERIODO','Custo (BRL/ton)']]
 wizard_frete_inbound_ferro_hidro = wizard_frete_inbound_ferro_hidro.rename({'Corrente VCM':'Corrente','NOME_PERIODO':'Período','Custo (BRL/ton)':'Valor'})
-
 unidade_interesse_inbound_proxy = correntes[['ConjuntoCorrentes','Unidade-Origem','Unidade-Destino']].drop_duplicates()
-
-wizard_frete_inbound_ferro_hidro = wizard_frete_inbound_ferro_hidro.merge(unidade_interesse_inbound_proxy, how = 'left', left_on = 'Corrente VCM', right_on='ConjuntoCorrentes')
+wizard_frete_inbound_ferro_hidro = fx.left_outer_join(wizard_frete_inbound_ferro_hidro, unidade_interesse_inbound_proxy, left_on = 'Corrente VCM', right_on='ConjuntoCorrentes')
 
 wizard_frete_inbound_ferro_hidro = wizard_frete_inbound_ferro_hidro[['Unidade-Origem','Unidade-Destino','Corrente VCM','NOME_PERIODO','MODAL','Custo (BRL/ton)']]
 
@@ -463,7 +400,7 @@ fretes_proibitivos['IDx'] = fretes_proibitivos['Unidade-Origem'] + '-' + \
                            fretes_proibitivos['ID-LEFT'].str.split('-',n=4).str[4]
 
 # Excluir correntes Ferroviárias e Hidroviárias
-fretes_proibitivos = fretes_proibitivos.merge(id_correntes_expurgar, how = 'left', left_on = 'ConjuntoCorrentes', right_on = 'Corrente VCM')
+fretes_proibitivos = fx.left_outer_join(fretes_proibitivos, id_correntes_expurgar, left_on = 'ConjuntoCorrentes', right_on = 'Corrente VCM')
 fretes_proibitivos = fretes_proibitivos.loc[(fretes_proibitivos.MODAL != 'Ferroviário')&\
                                             (fretes_proibitivos.MODAL != 'Hidroviário')].reset_index().drop(columns = 'index')
 fretes_proibitivos = fretes_proibitivos[['IDx','Valor']].rename(columns={'Valor':'ValorVariavel'})
@@ -473,7 +410,7 @@ fretes_proibitivos['ValorContainer'] = 0.0
 # =======================================================
 
 # Excluir correntes Ferroviárias e Hidroviárias
-wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.merge(id_correntes_expurgar, how = 'left', left_on = 'Corrente', right_on = 'Corrente VCM')
+wizard_frete_rodoviario_inbound = fx.left_outer_join(wizard_frete_rodoviario_inbound, id_correntes_expurgar, left_on = 'Corrente', right_on = 'Corrente VCM')
 wizard_frete_rodoviario_inbound = wizard_frete_rodoviario_inbound.loc[(wizard_frete_rodoviario_inbound['MODAL'] != 'Ferroviário')\
                                                                       &(wizard_frete_rodoviario_inbound['MODAL'] != 'Hidroviário')].reset_index().drop(columns='index')
 wizard_custo_frete = pd.concat([wizard_frete_inbound_ferro_hidro,frete_outbound,wizard_frete_rodoviario_inbound])
@@ -487,7 +424,8 @@ wizard_custo_frete = pd.concat([wizard_custo_frete, fretes_proibitivos])
 wizard_custo_frete = wizard_custo_frete.drop_duplicates(keep = 'first')
 
 template_fretes = template_fretes.drop(columns=['ValorVariavel', 'ValorContainer'])
-template_fretes = template_fretes.merge(wizard_custo_frete, how = 'left', left_on='ID', right_on='IDx')
+template_fretes = fx.left_outer_join(template_fretes, wizard_custo_frete, left_on='ID', right_on='IDx',
+                                     name_left='Template Fretes', name_right='Wizard Fretes')
 template_fretes = template_fretes.drop(columns = ['ID','IDx'])
 
 # =========================================================================
@@ -498,7 +436,7 @@ media = template_fretes.groupby(by=['Corrente'])['ValorVariavel'].mean()
 media = media.reset_index()
 media = media.rename(columns={'Corrente':'CorrenteOut','ValorVariavel':'ValorMedia'})
 
-template_fretes = template_fretes.merge(media, how = 'left', left_on='Corrente', right_on='CorrenteOut')
+template_fretes = fx.left_outer_join(template_fretes, media, left_on='Corrente', right_on='CorrenteOut')
 template_fretes['ValorMedia'] = template_fretes['ValorMedia'].fillna(0.0)
 template_fretes['ValorVariavel'] = template_fretes['ValorVariavel'].fillna(0.0)
 
@@ -515,6 +453,7 @@ soma = soma.drop(columns={'soma'})
 wizard_custo_frete_structure = template_fretes.merge(soma, how='left', on='Corrente', indicator=True)
 wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure.apply(lambda x: x['ValorMedia'] if x['ValorVariavel']==0.0 and x['ValorMedia']!=0.0 and x['_merge']=='both' else x['ValorVariavel'], axis=1)
 wizard_custo_frete_structure = wizard_custo_frete_structure.drop(columns={'CorrenteOut','ValorMedia','_merge'})
+
 
 # (11/06/2025) Para os casos que temos menos de 2 meses populados, mas temos pelo menos um valor, replicar esse valor.
 limite = wizard_custo_frete_structure.shape[0]
@@ -533,7 +472,7 @@ wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure['Va
 wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure['ValorVariavel'].round(2)
 
 wizard_custo_frete_structure.to_excel(os.path.join(cwd,output_path + 'WIZARD_CUSTO_FRETE.xlsx'), index = False, sheet_name = 'FRETES_PERIODOS')
-fretes_outbound_nao_listados = fretes_outbound_nao_listados.to_excel(os.path.join(cwd,exec_log_path + 'LOG ERROR - Erros Frete Outbound.xlsx'), index = False, sheet_name = 'Erros')
+fretes_outbound_nao_listados.to_excel(os.path.join(cwd,exec_log_path + 'LOG ERROR - Erros Frete Outbound.xlsx'), index = False, sheet_name = 'Erros')
 frete_inbound_rodo_sem_valor.to_excel(os.path.join(cwd,exec_log_path + 'LOG ERROR - Erros Frete Inbound.xlsx'), index = False, sheet_name = 'Erros')
 print('Arquivo WIZARD_CUSTO_FRETE.xlsx foi Atualizado com Sucesso!')
 end_time = time.time()

@@ -4,20 +4,19 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                 >>  tax.py  <<                                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 27/03/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 07/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (27/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
-print('║ - v1.0.1 (02/07/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
+print('║ - v1.0.1 (07/07/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> ICMS de Entrada                                                                                             ║')
 print('║ >> ICMS de Saída                                                                                               ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 print('\n')
-
 
 
 # =======================================================================================================================
@@ -56,116 +55,19 @@ exec_log_path = 'Error Logs/'                  # Logs de erros durante a execuç
 
 logging.info("Iniciando execução do script.")
 
+
 # =======================================================================================================================
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
-
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-    return merged_df
-
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'localizacao': 'depGeolocalizacao.xlsx',
-     'localizacao_sn': 'depGeolocalizacao',
-     'periodos': 'iptPeriodos.xlsx',
-     'periodos_sn': 'Períodos de Otimização',
-     'cadastro_produtos': 'depSKU.xlsx',
-     'cadastro_produtos_sn': 'CADASTRO',     
-     'agrupamento_sn':'AGRUPAMENTO',
-     'up_correntes':'iptUpdateCorrentes.xlsx',
-     'up_correntes_sn': 'iptUpdateCorrentes',
-     'lista_preco' : 'iptListaPreco.xlsx',
-     'lista_preco_sn' : 'iptListaPreco',
-     'custo_reposicao' : 'iptCustoReposicao.xlsx',
-     'custo_reposicao_sn' : 'iptCustoReposicao',
-     'unidades_icms': 'depAtvcBalancosFin.xlsx',
-     'unidades_icms_sn': 'depAtvcBalancosFin',
-     'template_corrente_produto': 'tmpCorrenteProduto.xlsx',
-     'template_imp_entrada': 'tmpImpostosEntrada.csv',
-     'template_imp_saida': 'tmpImpostosSaida.csv',
-}
-
-tp_dado_arquivos = {
-     'localizacao': {'Unidade':str, 'Estado':str, 'Município':str},
-     'periodos':{'NUMERO':'int64','PERIODO':'datetime64[ns]', 'NOME_PERIODO':str},
-     'cadastro_produtos': {'PRD-VCM':str,'CODIGO_ITEM':str,'DESCRICAO':str, 'TIPO_MATERIAL':str, 'CATEGORIA':str},
-     'agrupamento': {'COD_ESPECIFICO':str, 'CODIGO_AGRUPADO':str},
-     'up_correntes': {'ConjuntoCorrentes':str, 'Unidade-Origem':str, 'Unidade-Destino':str, 'Tipo':str},
-     'lista_preco': {'DATA':'datetime64[ns]', 'DH_INICIAL':'datetime64[ns]', 'DH_FINAL':'datetime64[ns]', 
-                     'FILIAL':str, 'ITEM':str, 'DESCRICAO':str, 'MOEDA':str, 'PTAX':np.float64, 'PRECO':np.float64, 'LISTA':str},
-     'custo_reposicao': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
-                         'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
-                         'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
-     'unidades_icms' : {'UNIDADE':str, 'DESC_UNIDADE':str, 'ZERAR_ENT':'int64', 'ZERAR_SAI':'int64', 'LOCALIZACAO':str},
-     'template_corrente_produto' : {'Corrente':str, 'PRD-VCM':str},
-     'template_imp_entrada' : {'Unidade Destino':str, 'Unidade Origem':str, 'Corrente':str, 'Produto':str, 'Período':str,
-                               'Base de Cálculo':'float64', 'ICMS-SUBST':'int64', 'ICMS-ST':'int64'},
-     'template_imp_saida' : {'Unidade Destino':str, 'Unidade Origem':str, 'Corrente':str, 'Produto':str, 'Período':str,
-                               'Base de Cálculo':'float64', 'ICMS-SUBST':'int64', 'ICMS-ST':'int64'},
-}
-
-rename_dataframes = {
-    'df_periodos':{'NUMERO':'Número','NOME_PERIODO':'Periodo_VCM'},
-    'df_correntes':{'ConjuntoCorrentes':'Corrente','Unidade-Origem':'Origem','Unidade-Destino':'Destino'},
-    'df_valor_compra':{'ConjuntoCorrentes':'Cód. Mat. Prima','DT_INICIAL':'Data Inicial','DT_FINAL':'Data Final',
-                    'CODIGO_MOEDA':'Moeda', 'CUSTO_REPOSICAO_MERCADO':'Custo Rep. Mercado',
-                    'CODIGO_ORGANIZACAO':'Desc. Empresa', 'PTAX_DIA_ANTERIOR':'Ptax Dia Anterior'},
-    'df_valor_venda':{'ITEM':'Código do Produto','PRECO':'Preço','PTAX':'Ptax USD','DH_INICIAL':'Data Inicio',
-                   'DH_FINAL':'Data fim','MOEDA':'Moeda','LISTA':'Nome da Lista'},
-     'df_produtos':{'CODIGO_ITEM':'ITEM_CODE'},
-     'unidades_icms' : {'UNIDADE':'Unidades', 'DESC_UNIDADE':'Desc. Empresa', 'ZERAR_ENT':'Zerar entrada', 'ZERAR_SAI':'Zerar saída', 'LOCALIZACAO':'Localização'}
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
@@ -183,20 +85,20 @@ df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodo
                             sheet_name = arquivos_primarios['periodos_sn'],
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
-df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
+df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos_tax'])
 
 # Dataframe :: Cadastro Produtos
 df_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['cadastro_produtos_sn'],
-                                  usecols = list(tp_dado_arquivos['cadastro_produtos'].keys()),
-                                  dtype = tp_dado_arquivos['cadastro_produtos'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 df_produtos = df_produtos.rename(columns=rename_dataframes['df_produtos'])
 
 # DataFrame :: Update de Correntes
-df_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['up_correntes']),
-                                    sheet_name= arquivos_primarios['up_correntes_sn'], 
-                                    usecols=list(tp_dado_arquivos['up_correntes'].keys()),
-                                    dtype=tp_dado_arquivos['up_correntes']).applymap(padronizar)
+df_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
+                                    sheet_name= arquivos_primarios['arq_tbUpdateCorrentes_sn'], 
+                                    usecols=list(tp_dado_arquivos['arq_tbUpdateCorrentes'].keys()),
+                                    dtype=tp_dado_arquivos['arq_tbUpdateCorrentes']).applymap(fx.padronizar)
 df_correntes = df_correntes.rename(columns=rename_dataframes['df_correntes'])
 
 # Dataframe :: Abertura de Correntes e produtos
@@ -216,7 +118,6 @@ df_template_icms_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios
                        encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
                        dtype=tp_dado_arquivos['template_imp_saida'])
 
-
 # Dataframe :: Custo de Reposição
 df_valor_compra =  pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custo_reposicao']),
                                         sheet_name= arquivos_primarios['custo_reposicao_sn'], 
@@ -228,21 +129,22 @@ df_valor_compra = df_valor_compra.rename(columns=rename_dataframes['df_valor_com
 df_valor_venda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['lista_preco']),
                                 sheet_name= arquivos_primarios['lista_preco_sn'], 
                                 usecols=list(tp_dado_arquivos['lista_preco'].keys()),
-                                dtype=tp_dado_arquivos['lista_preco']).applymap(padronizar)
+                                dtype=tp_dado_arquivos['lista_preco']).applymap(fx.padronizar)
 df_valor_venda = df_valor_venda.rename(columns=rename_dataframes['df_valor_venda'])
 
 # Dataframe :: Unidades ICMS
 df_pontos_balanco = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_icms']),
                                         sheet_name = arquivos_primarios['unidades_icms_sn'],
                                         usecols = list(tp_dado_arquivos['unidades_icms'].keys()),
-                                        dtype = tp_dado_arquivos['unidades_icms']).applymap(padronizar)
+                                        dtype = tp_dado_arquivos['unidades_icms']).applymap(fx.padronizar)
 df_pontos_balanco = df_pontos_balanco.rename(columns=rename_dataframes['unidades_icms'])
 
 # Dataframe :: Agrupamento
 agrupamento_mp = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                          sheet_name = arquivos_primarios['agrupamento_sn'],
-                                          usecols = list(tp_dado_arquivos['agrupamento'].keys()),
-                                          dtype = tp_dado_arquivos['agrupamento'])
+                                          sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
+                                          usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
+                                          dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
+
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
@@ -266,9 +168,10 @@ df_valor_venda = df_valor_venda.merge(df_periodos[['PERIODO','Periodo_VCM']], ho
 df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data Inicio']) & (df_valor_venda['PERIODO'] <= df_valor_venda['Data fim'])
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
-df_valor_compra = left_outer_join(df_valor_compra,agrupamento_mp,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO')
-df_valor_compra = df_valor_compra.dropna(subset = 'COD_ESPECIFICO')
-df_valor_venda = left_outer_join(df_valor_venda,agrupamento_mp,left_on='Código do Produto',right_on='COD_ESPECIFICO')
+
+# (07/07/25) VERIFICAR SE era msm para aumentar a qntd de linhas... 
+df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_mp,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO', struct=False)
+df_valor_venda = fx.left_outer_join(df_valor_venda,agrupamento_mp,left_on='Código do Produto',right_on='COD_ESPECIFICO',struct=False)
 df_valor_venda = df_valor_venda.dropna(subset = 'COD_ESPECIFICO')
 df_valor_compra.rename(columns = {"CODIGO_AGRUPADO": "ITEM_CODE"},
                        inplace=True)
@@ -366,22 +269,19 @@ df_base_saida = df_base_saida[(df_base_saida["Tipo"] == "INBOUND") |
                               (df_base_saida["Tipo"] == "TRANSFERENCIA")]
 
 # Trazendo os produtos presentes em cada uma das correntes
-df_base_saida = df_base_saida.merge(df_corrente_produto, on = "Corrente",
-                                    how = "left")
+df_base_saida = fx.left_outer_join(df_base_saida,df_corrente_produto, left_on= "Corrente", right_on= "Corrente",
+                                    struct=False)
 
 ## Inserindo dimensão temporal através do df_periodos
 ## Posteriormente, realizar o merge considerando também períodos
-print(df_base_saida.shape)
 df_base_saida = df_base_saida.merge(df_periodos[['Periodo_VCM']], how = 'cross')
-print(df_base_saida.shape)
-df_base_saida = df_base_saida.merge(df_valor_venda, how = "left", 
-                                    on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
+df_base_saida = fx.left_outer_join(df_base_saida,df_valor_venda, 
+                                    left_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"],
+                                    right_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
 df_base_saida["Preço Venda"] = df_base_saida["Preço Venda"].fillna(0)
-print(df_base_saida.shape)
-df_base_saida = df_base_saida.merge(valor_venda_medio, how = "left", 
-                                    on = "PRD-VCM")
+df_base_saida = fx.left_outer_join(df_base_saida, valor_venda_medio, 
+                                    left_on = "PRD-VCM", right_on="PRD-VCM")
 df_base_saida["Preço Venda Médio"] = df_base_saida["Preço Venda Médio"].fillna(0)
-print(df_base_saida.shape)
 
 # Atribuindo o valor da base de cálculo a partir do preço de venda ou do estoque
 df_base_saida_periodos = df_base_saida.copy()
@@ -390,7 +290,6 @@ df_base_saida_periodos.loc[df_base_saida_periodos["Preço Venda"] != 0,
 
 df_base_saida_periodos.loc[df_base_saida_periodos["Preço Venda"] == 0,
                             'Base de Cálculo'] = df_base_saida_periodos["Preço Venda Médio"]
-print(df_base_saida_periodos.shape)
 
 # Deixando na mesma forma que o template VCM
 df_base_saida_periodos.rename(columns = {"Origem" : "Unidade Origem",
@@ -408,14 +307,14 @@ print(df_base_saida_periodos.columns)
 # Ideia: pegar todas as linhas que apareçam no template e usar apenas o valor novo calculado
 df_template_icms_saida.drop(labels="Base de Cálculo", axis=1, inplace=True) 
 
-df_template_icms_saida = left_outer_join(df_template_icms_saida,df_base_saida_periodos,left_on=["Unidade Origem", "Unidade Destino",
+df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_base_saida_periodos,left_on=["Unidade Origem", "Unidade Destino",
                                          "Corrente", "Produto", "Período"],right_on=["Unidade Origem", "Unidade Destino",
                                          "Corrente", "Produto", "Período"])
 
 df_template_icms_saida.fillna(0, inplace = True)
 
 # Inserindo a matriz de balanço de impostos para entrada
-df_template_icms_saida = left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Origem',right_on='Unidades')
+df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Origem',right_on='Unidades')
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -423,7 +322,7 @@ df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
 df_template_icms_saida = df_template_icms_saida.rename(columns={'Zerar entrada':'ORG-IN','Zerar saída':'ORG-OUT'})
 
 # Inserindo a matriz de balanço de impostos para saída
-df_template_icms_saida = left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Destino',right_on='Unidades')
+df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Destino',right_on='Unidades')
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -442,8 +341,6 @@ df_template_icms_saida['Base de Cálculo'] = df_template_icms_saida['Base de Cá
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST"]]
-
-#print(df_template_icms_saida.shape)
 
 # Criando arquivo output para ICMS de Saída
 # 12/04/2024: Alterando encoding para utf-8 e delimitador (sep) para >> ; <<
@@ -471,22 +368,16 @@ df_base_entrada = df_base_entrada[(df_base_entrada["Tipo"] == "INBOUND") | (df_b
                               (df_base_entrada["Tipo"] == "OUTBOUND") |
                               (df_base_entrada["Tipo"] == "TRANSFERENCIA")]
 
-#USAR LEFT-JOIN NESSAS MESCLAGENS (na atualização para oo)
-
 # Trazendo os produtos presentes em cada uma das correntes
-df_base_entrada = df_base_entrada.merge(df_corrente_produto, on="Corrente",
-                                        how = "left")
-#print(df_base_entrada.shape)
+df_base_entrada = fx.left_outer_join(df_base_entrada, df_corrente_produto, left_on="Corrente",
+                                       right_on="Corrente", struct=False)
 df_base_entrada = df_base_entrada.merge(df_periodos[['Periodo_VCM']], how = 'cross')
-#print(df_base_entrada.shape)
-df_base_entrada = df_base_entrada.merge(df_valor_compra, how = "left", 
-                                    on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
+df_base_entrada = fx.left_outer_join(df_base_entrada, df_valor_compra, 
+                                    left_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"], right_on= ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
 df_base_entrada["Preço Compra"] = df_base_entrada["Preço Compra"].fillna(0)
-#print(df_base_entrada.shape)
-df_base_entrada = df_base_entrada.merge(valor_compra_medio, how = "left", 
-                                    on = "PRD-VCM")
+df_base_entrada = fx.left_outer_join(df_base_entrada, valor_compra_medio,
+                                left_on = "PRD-VCM", right_on="PRD-VCM")
 df_base_entrada["Preço Compra Médio"] = df_base_entrada["Preço Compra Médio"].fillna(0)
-#print(df_base_entrada.shape)
 df_base_entrada_periodos = df_base_entrada.copy()
 
 # Atribuindo o valor da base de cálculo a partir do custo de reposição ou do estoque
@@ -510,16 +401,16 @@ print(df_base_entrada_periodos.columns)
 # Ideia: pegar todas as linhas que apareçam no template e usar apenas o valor
 # novo calculado
 df_template_icms_entrada.drop(labels="Base de Cálculo", axis=1, inplace=True) 
-df_template_icms_entrada = df_template_icms_entrada.merge(
-                                   df_base_entrada_periodos, 
-                                   on = ["Unidade Destino", "Unidade Origem",
+df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada, df_base_entrada_periodos, 
+                                   left_on = ["Unidade Destino", "Unidade Origem",
                                          "Corrente", "Produto", "Período"], 
-                                   how = "left")
+                                   right_on= ["Unidade Destino", "Unidade Origem",
+                                         "Corrente", "Produto", "Período"])
 df_template_icms_entrada.fillna(0, inplace = True)
 
 # Dados de Entrada
 df_pontos_balanco = df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']]
-df_template_icms_entrada = left_outer_join(df_template_icms_entrada,df_pontos_balanco,
+df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada,df_pontos_balanco,
                 left_on='Unidade Origem',right_on='Unidades')
 
 df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
@@ -529,7 +420,7 @@ df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
 df_template_icms_entrada = df_template_icms_entrada.rename(columns={'Zerar entrada':'ORG-IN','Zerar saída':'ORG-OUT'})
 
 # Inserindo a matriz de balanço de impostos para saída
-df_template_icms_entrada = left_outer_join(df_template_icms_entrada,df_pontos_balanco,left_on='Unidade Destino',right_on='Unidades')
+df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada,df_pontos_balanco,left_on='Unidade Destino',right_on='Unidades')
 df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -543,7 +434,6 @@ df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['Tax.Check'].re
 df_template_icms_entrada['Tax.Check'] = df_template_icms_entrada['Tax.Check'].fillna(1.0)
 df_template_icms_entrada['Base de Cálculo'] = df_template_icms_entrada['Base de Cálculo']*df_template_icms_entrada['Tax.Check']
 df_template_icms_entrada['Base de Cálculo'] =df_template_icms_entrada['Base de Cálculo'].round(2)
-
 
 # Dados de Entrada
 # Ajustando a ordem das colunas
