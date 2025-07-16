@@ -4,12 +4,13 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>  reposition_cost.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 28/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 30/04/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 16/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (30/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
+print('║ - v1.0.1 (16/07/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Custos de Fornecimento de Matérias-Primas                                                                   ║')
@@ -63,109 +64,16 @@ logging.info("Iniciando execução do script.")
 # FUNÇÕES
 # =======================================================================================================================
 
-# CHECAGEM DE ARQUIVOS
-# >> Valida a data 
-def validar_data_arquivo(arquivo):
-    try:
-        
-        timestamp = os.path.getmtime(arquivo)
-        # Obter data e hora do momento da atualização
-        curr_date = time.localtime()
-        comp_timestamp = time.localtime(timestamp)
-
-        # Converter em um objeto do tipo datetime
-        data_edicao = datetime.datetime.fromtimestamp(timestamp)        
-
-        # Exibe a data em um pop-up
-        if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-            messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-            sys.exit()
-    
-    except FileNotFoundError: 
-        messagebox.showerror("Erro", "Arquivo não encontrado.")
-
-def left_outer_join(df_left, df_right, left_on, right_on):
-    print('\n')
-    print(f'══════════════════════════════════════════════ LEFT JOIN ═══════════════════════════════════════════════════')
-    name_left = [name for name, obj in globals().items() if obj is df_left]
-    name_right = [name for name, obj in globals().items() if obj is df_right]
-    print(f'Mesclando {name_left} x {name_right}')
-    x1 = df_left.shape[0]
-    print(f'A quantidade de linhas antes do join é {x1}')
-    merged_df = df_left.merge(df_right, how = 'left', left_on = left_on, right_on = right_on)
-    # Limpar o DataFrame original e aplicar as novas colunas
-    df_left.drop(df_left.columns, axis=1, inplace=True) 
-    for col in merged_df.columns:
-        df_left[col] = merged_df[col]  # Copiar colunas do merged_df
-
-    x2 = df_left.shape[0]
-    print(f'A quantidade de linhas após o join é {x2}')
-    if x1 == x2:
-        y = '√'
-    else:
-        y = 'X'
-        print(f'Checar por duplicidades em {name_right}')
-    print(f'═══════════════════════════════════════ FIM DO JOIN :: Resultado = {y} ═══════════════════════════════════════')
-
-# PADRONIZAR STRINGS
-def padronizar(value):
-    if isinstance(value, str):
-        value = value.upper().strip()
-        value = unidecode(value)
-    return value
+from _modulos import aux_functions_vcm
+fx = aux_functions_vcm()
 
 
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
 
-arquivos_primarios = {
-     'periodos': 'iptPeriodos.xlsx',
-     'periodos_sn': 'Períodos de Otimização',
-     'portos': 'depUnidadesPortuarias.xlsx',
-     'portos_sn': 'depUnidadesPortuarias',
-     'cadastro_produtos': 'depSKU.xlsx',
-     'cadastro_produtos_sn': 'CADASTRO',
-     'agrupamento_sn':'AGRUPAMENTO',
-     'compras_importadas': 'iptComprasImportadas.xlsx',
-     'compras_importadas_sn': 'iptComprasImportadas',
-     'compras_nacionais':'iptComprasNacionais.xlsx',
-     'compras_nacionais_sn':'iptComprasNacionais',
-     'custos_mp': 'iptCustoReposicao.xlsx',
-     'custos_mp_sn': 'iptCustoReposicao',
-     'demurrage': 'iptDemurrage.xlsx',
-     'demurrage_sn': 'iptDemurrage',
-     'ptax_demurrage': 'PTAX',
-     'template_suprimento': 'tmpSuprimentoFaixa.xlsx',
-}
+from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 
-tp_dado_arquivos = {
-     'periodos':{'NUMERO':np.int64,'PERIODO':'datetime64[ns]', 'NOME_PERIODO':str},
-     'portos': {'NOME_PORTO_VCM':str, 'PORTO':str, 'UNIDADE':str, 'CORRENTE':str},
-     'cadastro_produtos': {'PRD-VCM':str,'CODIGO_ITEM':str,'DESCRICAO':str, 'TIPO_MATERIAL':str, 'CATEGORIA':str},
-     'agrupamento': {'COD_ESPECIFICO':str, 'CODIGO_AGRUPADO':str},
-     'compras_importadas': {'Porto':str,'Fábrica':str,'Matéria-prima':str,'Mês Entrega':'datetime64[ns]',
-                   'BALANCE (TONS)':np.float32,'Status':str,'COMPANY':str,'RAW MATERIAL COD.':str},
-     'compras_nacionais': {'Porto':str,'Fábrica':str,'Matéria-prima':str,'Status':str,'COMPANY':str,
-                            'RAW MATERIAL COD.':str,'Mês000':np.float32,'Mês001':np.float32,'Mês002':np.float32,
-                            'Mês003':np.float32,'Mês004':np.float32,'Mês005':np.float32,'Mês006':np.float32,
-                            'Mês007':np.float32,'Mês008':np.float32,'Mês009':np.float32,'Mês010':np.float32,
-                            'Mês011':np.float32,'Mês012':np.float32},
-     'custos_mp': {'DH_VIGOR':'datetime64[ns]', 'DH_REFERENCIA':'datetime64[ns]', 'DT_INICIAL':'datetime64[ns]', 
-                    'DT_FINAL':'datetime64[ns]', 'CD_PRODUTO_FTO':str, 'DESCRICAO_ITEM':str, 'CODIGO_ORGANIZACAO':str,
-                    'CODIGO_MOEDA':str, 'PTAX_DIA_ANTERIOR':np.float64, 'CUSTO_REPOSICAO_MERCADO':np.float64},
-     'demurrage': {'Porto':str, 'Terminal':str},
-     'ptax': {'Cotação (BRL/USD)': np.float64},
-     'template_suprimento': {'Unidade':str, 'Produto':str, 'Periodo':str, 'Suprimento Mínimo':np.float64, 'Suprimento Máximo':np.float64},
-}
-
-rename_dataframes = {
-    'df_periodos':{'NOME_PERIODO':'Periodo_VCM', 'PERIODO':'Nome'},
-    'df_revisao_importada':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Mês Entrega':'DT_REMESSA',
-                    'BALANCE (TONS)':'BALANCE_TONS','Status':'STATUS','COMPANY':'COMPANY','RAW MATERIAL COD.':'CODIGO_MP'},
-    'df_revisao_nacional':{'Porto':'PORTO','Fábrica':'PLANTA','Matéria-prima':'MP','Status':'STATUS','COMPANY':'COMPANY',
-                    'RAW MATERIAL COD.':'CODIGO_MP'},
-}
 
 # =======================================================================================================================
 # CARREGAR DATAFRAMES
@@ -178,46 +86,67 @@ df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodo
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
 
+# applymap(fx.padronizar) não aplicado por se tratar de dados com a estrutura final do VCM
+df_periodos['pk_NOME_PERIODO'] = df_periodos['NOME_PERIODO'].str.split(' ', expand = True)[0]
+id_periodos = df_periodos['NOME_PERIODO'].to_frame()
+
 # Dataframe :: Portos existentes com códigos e correntes.
-df_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['portos']),
-                                  sheet_name = arquivos_primarios['portos_sn'],
-                                  usecols = list(tp_dado_arquivos['portos'].keys()),
-                                  dtype = tp_dado_arquivos['portos']).applymap(padronizar)
+df_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_por']),
+                                  sheet_name = arquivos_primarios['unidades_por_sn'],
+                                  usecols = list(tp_dado_arquivos['unidades_por'].keys()),
+                                  dtype = tp_dado_arquivos['unidades_por']).applymap(fx.padronizar)
+
+# DataFrame :: portos_correntes :: granularidade de correntes
+portos_correntes = df_portos.copy()
+
+# DataFrame :: az_portos :: unidades de armazenagem dos portos
+az_portos = df_portos.copy()
+az_portos = df_portos[['NOME_AZ_PORTO_VCM','PORTO']].drop_duplicates()
+
+# DataFrame :: postos :: apenas a nível de PORTO e NOME_PORTO_VCM
+df_portos = df_portos[['NOME_PORTO_VCM','PORTO']].drop_duplicates()
 
 # Dataframe :: Cadastro Produtos
 df_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['cadastro_produtos_sn'],
-                                  usecols = list(tp_dado_arquivos['cadastro_produtos'].keys()),
-                                  dtype = tp_dado_arquivos['cadastro_produtos'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 
 # DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
 cadastro_mp = df_produtos[(df_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'MP')]
 
 # Dataframe :: Agrupamento
 agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
-                                  sheet_name = arquivos_primarios['agrupamento_sn'],
-                                  usecols = list(tp_dado_arquivos['agrupamento'].keys()),
-                                  dtype = tp_dado_arquivos['agrupamento'])
+                                  sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
+                                  usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
+                                  dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
+
+proxy_agrupamento = df_produtos[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
+proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
+agrupamento_produtos = pd.concat([agrupamento_produtos,proxy_agrupamento])
+agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECIFICO')
 
 # Dataframe :: Compras importadas :: importa todas as compras firmes IMPORTADAS ou NACIONALIZADAS
-df_revisao_importada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['compras_importadas']),
-                                  sheet_name = arquivos_primarios['compras_importadas_sn'],
-                                  usecols = list(tp_dado_arquivos['compras_importadas'].keys()),
-                                  dtype = tp_dado_arquivos['compras_importadas']).applymap(padronizar)
+df_revisao_importada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['df_revisao_importada']),
+                                  sheet_name = arquivos_primarios['df_revisao_importada'].split('.')[0],
+                                  usecols = list(tp_dado_arquivos['df_revisao_importada'].keys()),
+                                  dtype = tp_dado_arquivos['df_revisao_importada']).applymap(fx.padronizar)
 df_revisao_importada = df_revisao_importada.rename(columns=rename_dataframes['df_revisao_importada'])
 
 # DataFrame :: Compras nacionais :: importa todas as compras firmes NACIONAIS
-df_revisao_nacional = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['compras_nacionais']),
-                                    sheet_name = arquivos_primarios['compras_nacionais_sn'].split('.')[0],
-                                    usecols = list(tp_dado_arquivos['compras_nacionais'].keys()),
-                                    dtype = tp_dado_arquivos['compras_nacionais']).applymap(padronizar)
+df_revisao_nacional = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['df_revisao_nacional']),
+                                    sheet_name = arquivos_primarios['df_revisao_nacional'].split('.')[0],
+                                    usecols = list(tp_dado_arquivos['df_revisao_nacional'].keys()),
+                                    dtype = tp_dado_arquivos['df_revisao_nacional']).applymap(fx.padronizar)
 df_revisao_nacional = df_revisao_nacional.rename(columns=rename_dataframes['df_revisao_nacional'])
 
 # Dataframe :: Custo de Reposição
-custos_mp = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custos_mp']),
-                                  sheet_name = arquivos_primarios['custos_mp_sn'],
-                                  usecols = list(tp_dado_arquivos['custos_mp'].keys()),
-                                  dtype = tp_dado_arquivos['custos_mp'])
+custos_mp = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custo_reposicao']),
+                                  sheet_name = arquivos_primarios['custo_reposicao_sn'],
+                                  usecols = list(tp_dado_arquivos['custo_reposicao'].keys()),
+                                  dtype = tp_dado_arquivos['custo_reposicao'])
 custos_mp = custos_mp.loc[custos_mp['CUSTO_REPOSICAO_MERCADO'] > 0.0,:].reset_index().drop(columns='index')
 
 # Dataframe :: Demurrage
@@ -227,18 +156,32 @@ demurrage = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demurrage
 ptax_demurrage = pd.read_excel(os.path.join(path + arquivos_primarios['demurrage']), sheet_name = 'PTAX',
                                   dtype =tp_dado_arquivos['ptax'])
 
+# DataFrame :: Suprimento Intercompany Fornecido por CMISS
+suprimento_cmiss =  pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['demanda_cmiss']),
+                                 sheet_name = arquivos_primarios['demanda_cmiss_sn'],
+                                 skiprows = 1, usecols = list(tp_dado_arquivos['demanda_cmiss'].keys()),
+                                 dtype = tp_dado_arquivos['demanda_cmiss'])
+
+# DataFrame :: Cadastro de Produtos VCM - CMISS
+produtos_cmiss = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['produtos_cmiss']),
+                               sheet_name = arquivos_primarios['produtos_cmiss_sn01'],
+                               usecols = list(tp_dado_arquivos['produtos_cmiss_sn01'].keys()),
+                               dtype = tp_dado_arquivos['produtos_cmiss_sn01'])
+
 # Dataframe :: Template Suprimento
-validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_suprimento']))
-template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_suprimento']),
-                                  usecols = list(tp_dado_arquivos['template_suprimento'].keys()),
-                                  dtype = tp_dado_arquivos['template_suprimento'])
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']))
+template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
+                                  usecols = list(tp_dado_arquivos['wizard_suprimento_faixa'].keys()),
+                                  dtype = tp_dado_arquivos['wizard_suprimento_faixa'])
 wizard_suprimento_faixa = template_suprimento[['Unidade', 'Produto', 'Periodo']]
 
 
-# =======================================================================================================================
-# EXECUÇÃO DE SCRIPTS
-# =======================================================================================================================
-print('Carregando Plano de Compras...')
+print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+print('║  >>  PLANO DE COMPRAS  <<                                                                                      ║')
+print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
+print('║ # WIZARD_SUPRIMENTO_FAIXA :: Plano de Compras Firmes para VCM                                                  ║')
+print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
+print('Iniciando...')
 
 # 1. Definindo matérias-primas com fornecimento nacional
 mp_fornecimento_nacional = cadastro_mp[(cadastro_mp['TIPO_MATERIAL'] == 'MP - COMPRAS')]['PRD-VCM']
@@ -247,98 +190,51 @@ mp_fornecimento_nacional = mp_fornecimento_nacional.rename(columns={'PRD-VCM':'P
 mp_fornecimento_nacional = mp_fornecimento_nacional.drop_duplicates()
 
 # 2. Tratando arquivos de plano de compras IMPORTADO e NACIONAL
-# 2.1. Importado
+# 2.1. IMPORTADO
 companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','ECFTO':'E600','SFT':'E890'}
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
 df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
-left_outer_join(df_revisao_importada,agrupamento_produtos,left_on='CODIGO_MP',right_on='COD_ESPECIFICO')
-left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO')
-left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada,agrupamento_produtos,left_on='CODIGO_MP',right_on='COD_ESPECIFICO',
+                       name_left='Revisão de Chegadas >>Importada<<', name_right='Agrupamento de Produtos')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO',
+                       name_left='Revisão de Chegadas >>Importada<<', name_right='Períodos')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                       name_left='Revisão de Chegadas >>Importada<<', name_right='Cadastro de Produtos VCM')
 
-# 2.2. Nacional
+# 2.2. NACIONAL
 id_vars = ['PORTO','PLANTA','MP','STATUS','COMPANY','CODIGO_MP']
 df_revisao_nacional = df_revisao_nacional.melt(id_vars = id_vars, var_name = 'PROXY_PERIODO',
                                                value_name = 'BALANCE_TONS')
 df_revisao_nacional['COMPANY'] = df_revisao_nacional['COMPANY'].replace(companies)
 df_revisao_nacional['PORTO'] = df_revisao_nacional['PORTO'] + '-' + df_revisao_nacional['PLANTA']
-left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO')
-left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'NOME_PERIODO')
-left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO',
+                      name_left='Revisão de Chegadas >>Nacional<<', name_right='Agrupamento de Produtos')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO',
+                      name_left='Revisão de Chegadas >>Nacional<<',name_right='Períodos')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                      name_left='Revisão de Chegadas >>Nacional<<',name_right='Cadstro de Produtos VCM')
 
 # 3. DataFrame de Compras Completo :: Importado + Nacional
-cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO',
-        'PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
+cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO','PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
 df_revisao_importada = df_revisao_importada[cols]
 df_revisao_nacional = df_revisao_nacional[cols]
 df_revisao = pd.concat([df_revisao_importada,df_revisao_nacional])
 df_revisao = df_revisao.reset_index().drop(columns='index')
-left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO')
+df_revisao = fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO',
+             name_left='Revisão de Chegadas >>ALL<<', name_right='Portos')
 
 # Salvando um dataframe com o histórico da execução para log_futuro
 exec_hist_df_revisao = df_revisao.copy()
-
-print('Agrupando dados...')
-df_revisao = df_revisao.groupby(by = ['NOME_PORTO_VCM','PRD-VCM','NOME_PERIODO'])['BALANCE_TONS'].sum().reset_index()
-df_revisao['pk_right'] = df_revisao['NOME_PORTO_VCM'] + '-' + df_revisao['PRD-VCM'] + '-' + df_revisao['NOME_PERIODO']
-print('Inserindo dados na estrutura topológica...')
-template_suprimento['Suprimento Mínimo'] = 0.0
-template_suprimento['Suprimento Máximo'] = 0.0
-template_suprimento['pk_left'] = template_suprimento['Unidade'] + '-' + template_suprimento['Produto'] + '-' + template_suprimento['Periodo']
-left_outer_join(template_suprimento,df_revisao, left_on = 'pk_left', right_on = 'pk_right')
-print('\nAplicando premissas para compras firmes...')
-print(' >> Horizonte Compras Importadas: M+0 até M+3')
-print(' >> Horizonte Compras Nacionais: M+0 até M+1')
-purchase_range = ['Mês000','Mês001','Mês002','Mês003']
-purchase_range_nac = ['Mês000','Mês001']
-mp_list_nac = list(mp_fornecimento_nacional['PRD-VCM-NAC'])
-for i in tqdm(range(template_suprimento.shape[0]), desc = 'Processando...', unit = ' row'):
-    # Caso 1: Está no horizonte de compra importada congelado e o fornecimento é importado
-    if template_suprimento['Periodo'][i].split(' ')[0] in purchase_range \
-       and template_suprimento['BALANCE_TONS'][i] > 0.0 \
-       and template_suprimento['Unidade'][i][:3] == 'POR':
-        template_suprimento['Suprimento Mínimo'][i] = template_suprimento['BALANCE_TONS'][i]
-        template_suprimento['Suprimento Máximo'][i] = template_suprimento['Suprimento Mínimo'][i]
-    
-    # Caso 2: Não está no horizonte de fornecimento importado congelado e o fornecimento é importado
-    elif template_suprimento['Periodo'][i].split(' ')[0] not in purchase_range \
-       and template_suprimento['Unidade'][i][:3] == 'POR':
-        template_suprimento['Suprimento Mínimo'][i] = template_suprimento['BALANCE_TONS'][i]
-        template_suprimento['Suprimento Máximo'][i] = 100000.0
-    
-    # Caso 3: Para os casos de fornecimento nacional
-    elif template_suprimento['Unidade'][i][:7] == 'FOR-NAC':
-        # Caso 3.1: Suprimento mínimo supera o threshold de 10 kton
-        if template_suprimento['BALANCE_TONS'][i] > 10000.0:
-            template_suprimento['Suprimento Mínimo'][i] = template_suprimento['BALANCE_TONS'][i]
-            template_suprimento['Suprimento Máximo'][i] = template_suprimento['Suprimento Mínimo'][i]
-        # Caso 3.2: Por notar que a otimização sugeria com muita facilidade compras no período de 000 a 001,
-        # uma nova premissa foi estabelecida em 29/05/2023 - Horizonte de Fornecimento Nacional Congelado
-        elif template_suprimento['Periodo'][i].split(' ')[0] in purchase_range_nac:
-            template_suprimento['Suprimento Mínimo'][i] = template_suprimento['BALANCE_TONS'][i]
-            template_suprimento['Suprimento Máximo'][i] = template_suprimento['Suprimento Mínimo'][i]
-        # Caso 3.3: Fornecimento Nacional está fora do Horizonte de Fornecimento Nacional Congelado
-        elif template_suprimento['Produto'][i] in mp_list_nac:
-            template_suprimento['Suprimento Mínimo'][i] = template_suprimento['BALANCE_TONS'][i]
-            template_suprimento['Suprimento Máximo'][i] = 10000.0
-        # Caso 3.4: Material não consta na lista de MPs adquiridas nacionalmente
-        else:
-            template_suprimento['Suprimento Mínimo'][i] = template_suprimento['BALANCE_TONS'][i]    
-            template_suprimento['Suprimento Máximo'][i] = 0.0
-
-columns = ['Unidade','Produto','Periodo','Suprimento Mínimo','Suprimento Máximo']
-template_suprimento = template_suprimento[columns]
-template_suprimento = template_suprimento.fillna(0.0)
-template_suprimento = template_suprimento.round({'Suprimento Mínimo':2,'Suprimento Máximo':2})
 
 # (30/04/2025) :: Linhas acima duplicadas do script supply.py
 
 # CUSTOS DE FORNECIMENTO DE MATÉRIAS-PRIMAS
 # =========================================
 print('\n')
-print('╔══════════════════════════════════════════════╗')
-print('║ Iniciando atualização de Custos de Reposição ║')
-print('╚══════════════════════════════════════════════╝')
+print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
+print('║  Iniciando atualização de Custos de Reposição                                                                  ║')
+print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 print('\n')
 
 demurrage = demurrage.dropna()
@@ -388,13 +284,12 @@ last_updated_cost = last_updated_cost.drop_duplicates(subset=['CD_PRODUTO_FTO'],
 # (11/02/2025) Olhando primeiro o código específico, depois o agrupado.
 # Utilizando o "Agrupamento" do cadastro de produtos.
 agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset=['COD_ESPECIFICO'])
-agrupamento_produtos = agrupamento_produtos.merge(cadastro_mp,how = 'left', right_on = 'CODIGO_ITEM', left_on = 'CODIGO_AGRUPADO')
-
-last_updated_cost = last_updated_cost.merge(agrupamento_produtos, how = 'left', right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO')
+agrupamento_produtos = fx.left_outer_join(agrupamento_produtos, cadastro_mp, right_on = 'CODIGO_ITEM', left_on = 'CODIGO_AGRUPADO')
+last_updated_cost = fx.left_outer_join(last_updated_cost, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO')
 last_updated_cost['COD_ESPECIFICO'] = last_updated_cost['COD_ESPECIFICO'].fillna('0')
 agrupamento_custo = last_updated_cost.loc[last_updated_cost['COD_ESPECIFICO']=='0']
 agrupamento_custo = agrupamento_custo[['CD_PRODUTO_FTO','Custo VCM (BRL/ton)']]
-agrupamento_custo = agrupamento_custo.merge(agrupamento_produtos, how = 'left', right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO_FTO')
+agrupamento_custo = fx.left_outer_join(agrupamento_custo, agrupamento_produtos, right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO_FTO')
 agrupamento_custo['CODIGO_AGRUPADO'] = agrupamento_custo['CODIGO_AGRUPADO'].fillna('0')
 agrupamento_custo = agrupamento_custo.loc[agrupamento_custo['CODIGO_AGRUPADO']!='0']
 last_updated_cost = last_updated_cost.loc[last_updated_cost['CODIGO_AGRUPADO']!='0']
@@ -404,12 +299,12 @@ last_updated_cost = last_updated_cost.dropna().reset_index().drop(columns = 'ind
 last_updated_cost = last_updated_cost[['PRD-VCM','Custo VCM (BRL/ton)']].rename(columns = {'Custo VCM (BRL/ton)':'LAST_UPDATED_COST','PRD-VCM':'ID'})
 
 # (11/02/2025) Olhando primeiro o código específico, depois o agrupado.
-tbDadoPrimarioCustoReposicao = custos_mp.merge(agrupamento_produtos, how = 'left', right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO')
+tbDadoPrimarioCustoReposicao = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO')
 tbDadoPrimarioCustoReposicao['COD_ESPECIFICO'] = tbDadoPrimarioCustoReposicao['COD_ESPECIFICO'].fillna('0')
 agrupamento_custo = tbDadoPrimarioCustoReposicao.loc[tbDadoPrimarioCustoReposicao['COD_ESPECIFICO']=='0']
 agrupamento_custo = agrupamento_custo[['DH_VIGOR','DH_REFERENCIA', 'Data Inicial', 'Data Final', 'CD_PRODUTO_FTO','DESCRICAO_ITEM',
                                     'CODIGO_ORGANIZACAO','CODIGO_MOEDA','PTAX_DIA_ANTERIOR','CUSTO_REPOSICAO_MERCADO','PERIODO','NOME_PERIODO']]
-agrupamento_custo = agrupamento_custo.merge(agrupamento_produtos, how = 'left', right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO_FTO')
+agrupamento_custo = fx.left_outer_join(agrupamento_custo, agrupamento_produtos, right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO_FTO')
 agrupamento_custo['CODIGO_AGRUPADO'] = agrupamento_custo['CODIGO_AGRUPADO'].fillna('0')
 agrupamento_custo = agrupamento_custo.loc[agrupamento_custo['CODIGO_AGRUPADO']!='0']
 tbDadoPrimarioCustoReposicao = tbDadoPrimarioCustoReposicao.loc[tbDadoPrimarioCustoReposicao['COD_ESPECIFICO']!='0']
@@ -420,7 +315,7 @@ custos_mp = pd.concat([tbDadoPrimarioCustoReposicao, agrupamento_custo])
 custos_mp['Validar'] = (custos_mp['PERIODO'] >= custos_mp['Data Inicial']) & (custos_mp['PERIODO'] <= custos_mp['Data Final'])
 custos_mp = custos_mp.loc[custos_mp.Validar == True]
 custos_mp = custos_mp.reset_index().drop(columns = ['index','Validar','Data Inicial','Data Final'])
-custos_mp = custos_mp.merge(agrupamento_produtos, how = 'left', right_on = 'CODIGO_ITEM', left_on = 'CD_PRODUTO_FTO')
+custos_mp = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO')
 custos_mp['Custo VCM (BRL/ton)'] = np.nan
 for i in range(custos_mp.shape[0]):
     if custos_mp['CODIGO_MOEDA'][i] == 'USD':
@@ -442,12 +337,12 @@ wizard_custo_suprimento_faixa['ID-LEFT'] = wizard_custo_suprimento_faixa['Unidad
 # (04/07/2025) Retirando duplicatas por PRD-VCM, pois isso estava alterando a estrutura do template.
 agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset=['PRD-VCM'])
 
-demurrage = demurrage.merge(df_periodos, how = 'left', left_on = 'Periodo', right_on = 'PERIODO')
-demurrage = demurrage.merge(df_portos, how = 'left', left_on = 'Porto', right_on = 'PORTO')
+demurrage = fx.left_outer_join(demurrage, df_periodos, left_on = 'Periodo', right_on = 'PERIODO')
+demurrage = fx.left_outer_join(demurrage, df_portos, left_on = 'Porto', right_on = 'PORTO')
 demurrage['ID-RIGHT'] = demurrage['NOME_PORTO_VCM'] + '-' + demurrage['NOME_PERIODO']
 wizard_custo_suprimento_faixa['Custo MP BRL/ton'] = 0.0
 wizard_custo_suprimento_faixa['Demurrage BRL/ton'] = 0.0
-wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa.merge(agrupamento_produtos[['PRD-VCM','CATEGORIA']], how = 'left', left_on='Produto',right_on='PRD-VCM')
+wizard_custo_suprimento_faixa = fx.left_outer_join(wizard_custo_suprimento_faixa, agrupamento_produtos[['PRD-VCM','CATEGORIA']], left_on='Produto',right_on='PRD-VCM')
 wizard_custo_suprimento_faixa['Validação'] = '0'
 # ===============================================================================================================================
 # (29/01/2025) Excluindo produtos que existem no template mas não no Dado Primario do Custo de Reposição
@@ -482,7 +377,7 @@ for i in tqdm(range(wizard_custo_suprimento_faixa.shape[0])):
 
 wizard_custo_suprimento_faixa['Custo do Produto'] = wizard_custo_suprimento_faixa['Custo MP BRL/ton'] + wizard_custo_suprimento_faixa['Demurrage BRL/ton']
 wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa[['Unidade','Produto','Periodo','Custo do Produto']]
-left_outer_join(wizard_suprimento_faixa, wizard_custo_suprimento_faixa, left_on = ['Unidade','Produto','Periodo'], right_on = ['Unidade','Produto','Periodo'])
+wizard_suprimento_faixa = fx.left_outer_join(wizard_suprimento_faixa, wizard_custo_suprimento_faixa, left_on = ['Unidade','Produto','Periodo'], right_on = ['Unidade','Produto','Periodo'])
 wizard_suprimento_faixa = wizard_suprimento_faixa.fillna(0.0)
 wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path + 'WIZARD_CUSTOS_FORNECIMENTO.xlsx'), sheet_name = 'CUSTO_PRODUTO', index = False)
 print('Arquivo (Wizard_Custos_Fornecimento.xlsx) foi Atualizado com Sucesso!')
