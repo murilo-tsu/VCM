@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>   sku_activation.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 09/06/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (09/06/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -163,7 +163,7 @@ df_comercial = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['mercad
 
 # DataFrame :: Unidades Terceiras
 df_gerencia = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_terceiras']),
-                        # sheet_name= arquivos_primarios['unidades_terceiras'].split('.')[0],
+                       sheet_name= arquivos_primarios['unidades_terceiras'].split('.')[0],
                        usecols=list(tp_dado_arquivos['unidades_terceiras'].keys()),
                        dtype=tp_dado_arquivos['unidades_terceiras']).applymap(fx.padronizar)
 df_gerencia['UNIDADE PRODUTORA'] = df_gerencia['UNIDADE PRODUTORA'].replace(list(dicgen['DE']), list(dicgen['PARA']))
@@ -200,9 +200,12 @@ companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
 df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
-df_revisao_importada = fx.left_outer_join(df_revisao_importada, agrupamento_produtos, left_on='CODIGO_MP', right_on='COD_ESPECIFICO')
-df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO')
-df_revisao_importada = fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, agrupamento_produtos, left_on='CODIGO_MP', right_on='COD_ESPECIFICO',
+                                          name_left = 'Revisão de Chegadas >>Importada<<', name_right = 'Agrupamento de Produtos')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO',
+                                          name_left = 'Revisão de Chegadas >>Importada<<', name_right = 'Períodos')
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                                          name_left = 'Revisão de Chegadas >>Importada<<', name_right = 'Cadastro de Produtos VCM')
 
 # 2.2. Nacional
 id_vars = ['PORTO','PLANTA','MP','STATUS','COMPANY','CODIGO_MP']
@@ -210,9 +213,12 @@ df_revisao_nacional = df_revisao_nacional.melt(id_vars = id_vars, var_name = 'PR
                                                value_name = 'BALANCE_TONS')
 df_revisao_nacional['COMPANY'] = df_revisao_nacional['COMPANY'].replace(companies)
 df_revisao_nacional['PORTO'] = df_revisao_nacional['PORTO'] + '-' + df_revisao_nacional['PLANTA']
-df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO')
-df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO')
-df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO',
+                                         name_left='Revisão de Chegadas >>Nacional<<', name_right='Agrupamento de Produtos')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO',
+                                         name_left='Revisão de Chegadas >>Nacional<<', name_right='Períodos')
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                                         name_left='Revisão de Chegadas >>Nacional<<', name_right='Cadastro de Produtos VCM')
 
 # 3. DataFrame de Compras Completo :: Importado + Nacional
 cols = ['PORTO','PLANTA','MP','COMPANY','CODIGO_MP','COD_ESPECIFICO','CODIGO_AGRUPADO','PERIODO','NOME_PERIODO','PRD-VCM','DESCRICAO','TIPO_MATERIAL','CATEGORIA','BALANCE_TONS']
@@ -220,7 +226,8 @@ df_revisao_importada = df_revisao_importada[cols]
 df_revisao_nacional = df_revisao_nacional[cols]
 df_revisao = pd.concat([df_revisao_importada,df_revisao_nacional])
 df_revisao = df_revisao.reset_index().drop(columns='index')
-df_revisao = fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO')
+df_revisao = fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO',
+                                name_left='Revisão de Chegadas >>ALL<<', name_right='Portos')
 
 # Parte acima pega de supply, resto é de warehouses!
 # ==============================================================================
@@ -242,8 +249,10 @@ df_comercial['ID'] = df_comercial['GERENCIA'] + '-' + df_comercial['CONSULTORIA'
 rename_cols = {'CODIGO PRODUTO':'PRODUTO ID','QUANTIDADE':'VOLUME',
                'GERENCIA':'REGIONAL','CONSULTORIA':'SUPERVISAO', 'PERIODO':'PERIODO'}
 df_demanda = df_demanda.rename(columns = rename_cols)
-df_demanda = fx.left_outer_join(df_demanda,agrupamento_produtos,left_on='PRODUTO ID',right_on='COD_ESPECIFICO')
-df_demanda = fx.left_outer_join(df_demanda, cadastro_pf, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_demanda = fx.left_outer_join(df_demanda,agrupamento_produtos,left_on='PRODUTO ID',right_on='COD_ESPECIFICO',
+                                name_left='Demanda', name_right='Agrupamento de Produtos')
+df_demanda = fx.left_outer_join(df_demanda, cadastro_pf, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                                name_left='Demanda', name_right='Cadastro de Produtos - Filtro PF')
 df_demanda = df_demanda.drop_duplicates(subset=['PERIODO','DIRETORIA','REGIONAL','PRODUTO ID'])
 df_demanda = df_demanda.dropna(subset = ['CODIGO_AGRUPADO'])
 df_demanda = df_demanda.drop(columns = ['PRODUTO ID','COD_ESPECIFICO'])
@@ -270,30 +279,38 @@ demanda_unidade_terceira['proxy.Supervisao'] = demanda_unidade_terceira['REGIONA
 demanda_unidade_terceira_na = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Supervisao'].isna(),:].reset_index().drop(columns='index')
 demanda_unidade_terceira_notna = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Supervisao'].notna(),:].reset_index().drop(columns='index')
 proxy = df_gerencia.loc[df_gerencia.CONSULTORIA.isna(),:].reset_index().drop(columns='index')
-# x0 = demanda_unidade_terceira_na.shape[0]
-demanda_unidade_terceira_na = demanda_unidade_terceira_na.merge(proxy,how='left',left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['UNIDADE PRODUTORA','GERENCIA'], indicator=True)
+demanda_unidade_terceira_na = demanda_unidade_terceira_na.merge(proxy,how='left',left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['UNIDADE PRODUTORA','GERENCIA'])
 # Desativando aqui pq não precisa manter o msm tmanho (eu acho)
-#fx.left_outer_join(demanda_unidade_terceira_na,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['Unidade Produtora','Gerencia'])
+#fx.left_outer_join(demanda_unidade_terceira_na,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['UNIDADE PRODUTORA','GERENCIA'], struct=False)
 proxy = df_gerencia.loc[df_gerencia.CONSULTORIA.notna(),:].reset_index().drop(columns='index')
 demanda_unidade_terceira_notna = demanda_unidade_terceira_notna.merge(proxy,how='left',left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['UNIDADE PRODUTORA','GERENCIA','CONSULTORIA'])
 # Desativando aqui pq não precisa manter o msm tmanho (eu acho)
-# fx.left_outer_join(demanda_unidade_terceira_notna,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['Unidade Produtora','Gerencia','Consultoria'])
+#fx.left_outer_join(demanda_unidade_terceira_notna,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['UNIDADE PRODUTORA','GERENCIA','CONSULTORIA'], struct=False)
 df_demanda = pd.concat([demanda_unidade_standard, demanda_unidade_terceira_na, demanda_unidade_terceira_notna])
 
+df_expedicao['DEPOSITO'] = np.where(df_expedicao['DEPOSITO'] == '1001',
+                                   df_expedicao['PLANTA'],
+                                   df_expedicao['DEPOSITO'])
 df_demanda['UNIDADE-LEFT'] = df_demanda['UNIDADE PRODUTORA'] + '-' + df_demanda['UNIDADE FATURAMENTO']
 df_expedicao['UNIDADE-RIGHT'] = df_expedicao['DEPOSITO'] + '-' + df_expedicao['PLANTA']
-df_demanda = df_demanda.merge(df_expedicao, left_on = 'UNIDADE-LEFT', right_on = 'UNIDADE-RIGHT', how = 'left')
+df_expedicao = df_expedicao.dropna(subset=["UNIDADE-RIGHT"])
+#df_demanda = df_demanda.merge(df_expedicao, left_on = 'UNIDADE-LEFT', right_on = 'UNIDADE-RIGHT', how = 'left')
+df_demanda = fx.left_outer_join(df_demanda, df_expedicao, left_on = 'UNIDADE-LEFT', right_on = 'UNIDADE-RIGHT',
+                                name_left='Demanda', name_right='Unidades de Expedição')
 df_demanda = df_demanda[['UNIDADE PRODUTORA','UNIDADE FATURAMENTO','REGIONAL','SUPERVISAO','VOLUME','PERIODO','UNIDADE_ARMAZENAGEM_VCM','UNIDADE_EXPEDICAO_VCM','PRD-VCM']] # VER SE É UNIDADE ARMAZENAGEM OU EXPEDIÇÃO
 df_demanda['Regional - Supervisão'] = df_demanda['REGIONAL'] + '-' + df_demanda['SUPERVISAO']
-df_demanda = df_demanda.merge(df_comercial, how='left', left_on='Regional - Supervisão', right_on='ID')
+df_demanda = fx.left_outer_join(df_demanda, df_comercial, left_on='Regional - Supervisão', right_on='ID',
+                                name_left='Demanda', name_right='Estrutura Comercial')
 df_demanda = df_demanda[['UNIDADE PRODUTORA','UNIDADE FATURAMENTO','PERIODO','PRD-VCM','UNIDADE_ARMAZENAGEM_VCM','UNIDADE_EXPEDICAO_VCM','VOLUME','VCM']]
-df_demanda = df_demanda.merge(df_periodos, left_on = 'PERIODO', right_on = 'PERIODO', how = 'left')
+df_demanda = fx.left_outer_join(df_demanda, df_periodos, left_on = 'PERIODO', right_on = 'PERIODO',
+                                name_left='Demanda', name_right='Períodos')
 
 # UNICO QUE ACHOU ALGUMA CORRESPONDÊNCIA FOI expediçãoVCM
 df_demanda['ID Origem-Destino'] = df_demanda['UNIDADE_EXPEDICAO_VCM'] + '-' + df_demanda['VCM']
 df_demanda = df_demanda.dropna(subset = ['PRD-VCM'])
 up_correntes['ID'] = up_correntes['Unidade-Origem'] + '-' + up_correntes['Unidade-Destino']
-df_demanda = df_demanda.merge(up_correntes,how='left', left_on='ID Origem-Destino', right_on='ID')
+df_demanda = fx.left_outer_join(df_demanda, up_correntes, left_on='ID Origem-Destino', right_on='ID',
+                                name_left='Demanda', name_right='Update Correntes')
 demanda_corrente_agrupada = df_demanda.groupby(['ConjuntoCorrentes','PERIODO','PRD-VCM'])['VOLUME'].sum().reset_index()
 demanda_corrente_agrupada = demanda_corrente_agrupada.rename(columns={'ConjuntoCorrentes':'Unidade','PERIODO':'Período','PRD-VCM':'Produto','VOLUME':'Limite'})
 demanda_corrente_agrupada['Ativo'] = True
@@ -303,13 +320,14 @@ demanda_corrente_agrupada['Ativo'] = True
 
 # # AMARRAÇÃO DAS CORRENTES DE CONSUMO
 # # ==================================
-df_revisao = df_revisao.merge(portos_correntes, how = 'left', left_on='Origem-Destino',right_on='ID_correntes')
+df_revisao = fx.left_outer_join(df_revisao, portos_correntes, left_on='Origem-Destino',right_on='ID_correntes',
+                                name_left='Revisão de Chegadas >>ALL<<', name_right='Granularidade de Correntes')
 df_revisao_correntes_grouped = df_revisao.groupby(['CORRENTE','PERIODO','PRD-VCM'])['BALANCE_TONS'].sum().reset_index()
 wizard_suprimento_amarracao = df_revisao_correntes_grouped.copy()
 wizard_suprimento_amarracao = wizard_suprimento_amarracao.rename(columns={'CORRENTE':'Unidade','PERIODO':'Período', 'PRD-VCM':'Produto','BALANCE_TONS':'Limite'})
 wizard_suprimento_amarracao['Ativo'] = True
 # Faz sentido eu adicionar isso? Só é para estar True, onde for >0.0 né?
-# wizard_suprimento_amarracao = wizard_suprimento_amarracao.loc[wizard_suprimento_amarracao['Limite']>0.0]
+wizard_suprimento_amarracao = wizard_suprimento_amarracao.loc[wizard_suprimento_amarracao['Limite']>0.0]
 wizard_amarracao = pd.concat([demanda_corrente_agrupada,wizard_suprimento_amarracao])
 wizard_amarracao['Período'] =  wizard_amarracao['Período'].astype(str)
 wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['Período'] + wizard_amarracao['Produto']
@@ -318,7 +336,8 @@ wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['P
 # ====================================
 aux_wizard_amarracao = wizard_amarracao[['Unidade','Ativo']]
 aux_wizard_amarracao = aux_wizard_amarracao.drop_duplicates()
-template_limites = template_limites.merge(aux_wizard_amarracao, how = 'left', left_on = 'Unidade', right_on = 'Unidade')
+template_limites = fx.left_outer_join(template_limites, aux_wizard_amarracao, left_on = 'Unidade', right_on = 'Unidade',
+                                      name_left='Template', name_right='Wizard Amarração')
 template_limites['Ativo'] = template_limites['Ativo'].fillna(False)
 for i in tqdm(range(template_limites.shape[0])):
     if template_limites['Ativo'][i] == True:

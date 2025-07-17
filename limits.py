@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  limits.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 08/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 25/06/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (10/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -85,23 +85,24 @@ df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodo
                          dtype=tp_dado_arquivos['periodos'])
 df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
 
+# DataFrame :: Dicionário Genérico
+df_dicionario = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
+                              sheet_name = arquivos_primarios['dicgen'].split('.')[0],
+                              usecols = list(tp_dado_arquivos['dicgen'].keys()),
+                              dtype = tp_dado_arquivos['dicgen'])
+
 # DataFrame :: Capacidade de Produtivas / Armazenagem / Expedição
 df_cap_producao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_prod']),
                          sheet_name= arquivos_primarios['cap_prod_sn'], 
                        usecols=list(tp_dado_arquivos['cap_prod'].keys()),
                        dtype=tp_dado_arquivos['cap_prod']).applymap(fx.padronizar)
+df_cap_producao['Unidade'] = df_cap_producao['Unidade'].replace(list(df_dicionario['DE']), list(df_dicionario['PARA']))
 
 # DataFrame :: Capacidade de Armazenagem das Fábricas
 df_cap_arm = df_cap_producao.copy()
 df_cap_arm_maxmin = df_cap_producao.copy()
 # DataFrame :: Capacidade de Descarga das Fábricas
 df_cap_desc = df_cap_producao.copy()
-
-# DataFrame :: Unidades de Expedição e Descarga
-df_expedicao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
-                         sheet_name= arquivos_primarios['unidades_exp_sn'], 
-                       usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
-                       dtype=tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 
 # DataFrame :: Depara Unidades Portuárias :: Porto APO
 df_unidades_port = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_por']),
@@ -158,8 +159,10 @@ unid_imp = unid_imp[unid_imp['DEPOSITO'] == '1001'].copy()
 df_cap_portos = pd.melt(df_cap_portos, id_vars=['PERIODO'], var_name='Porto', value_name='Capacidade')
 df_cap_portos = df_cap_portos.applymap(fx.padronizar)
 portos_apo = df_unidades_port[['NOME_AZ_PORTO_VCM','PORTO']].drop_duplicates().dropna(subset = 'NOME_AZ_PORTO_VCM')
-df_cap_portos = fx.left_outer_join(df_cap_portos,portos_apo,left_on='Porto', right_on='PORTO')
-df_cap_portos = fx.left_outer_join(df_cap_portos,df_periodos,left_on='PERIODO', right_on='Nome')
+df_cap_portos = fx.left_outer_join(df_cap_portos,portos_apo,left_on='Porto', right_on='PORTO',
+                                   name_left='Capacidade Portos', name_right='Depara Unidades Portuárias')
+df_cap_portos = fx.left_outer_join(df_cap_portos,df_periodos,left_on='PERIODO', right_on='Nome',
+                                   name_left='Capacidade Portos', name_right='Períodos')
 df_cap_portos = df_cap_portos[['NOME_AZ_PORTO_VCM','Nome VCM','Capacidade']]
 df_cap_portos = df_cap_portos.rename(columns={'NOME_AZ_PORTO_VCM':'Unidade','Nome VCM':'Periodo','Capacidade':'Limite'})
 df_cap_portos = df_cap_portos.dropna()
@@ -167,7 +170,8 @@ df_cap_portos['Limite'] = df_cap_portos['Limite']*1000
 print('Etapa 02 :: CAPACIDADE DAS PLANTAS :: index = IMP')
 df_cap_producao = df_cap_producao[df_cap_producao['Agrupador'] == 'CAPACIDADE PRODUCAO'].copy()
 df_cap_producao['DEPOSITO'] = '1001'
-df_cap_producao = fx.left_outer_join(df_cap_producao,df_periodos,left_on='Dt/Ref', right_on='Nome')
+df_cap_producao = fx.left_outer_join(df_cap_producao,df_periodos,left_on='Dt/Ref', right_on='Nome',
+                                     name_left='Cap. por Unidade', name_right='Períodos')
 df_cap_producao = df_cap_producao.dropna()
 df_cap_producao['Ativo'] = 'True'
 df_cap_producao = fx.left_outer_join(df_cap_producao,df_unidades,left_on=['Unidade','DEPOSITO'], right_on=['PLANTA','DEPOSITO'],name_left='Cap. por Unidade',
@@ -178,7 +182,7 @@ df_cap_producao = df_cap_producao[['UNIDADE_EXPEDICAO_VCM','Periodo','Limite']].
 df_cap = pd.concat([df_cap_portos, df_cap_producao])
 df_cap['Ativo'] = True
 template_saida = fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'],
-                   name_left = 'Template', name_right = 'Capacidades Expedição Portos + Unidades')
+                   name_left = 'Template Saída', name_right = 'Capacidades Expedição Portos + Unidades')
 template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
 template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
 template_saida['Limite'] = template_saida['Limite'].fillna(0.0)

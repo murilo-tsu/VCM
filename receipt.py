@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                               >>  receipt.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 24/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 07/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (24/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -98,6 +98,12 @@ agrupamento_pf = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cada
                                   sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                                   usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
+proxy_agrupamento = df_produtos[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
+proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
+agrupamento_produtos = pd.concat([agrupamento_pf,proxy_agrupamento])
+agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECIFICO')
 
 # DataFrame :: Update de Correntes
 df_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['correntes']),
@@ -142,8 +148,9 @@ df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data I
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
 
-agrupamento_pf = agrupamento_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
-df_valor_venda = fx.left_outer_join(df_valor_venda, agrupamento_pf, left_on = 'Código do Produto', right_on = 'COD_ESPECIFICO')
+# agrupamento_pf = agrupamento_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
+df_valor_venda = fx.left_outer_join(df_valor_venda, agrupamento_produtos, left_on = 'Código do Produto', right_on = 'COD_ESPECIFICO',
+                                    name_left='Lista Preço', name_right='Agrupamento de Produtos')
 df_valor_venda.rename(columns = {"CODIGO_AGRUPADO": "CODIGO_ITEM"}, inplace=True)
 df_valor_venda = df_valor_venda.astype({'Ptax USD':np.float32,'Preço':np.float32})
 df_valor_venda = df_valor_venda.merge(df_produtos[["CODIGO_ITEM", "PRD-VCM"]], on = "CODIGO_ITEM", how="inner")
@@ -165,7 +172,8 @@ valor_venda_medio = valor_venda_medio.reset_index()
 #valor_venda_medio.reset_index(inplace = True)
 valor_venda_medio.rename(columns = {"Preço Venda": "Preço Venda Médio"}, inplace=True)
 
-df_pontos_venda = fx.left_outer_join(df_pontos_venda, df_correntes, left_on = "Origem", right_on="Origem", struct=False)
+df_pontos_venda = fx.left_outer_join(df_pontos_venda, df_correntes, left_on = "Origem", right_on="Origem", struct=False,
+                                     name_left='Unidades de Receita Movimentação', name_right='Update de Correntes')
 # 14/05/2024 - Incluindo uma etapa de exclusão de NaN
 df_pontos_venda = df_pontos_venda.dropna()
 # Pegando apenas as correntes que vão para mercados consumidores
@@ -178,18 +186,21 @@ df_pontos_venda = df_pontos_venda.merge(df_corrente_produto, on = "Corrente",
                                         how = "inner")
 df_pontos_venda = df_pontos_venda.merge(df_periodos[['NOME_PERIODO','PERIODO']], how = 'cross')
 
-df_pontos_venda["Desc. Empresa"] = df_pontos_venda["Origem ECFTO"]
-df_pontos_venda.drop(labels = ["Origem ECFTO"], axis = 1, inplace = True)
+df_pontos_venda["Desc. Empresa"] = df_pontos_venda["Origem EC"]
+df_pontos_venda.drop(labels = ["Origem EC"], axis = 1, inplace = True)
 
-df_receita_movimentacao = fx.left_outer_join(df_pontos_venda, df_valor_venda, left_on = ["Desc. Empresa", "PRD-VCM","NOME_PERIODO"], right_on=["Desc. Empresa", "PRD-VCM","NOME_PERIODO"])
+df_receita_movimentacao = fx.left_outer_join(df_pontos_venda, df_valor_venda, left_on = ["Desc. Empresa", "PRD-VCM","NOME_PERIODO"], right_on=["Desc. Empresa", "PRD-VCM","NOME_PERIODO"],
+                                             name_left='Unidades de Receita Movimentação', name_right='Lista Preço')
 df_receita_movimentacao["Preço Venda"] = (df_receita_movimentacao["Preço Venda"].fillna(0))
 
 # Trazendo preços médios para quando não houver preços específicos
-df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao,valor_venda_medio, left_on = ["PRD-VCM"], right_on=["PRD-VCM"])
+df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao,valor_venda_medio, left_on = ["PRD-VCM"], right_on=["PRD-VCM"],
+                                             name_left='Receita Movimentação', name_right='Preço Médio')
 df_receita_movimentacao["Preço Venda Médio"] = (df_receita_movimentacao["Preço Venda Médio"].fillna(0))
 
 # Classificação de produtos para eliminar o que não é produto final
-df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao, df_produtos[["PRD-VCM", "TIPO_MATERIAL"]], left_on = "PRD-VCM", right_on="PRD-VCM")
+df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao, df_produtos[["PRD-VCM", "TIPO_MATERIAL"]], left_on = "PRD-VCM", right_on="PRD-VCM",
+                                             name_left='Receita Movimentação', name_right='Cadastro de Produtos')
 
 # O que não é produto final fica com preço zerado
 # O que tem preço específico é usado
@@ -229,7 +240,8 @@ df_template_rmov.drop(labels="Valor", axis=1, inplace=True)
 df_receita_movimentacao_periodos = fx.left_outer_join(df_template_rmov,
                                         df_receita_movimentacao_periodos, 
                                         left_on = ["Origem", "Destino", "Corrente", "Produto", "Periodo"], 
-                                        right_on = ["Origem", "Destino", "Corrente", "Produto", "Periodo"])
+                                        right_on = ["Origem", "Destino", "Corrente", "Produto", "Periodo"],
+                                        name_left='Template Receita Movimentação', name_right='Receita Movimentação')
 df_receita_movimentacao_periodos.fillna(0, inplace = True)
 
 df_receita_movimentacao_periodos['Valor'] = df_receita_movimentacao_periodos['Valor'].round(2)

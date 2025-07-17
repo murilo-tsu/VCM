@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  inventories.py  <<                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 14/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 02/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (20/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -173,9 +173,11 @@ estoques_iniciais_pvo = estoques_iniciais_pvo.merge(pf_pvo_cadastrada, how = 'le
 # ==============================================================================================================
 
 # Matérias-primas
-estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_estoques, left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO')
+estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_estoques, left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO',
+                                                                               name_left='Estoques Iniciais', name_right='Agrupamento de Produtos')
 estoques_iniciais = estoques_iniciais.drop(columns = ['ITEM_CODE','COD_ESPECIFICO']).rename(columns = {'CODIGO_AGRUPADO':'ITEM_CODE'})
-estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_cadastrada, right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE')
+estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_cadastrada, right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE',
+                                       name_left='Estoques Iniciais', name_right='Cadastro de Produtos - MP')
 
 # Utilizar o pd.concat para agrupar os relatórios de PVO e de MPs
 estoques_iniciais_agrupados = pd.concat([estoques_iniciais,estoques_iniciais_pvo])
@@ -187,7 +189,8 @@ estoques_iniciais_agrupados = estoques_iniciais_agrupados.reset_index()
 estoques_iniciais_agrupados['ID'] = estoques_iniciais_agrupados['UNIDADE_ARMAZENAGEM_VCM'] + estoques_iniciais_agrupados['PRD-VCM']
 wizard_volumes_iniciais['ID'] = wizard_volumes_iniciais['Unidade'] + wizard_volumes_iniciais['Produto']
 
-wizard_volumes_iniciais = fx.left_outer_join(wizard_volumes_iniciais, estoques_iniciais_agrupados, right_on = 'ID', left_on = 'ID')
+wizard_volumes_iniciais = fx.left_outer_join(wizard_volumes_iniciais, estoques_iniciais_agrupados, right_on = 'ID', left_on = 'ID',
+                                             name_left='Template Estoques', name_right='Estoques Iniciais Agrupados')
 wizard_volumes_iniciais['Valor'] = 0.0
 for i in range(wizard_volumes_iniciais.shape[0]):
     if wizard_volumes_iniciais['ACTUAL_STOCK'][i] > 0.0:

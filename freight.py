@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                               >>  freight.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 10/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 26/06/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (13/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -129,14 +129,15 @@ localizacao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['localiz
 
 localizacao['ID Origem-Destino'] = localizacao['Município'] + '-' + localizacao['Estado']
 
-# DataFrame :: Depara Unidades
-depara_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
-                        sheet_name= arquivos_primarios['unidades_exp_sn'],
-                       usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
-                       dtype=tp_dado_arquivos['unidades_exp'])
+# Comentando pois diz respeito a parte do script já desativada.
+# # DataFrame :: Depara Unidades
+# depara_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
+#                         sheet_name= arquivos_primarios['unidades_exp_sn'],
+#                        usecols=list(tp_dado_arquivos['unidades_exp'].keys()),
+#                        dtype=tp_dado_arquivos['unidades_exp'])
 
-id_unidades = depara_unidades['UNIDADE_EXPEDICAO_VCM'].str.split("-", n=2, expand = True)
-id_unidades = id_unidades[1].drop_duplicates().tolist()
+# id_unidades = depara_unidades['UNIDADE_EXPEDICAO_VCM'].str.split("-", n=2, expand = True)
+# id_unidades = id_unidades[1].drop_duplicates().tolist()
 
 # DataFrame :: Custos de Frete Inbound Ferroviário e Hidroviário
 frete_inbound_ferro_hidro = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custo_internalizacao']),
@@ -436,7 +437,8 @@ media = template_fretes.groupby(by=['Corrente'])['ValorVariavel'].mean()
 media = media.reset_index()
 media = media.rename(columns={'Corrente':'CorrenteOut','ValorVariavel':'ValorMedia'})
 
-template_fretes = fx.left_outer_join(template_fretes, media, left_on='Corrente', right_on='CorrenteOut')
+template_fretes = fx.left_outer_join(template_fretes, media, left_on='Corrente', right_on='CorrenteOut',
+                                    name_left='Template Fretes', name_right='Média de Fretes')
 template_fretes['ValorMedia'] = template_fretes['ValorMedia'].fillna(0.0)
 template_fretes['ValorVariavel'] = template_fretes['ValorVariavel'].fillna(0.0)
 

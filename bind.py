@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  bind.py  <<                                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 14/05/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 16/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (21/05/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -165,7 +165,7 @@ df_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidade
                             usecols = list(tp_dado_arquivos['unidades_exp'].keys()),
                             dtype = tp_dado_arquivos['unidades_exp'])
 
-# DataFrame :: 
+# DataFrame :: Estrutura Comercial
 df_supervisoes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['mercados']),
                                sheet_name = arquivos_primarios['mercados'].split('.')[0],
                                usecols = list(tp_dado_arquivos['mercados'].keys()),
@@ -184,18 +184,18 @@ df_dicionario = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicge
                               dtype = tp_dado_arquivos['dicgen'])
 
 # DataFrame :: Template Demanda
-fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
 template_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
                             usecols = list(tp_dado_arquivos['template_demanda'].keys()),
                             dtype = tp_dado_arquivos['template_demanda'])
 
 # DataFrame :: Template Definição Limites
-fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_limites']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_limites']))
 template_limites = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_limites']),\
                               delimiter = ';', encoding = 'utf-8')
 
 # DataFrame :: Template Correntes
-fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_correntes']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_correntes']))
 template_correntes = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_correntes']),\
                               delimiter = ';', encoding = 'utf-8')
 
@@ -263,8 +263,8 @@ df_revisao = df_revisao.merge(df_correntes, how='left', left_on=['NOME_PORTO_VCM
 # MERCADOS CONSUMIDORES
 # =====================
 # Está seção dedica-se ao ETL para a criação dos WIZARDS de MERCADOS CONSUMIDORES
-#df_agrupamento = df_agrupamento.merge(pf_cadastrada, how = 'left', left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
-df_agrupamento = fx.left_outer_join(df_agrupamento, pf_cadastrada, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM')
+df_agrupamento = fx.left_outer_join(df_agrupamento, pf_cadastrada, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
+                                    name_left='Agrupamento de Produtos', name_right='Cadastro de Produtos - PF')
 df_agrupamento = df_agrupamento[['CODIGO_AGRUPADO','DESCRICAO_ESPECIFICA','PRD-VCM','COD_ESPECIFICO']]
 df_agrupamento = df_agrupamento.dropna(subset = ['PRD-VCM'])
 df_agrupamento = df_agrupamento.drop_duplicates(subset = ['CODIGO_AGRUPADO'])
@@ -279,7 +279,8 @@ rename_cols = {'CODIGO PRODUTO':'PRODUTO ID','QUANTIDADE':'VOLUME',
                'GERENCIA':'REGIONAL','CONSULTORIA':'SUPERVISAO', 'PERIODO':'PERIODO'}
 df_demanda = df_demanda.rename(columns = rename_cols)
 df_demanda = df_demanda.loc[df_demanda['PRODUTO ID'].notnull(),:]
-df_demanda = fx.left_outer_join(df_demanda, agrupamento_produtos, left_on = 'PRODUTO ID', right_on = 'COD_ESPECIFICO')
+df_demanda = fx.left_outer_join(df_demanda, agrupamento_produtos, left_on = 'PRODUTO ID', right_on = 'COD_ESPECIFICO',
+                                name_left='Demanda', name_right='Agrupamento de Produtos')
 df_demanda = df_demanda.dropna(subset = ['CODIGO_AGRUPADO'])
 df_demanda['Código Agrupado'] = df_demanda['CODIGO_AGRUPADO'].astype(np.int64)
 df_demanda = df_demanda.drop(columns = ['PRODUTO ID','COD_ESPECIFICO'])
@@ -314,13 +315,16 @@ demanda['pkLEFT'] = demanda['UNIDADE PRODUTORA'] + '-' + demanda['UNIDADE FATURA
 df_unidades['pkRIGHT.2'] = df_unidades['DEPOSITO'] + '-' + df_unidades['PLANTA']
 demanda = fx.left_outer_join(demanda, df_unidades, left_on = 'pkLEFT', right_on = 'pkRIGHT.2',
           name_left='Demanda', name_right='De-Para Unidades Expedição')
-demanda = fx.left_outer_join(demanda, df_agrupamento, left_on = 'PRODUTO ID', right_on = 'CODIGO_AGRUPADO')
+demanda = fx.left_outer_join(demanda, df_agrupamento, left_on = 'PRODUTO ID', right_on = 'CODIGO_AGRUPADO',
+          name_left='Demanda', name_right='Agrupamento de Produtos')
 demanda = demanda[['REGIONAL','SUPERVISAO','VOLUME','PERIODO','UNIDADE_EXPEDICAO_VCM','PRD-VCM']]
 demanda = demanda.dropna(subset = ['UNIDADE_EXPEDICAO_VCM','PRD-VCM'])
 demanda['Regional - Supervisão'] = demanda['REGIONAL'] + '-' + demanda['SUPERVISAO']
-demanda = fx.left_outer_join(demanda, df_supervisoes, left_on = 'Regional - Supervisão', right_on = 'ID')
+demanda = fx.left_outer_join(demanda, df_supervisoes, left_on = 'Regional - Supervisão', right_on = 'ID',
+          name_left='Demanda', name_right='Estrutura Comercial')
 demanda = demanda[['PERIODO','PRD-VCM','UNIDADE_EXPEDICAO_VCM','VCM','VOLUME']]
-demanda = fx.left_outer_join(demanda, df_periodos, left_on = 'PERIODO', right_on = 'PERIODO')
+demanda = fx.left_outer_join(demanda, df_periodos, left_on = 'PERIODO', right_on = 'PERIODO',
+          name_left='Demanda', name_right='Período')
 demanda['ID Origem-Destino'] = demanda['UNIDADE_EXPEDICAO_VCM'] + '-' + demanda['VCM']
 demanda = demanda.dropna(subset = ['PRD-VCM'])
 
@@ -330,7 +334,8 @@ demanda = demanda.dropna(subset = ['PRD-VCM'])
 # AMARRAÇÃO DAS CORRENTES DE CONSUMO
 # ==================================
 dep_correntes['ID'] = dep_correntes['Unidade-Origem'] + '-' + dep_correntes['Unidade-Destino']
-demanda = fx.left_outer_join(demanda, dep_correntes, left_on = 'ID Origem-Destino', right_on = 'ID')
+demanda = fx.left_outer_join(demanda, dep_correntes, left_on = 'ID Origem-Destino', right_on = 'ID',
+                             name_left='Demanda', name_right='Update Correntes')
 demanda_corrente_agrupada = demanda.groupby(['ConjuntoCorrentes','NOME_PERIODO','PRD-VCM'])['VOLUME'].sum().reset_index()
 demanda_corrente_agrupada = demanda_corrente_agrupada.rename(columns={'ConjuntoCorrentes':'Unidade','NOME_PERIODO':'Período','PRD-VCM':'Produto','VOLUME':'Limite'})
 demanda_corrente_agrupada['Ativo'] = True
@@ -349,7 +354,8 @@ wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['P
 # Cria uma ativação por produto e por corrente
 aux_wizard_amarracao = wizard_amarracao[['Unidade','Ativo']]
 aux_wizard_amarracao = aux_wizard_amarracao.drop_duplicates()
-template_limites = fx.left_outer_join(template_limites, aux_wizard_amarracao, left_on = 'Unidade', right_on = 'Unidade')
+template_limites = fx.left_outer_join(template_limites, aux_wizard_amarracao, left_on = 'Unidade', right_on = 'Unidade',)
+                                      #name_left='Template Limites', name_right='Wizard Amarração')
 template_limites.fillna(False)
 for i in tqdm(range(template_limites.shape[0])):
     if template_limites['Ativo'][i] == True:
@@ -357,6 +363,7 @@ for i in tqdm(range(template_limites.shape[0])):
     else:
         template_limites['Nivel Detalhe'][i] = template_limites['Nivel Detalhe'][i]
 
+#template_limites.to_csv(os.path.join(cwd,output_path + 'DefinicaoLimites.csv'), encoding = '1252', index = False)
 #print('DefinicaoLimites.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')
 print('Importante atualizar WIZARD CORRENTES INPUT a partir dos dados do VCM!')
 
@@ -370,7 +377,8 @@ template_correntes['Ativo'] = False
 template_correntes['ID-LEFT'] = template_correntes['Unidade'] + template_correntes['Periodo'] + template_correntes['Produto']
 wizard_amarracao = pd.concat([demanda_corrente_agrupada,wizard_suprimento_amarracao])
 wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['Período'] + wizard_amarracao['Produto']
-template_correntes = fx.left_outer_join(template_correntes, wizard_amarracao, right_on = 'ID-RIGHT', left_on = 'ID-LEFT')
+template_correntes = fx.left_outer_join(template_correntes, wizard_amarracao, right_on = 'ID-RIGHT', left_on = 'ID-LEFT',
+                                        name_left='Template Correntes', name_right='Wizard Amarração')
 template_correntes = template_correntes.astype({'Limite_y':np.float32,'Limite_x':np.float32})
 template_correntes['Limite_y'] = template_correntes['Limite_y'].fillna(0.0)
 for i in tqdm(range(template_correntes.shape[0])):
