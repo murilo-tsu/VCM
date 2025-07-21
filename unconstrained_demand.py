@@ -107,6 +107,7 @@ unidades_exp = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidad
                              sheet_name = arquivos_primarios['unidades_exp'].split('.')[0],
                              usecols = list(tp_dado_arquivos['unidades_exp'].keys()),
                              dtype = tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
+unidades_exp = unidades_exp.dropna(subset="DEPOSITO")
 
 # Carregando uma lista de depara de supervisões para MERCADO CONSUMIDOR
 mercados = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['mercados']),
@@ -166,6 +167,7 @@ demanda = fx.left_outer_join(demanda, agrupamento_produtos, left_on = 'CODIGO PR
                    name_left='Demanda', name_right='Agrupamento de Produtos')
 demanda = fx.left_outer_join(demanda, pf_cadastrada, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
                    name_left='Demanda', name_right='Cadastro de Produtos')
+
 # Criar uma lista de unidades terceiras relevantes para uma determinada fábrica (unidade de expedição)
 # Buscar apenas as unidades terceiras
 unique = unidades_terc['UNIDADE PRODUTORA'].drop_duplicates().to_list()
@@ -223,14 +225,12 @@ demanda['pk'] = demanda['VCM'] + '-' + demanda['PRD-VCM'] + '-' + demanda['NOME_
 wizard_spot_demanda_produto_faixa['pk'] = wizard_spot_demanda_produto_faixa['Unidade'] + '-' +\
                                           wizard_spot_demanda_produto_faixa['Produto'] + '-' +\
                                           wizard_spot_demanda_produto_faixa['Periodo']
-history_demanda = demanda.copy()
+demanda_excluida = demanda[demanda["pk"].isna()].copy()
 print('Excluindo linhas da demanda para as quais não foi possível localizar um PRD-VCM')
-print('Para avaliar os SKUs da demanda irrestrita, verificar as saídas do script 1st Deploy')
-demanda = demanda.dropna(subset = ['PRD-VCM'])
-excluded_volume = demanda.loc[demanda['pk'].isna(),:]['QUANTIDADE'].sum().round(2)
-print(f'O volume desconsiderado da demanda irrestrita é de {excluded_volume}')
-print(f'Gerado um log de erro das linhas de demanda expurgadas: LOG ERROR - Linhas Ignoradas da Demanda')
-demanda.loc[demanda['pk'].isna(),:].to_excel(os.path.join(cwd,exec_log_path+'LOG ERROR - Linhas Ignoradas da Demanda.xlsx'),index=False)
+print('Avaliar os SKU ausentes :: [CALL TO ACTION] Demanda vs. Status Lista Técnica')
+demanda = demanda.dropna(subset = ['pk'])
+excluded_volume = demanda_excluida['QUANTIDADE'].sum().round(2)
+demanda.loc[demanda['pk'].isna(),:].to_excel(os.path.join(cwd,exec_log_path+'[CALL TO ACTION] Linhas Expurgadas da Demanda.xlsx'),index=False)
 demanda = demanda.groupby(['pk']).agg({'QUANTIDADE':'sum'}).reset_index()
 print('Preenchendo o estrutura topológica...')
 wizard_spot_demanda_produto_faixa = fx.left_outer_join(wizard_spot_demanda_produto_faixa, demanda, left_on = 'pk', right_on = 'pk',
@@ -256,6 +256,14 @@ demanda_cmiss['Periodo'] = demanda_cmiss['NOME_PERIODO']
 columns = ['Unidade','Produto','Periodo','Quantidade']
 demanda_cmiss = demanda_cmiss[columns]
 demanda_cmiss = demanda_cmiss.groupby(by=['Unidade','Produto','Periodo'])['Quantidade'].sum().reset_index()
+cmiss_volume = demanda_cmiss["Quantidade"].sum().round(2)
+
+print(f'LOG DE ERRO :: linhas expurgadas da demanda: [CALL TO ACTION] Linhas Expurgadas da Demanda')
+print(f'O volume desconsiderado da demanda irrestrita é de :: (+) {excluded_volume}')
+print(f'O volume da demanda atendido por CMISS é de        :: (+) {cmiss_volume}')
+print(f'                                                      ----------------------')
+print(f'O volume desconsiderado da demanda downstream      :: (=) {cmiss_volume+excluded_volume}')
+
 wizard_spot_demanda_produto_faixa = fx.left_outer_join(wizard_spot_demanda_produto_faixa, demanda_cmiss,
                                                        left_on = ['Unidade','Produto','Periodo'],
                                                        right_on = ['Unidade','Produto','Periodo'],
@@ -301,8 +309,8 @@ wizard_spot_demanda_produto_faixa = wizard_spot_demanda_produto_faixa[columns]
 decimals_kg = 2
 wizard_spot_demanda_produto_faixa['Demanda Mínima'] = wizard_spot_demanda_produto_faixa['Demanda Mínima'].apply(lambda x: round(x, decimals_kg))
 wizard_spot_demanda_produto_faixa['Demanda Máxima'] = wizard_spot_demanda_produto_faixa['Demanda Máxima'].apply(lambda x: round(x, decimals_kg))
-wizard_spot_demanda_produto_faixa.to_excel(os.path.join(cwd,output_path + 'Wizard_Spot_Demanda_Produto_Faixa.xlsx'), sheet_name='SPOT_DEMANDA_PRODUTO_FAIXA', index = False)
-print('Arquivo (Wizard_Spot_Demanda_Produto_Faixa.xlsx) foi Atualizado com Sucesso!')
+wizard_spot_demanda_produto_faixa.to_excel(os.path.join(cwd,output_path + 'WIZARD_SPOT_DEMANDA_PRODUTO_FAIXA.xlsx'), sheet_name='SPOT_DEMANDA_PRODUTO_FAIXA', index = False)
+print('Arquivo [WIZARD_SPOT_DEMANDA_PRODUTO_FAIXA.xlsx] foi Atualizado com Sucesso!')
 demanda_resumida = wizard_spot_demanda_produto_faixa.copy()
 demanda_resumida = fx.left_outer_join(demanda_resumida, periodos, left_on = 'Periodo', right_on = 'NOME_PERIODO',
                    name_left='Demanda Resumida', name_right='Períodos')
