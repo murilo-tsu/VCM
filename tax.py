@@ -105,6 +105,7 @@ df_correntes = df_correntes.rename(columns=rename_dataframes['df_correntes'])
 df_corrente_produto = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_corrente_produto']),
                                             usecols=list(tp_dado_arquivos['template_corrente_produto'].keys()),
                                             dtype=tp_dado_arquivos['template_corrente_produto'])
+df_corrente_produto = df_corrente_produto.rename(columns={'Produto':'PRD-VCM'})
 
 # Dataframe :: Template Impostos Entrada
 #validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
@@ -140,10 +141,17 @@ df_pontos_balanco = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['u
 df_pontos_balanco = df_pontos_balanco.rename(columns=rename_dataframes['unidades_icms'])
 
 # Dataframe :: Agrupamento
-agrupamento_mp = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
+agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
                                           sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                                           usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                                           dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
+
+proxy_agrupamento = df_produtos[['ITEM_CODE','DESCRICAO']]
+proxy_agrupamento = proxy_agrupamento.rename(columns={'ITEM_CODE':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
+proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
+agrupamento_produtos = pd.concat([agrupamento_produtos,proxy_agrupamento])
+agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECIFICO')
 
 
 # =======================================================================================================================
@@ -169,9 +177,10 @@ df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data I
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
 
-# (07/07/25) VERIFICAR SE era msm para aumentar a qntd de linhas... 
-df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_mp,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO', struct=False)
-df_valor_venda = fx.left_outer_join(df_valor_venda,agrupamento_mp,left_on='Código do Produto',right_on='COD_ESPECIFICO',struct=False)
+df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_produtos,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO',
+                                     name_right='Custo de Reposição',name_left='Agrupamento de Produtos')
+df_valor_venda = fx.left_outer_join(df_valor_venda,agrupamento_produtos,left_on='Código do Produto',right_on='COD_ESPECIFICO',
+                                    name_right='Lista Preço',name_left='Agrupamento de Produtos')
 df_valor_venda = df_valor_venda.dropna(subset = 'COD_ESPECIFICO')
 df_valor_compra.rename(columns = {"CODIGO_AGRUPADO": "ITEM_CODE"},
                        inplace=True)
@@ -225,7 +234,7 @@ valor_compra_medio.rename(columns = {"Preço Compra": "Preço Compra Médio"}, i
 # df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace("'","")
 # df_valor_venda["Ptax USD"] = df_valor_venda["Ptax USD"].str.replace(",",".")
 
-# df_valor_venda = df_valor_venda.astype({"Preço" : float, "Ptax USD" : float})
+df_valor_venda = df_valor_venda.astype({"Preço" : float, "Ptax USD" : float})
 
 # Convertendo de dólares para reais quando necessário
 df_valor_venda["Preço Venda"] = np.where(df_valor_venda["Moeda"] == "BRL",
@@ -270,17 +279,19 @@ df_base_saida = df_base_saida[(df_base_saida["Tipo"] == "INBOUND") |
 
 # Trazendo os produtos presentes em cada uma das correntes
 df_base_saida = fx.left_outer_join(df_base_saida,df_corrente_produto, left_on= "Corrente", right_on= "Corrente",
-                                    struct=False)
+                                    struct=False, name_right='Base de Saída',name_left='Abertura de Correntes e Produtos')
 
 ## Inserindo dimensão temporal através do df_periodos
 ## Posteriormente, realizar o merge considerando também períodos
 df_base_saida = df_base_saida.merge(df_periodos[['Periodo_VCM']], how = 'cross')
 df_base_saida = fx.left_outer_join(df_base_saida,df_valor_venda, 
                                     left_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"],
-                                    right_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
+                                    right_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"],
+                                    name_right='Base de Saída',name_left='Lista Preço')
 df_base_saida["Preço Venda"] = df_base_saida["Preço Venda"].fillna(0)
 df_base_saida = fx.left_outer_join(df_base_saida, valor_venda_medio, 
-                                    left_on = "PRD-VCM", right_on="PRD-VCM")
+                                    left_on = "PRD-VCM", right_on="PRD-VCM",
+                                    name_right='Base de Saída',name_left='Preço Médio')
 df_base_saida["Preço Venda Médio"] = df_base_saida["Preço Venda Médio"].fillna(0)
 
 # Atribuindo o valor da base de cálculo a partir do preço de venda ou do estoque
@@ -309,12 +320,13 @@ df_template_icms_saida.drop(labels="Base de Cálculo", axis=1, inplace=True)
 
 df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_base_saida_periodos,left_on=["Unidade Origem", "Unidade Destino",
                                          "Corrente", "Produto", "Período"],right_on=["Unidade Origem", "Unidade Destino",
-                                         "Corrente", "Produto", "Período"])
+                                         "Corrente", "Produto", "Período"], name_right='Template Impostos Saida',name_left='Base de Saída')
 
 df_template_icms_saida.fillna(0, inplace = True)
 
 # Inserindo a matriz de balanço de impostos para entrada
-df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Origem',right_on='Unidades')
+df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Origem',right_on='Unidades',
+                                            name_right='Template Impostos Saída', name_left='Unidades ICMS - Entrada')
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
@@ -322,12 +334,12 @@ df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
 df_template_icms_saida = df_template_icms_saida.rename(columns={'Zerar entrada':'ORG-IN','Zerar saída':'ORG-OUT'})
 
 # Inserindo a matriz de balanço de impostos para saída
-df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Destino',right_on='Unidades')
+df_template_icms_saida = fx.left_outer_join(df_template_icms_saida,df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']],left_on='Unidade Destino',right_on='Unidades',
+                                            name_right='Template Impostos Saída', name_left='Unidades ICMS - Saída')
 df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",
-                        "ORG-IN","ORG-OUT",
-                        "Zerar entrada","Zerar saída"]]
+                        "ORG-IN","ORG-OUT", "Zerar entrada","Zerar saída"]]
 df_template_icms_saida = df_template_icms_saida.rename(columns={'Zerar entrada':'DEST-IN','Zerar saída':'DEST-OUT'})
 df_template_icms_saida = df_template_icms_saida.astype({'ORG-OUT':np.float64,'DEST-IN':np.float64,'Base de Cálculo':np.float64})
 df_template_icms_saida['Tax.Check'] = df_template_icms_saida['ORG-OUT'] + df_template_icms_saida['DEST-IN']
@@ -370,13 +382,16 @@ df_base_entrada = df_base_entrada[(df_base_entrada["Tipo"] == "INBOUND") | (df_b
 
 # Trazendo os produtos presentes em cada uma das correntes
 df_base_entrada = fx.left_outer_join(df_base_entrada, df_corrente_produto, left_on="Corrente",
-                                       right_on="Corrente", struct=False)
+                                       right_on="Corrente", struct=False, 
+                                       name_right='Base de Entrada', name_left='Abertura de Correntes e Produtos')
 df_base_entrada = df_base_entrada.merge(df_periodos[['Periodo_VCM']], how = 'cross')
 df_base_entrada = fx.left_outer_join(df_base_entrada, df_valor_compra, 
-                                    left_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"], right_on= ["Periodo_VCM","Desc. Empresa", "PRD-VCM"])
+                                    left_on = ["Periodo_VCM","Desc. Empresa", "PRD-VCM"], right_on= ["Periodo_VCM","Desc. Empresa", "PRD-VCM"],
+                                    name_right='Base de Entrada', name_left='Custo de Reposição')
 df_base_entrada["Preço Compra"] = df_base_entrada["Preço Compra"].fillna(0)
 df_base_entrada = fx.left_outer_join(df_base_entrada, valor_compra_medio,
-                                left_on = "PRD-VCM", right_on="PRD-VCM")
+                                left_on = "PRD-VCM", right_on="PRD-VCM",
+                                name_right='Base de Entrada', name_left='Custo Médio')
 df_base_entrada["Preço Compra Médio"] = df_base_entrada["Preço Compra Médio"].fillna(0)
 df_base_entrada_periodos = df_base_entrada.copy()
 
@@ -405,13 +420,15 @@ df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada, df_base_
                                    left_on = ["Unidade Destino", "Unidade Origem",
                                          "Corrente", "Produto", "Período"], 
                                    right_on= ["Unidade Destino", "Unidade Origem",
-                                         "Corrente", "Produto", "Período"])
+                                         "Corrente", "Produto", "Período"],
+                                         name_right='Template ICMS Entrada', name_left='Base de Entrada')
 df_template_icms_entrada.fillna(0, inplace = True)
 
 # Dados de Entrada
 df_pontos_balanco = df_pontos_balanco[['Unidades','Zerar entrada','Zerar saída']]
 df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada,df_pontos_balanco,
-                left_on='Unidade Origem',right_on='Unidades')
+                left_on='Unidade Origem',right_on='Unidades',
+                name_right='Template ICMS Entrada', name_left='Unidades ICMS - Entrada')
 
 df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
@@ -420,7 +437,8 @@ df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
 df_template_icms_entrada = df_template_icms_entrada.rename(columns={'Zerar entrada':'ORG-IN','Zerar saída':'ORG-OUT'})
 
 # Inserindo a matriz de balanço de impostos para saída
-df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada,df_pontos_balanco,left_on='Unidade Destino',right_on='Unidades')
+df_template_icms_entrada = fx.left_outer_join(df_template_icms_entrada,df_pontos_balanco,left_on='Unidade Destino',right_on='Unidades',
+                                              name_right='Template ICMS Entrada', name_left='Unidades ICMS - Saída')
 df_template_icms_entrada = df_template_icms_entrada[["Unidade Origem",
                         "Unidade Destino", "Corrente", "Produto",
                         "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST",

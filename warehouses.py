@@ -162,18 +162,22 @@ print('╚═══════════════════════�
 # Faria sentido puxar isso por unidade direto? 
 # (Sem passar pelo estado, mas ai ia ter que vir a unidade no dado de custo)
 
-df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
+df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade',
+                                           name_left='Template de Custos de Handling', name_right='Localização')
 # Substituindo o nome pela sigla.
 df_custos_armz['Estado'] = df_custos_armz['Estado'].replace(['BAHIA', 'ESPIRITO SANTO', 'GOIAS',
                     'PARANA', 'RIO GRANDE DO SUL', 'SANTA CATARINA', 'SAO PAULO', 'SERGIPE',],\
                     ['BA', 'ES', 'GO', 'PR', 'RS', 'SC', 'SP', 'SE'])
-df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_custos_armz,left_on='Estado', right_on='Estado')
+df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
+                                           name_left='Template de Custos de Handling', name_right='DADO PRIMARIO DE ARMAZENAGEM E HANDLING')
 df_template_hand_armz['Recebimento'] = df_template_hand_armz['Handling (R$/ton)'].fillna(0.0)
 df_template_hand_armz = df_template_hand_armz[['Unidade','Produto','Periodo','Recebimento','Expedição']]
 df_template_hand_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosHandlingArmz.xlsx'),index=False, sheet_name='HANDLING')
 
-df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade')
-df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_custos_armz,left_on='Estado', right_on='Estado')
+df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade',
+                                          name_left='Template de Custos Variáveis', name_right='Localização')
+df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
+                                          name_left='Template de Custos Variáveis', name_right='ADO PRIMARIO DE ARMAZENAGEM E HANDLING')
 df_template_var_armz['Custo Variável'] = df_template_var_armz['Armazenagem (R$/ton)'].fillna(0.0)
 # (03/12/2024) Como pedido pelo Ricardo, caso o custo variável esteja zerado, preencher com um valor específico para cada unidade.
 df_template_var_armz['ID'] = df_template_var_armz['Unidade'].str[:3]
@@ -201,7 +205,8 @@ print('╚═══════════════════════�
 df_cap_arm_maxmin = df_cap_arm_maxmin.loc[df_cap_arm_maxmin['Agrupador']=='CAPACIDADE ARMAZENAGEM'].copy()
 df_cap_arm_maxmin['Unidade'] = df_cap_arm_maxmin['Unidade'].replace(list(dicgen['DE']),list(dicgen['PARA']))
 unid_arm['Local'] = np.where(unid_arm['UNIDADE_ARMAZENAGEM_VCM'].str[:3] == 'AIN','INTERNO','EXTERNO')
-unid_arm = unid_arm.drop_duplicates(subset=['PLANTA'])
+#unid_arm = unid_arm.drop_duplicates(subset=['PLANTA'])
+unid_arm = unid_arm.loc[unid_arm['DEPOSITO']=='1001']
 df_cap_arm_maxmin = df_cap_arm_maxmin[['Unidade','Quantidade','Local']]
 # (08/07/2025) Desativando a ideia de média.
 # (25/06/2025) Fazendo uma média das quantidades por unidade, para tirar as duplicatas.
@@ -212,7 +217,8 @@ df_cap_arm_maxmin = fx.left_outer_join(df_cap_arm_maxmin, unid_arm, left_on=['Un
                    name_left='Capacidade de Armazenagem INTERNO e EXTERNO', name_right='Depara de Unidades')
 # (08/07/2025) Adicionando o período como cross, pq cada linha precisa de uma referência de período para o template!
 df_cap_arm_maxmin = df_cap_arm_maxmin.merge(df_periodos, how='cross')
-template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin, left_on=['Unidade','Periodo'], right_on=['UNIDADE_ARMAZENAGEM_VCM','Nome VCM'],                   name_left = 'Template Capacidade', name_right = 'Capacidade de Armazenagem INTERNO e EXTERNO')
+template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin, left_on=['Unidade','Periodo'], right_on=['UNIDADE_ARMAZENAGEM_VCM','Nome VCM'],
+                                         name_left = 'Template Capacidade', name_right = 'Capacidade de Armazenagem INTERNO e EXTERNO')
 template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
 template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
 template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})

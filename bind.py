@@ -297,7 +297,7 @@ demanda_unidade_terceira = df_demanda.loc[df_demanda['proxy.Faturamento'].isna()
 demanda_unidade_standard['UNIDADE FATURAMENTO'] = demanda_unidade_standard['proxy.Faturamento']
 # Recriar a lista agora apenas com as consultorias relevantes para determinar a UNIDADE FATURAMENTO
 unique = df_terceiras.loc[df_terceiras['CONSULTORIA'].notna(),:]['GERENCIA'].drop_duplicates().to_list()
-demanda_unidade_terceira['proxy.Supervisao'] = demanda_unidade_terceira['REGIONAL'].apply(lambda x: np.NaN if x not in unique else x)
+demanda_unidade_terceira['proxy.Supervisao'] = demanda_unidade_terceira['REGIONAL'].apply(lambda x: np.nan if x not in unique else x)
 demanda_unidade_terceira_na = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Supervisao'].isna(),:].reset_index().drop(columns='index')
 demanda_unidade_terceira_notna = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Supervisao'].notna(),:].reset_index().drop(columns='index')
 proxy = df_terceiras.loc[df_terceiras.CONSULTORIA.isna(),:].reset_index().drop(columns='index')
@@ -313,6 +313,7 @@ df_unidades['DEPOSITO'] = np.where(df_unidades['DEPOSITO'] == '1001',
                                    df_unidades['DEPOSITO'])
 demanda['pkLEFT'] = demanda['UNIDADE PRODUTORA'] + '-' + demanda['UNIDADE FATURAMENTO']
 df_unidades['pkRIGHT.2'] = df_unidades['DEPOSITO'] + '-' + df_unidades['PLANTA']
+df_unidades = df_unidades.dropna(subset='pkRIGHT.2')
 demanda = fx.left_outer_join(demanda, df_unidades, left_on = 'pkLEFT', right_on = 'pkRIGHT.2',
           name_left='Demanda', name_right='De-Para Unidades Expedição')
 demanda = fx.left_outer_join(demanda, df_agrupamento, left_on = 'PRODUTO ID', right_on = 'CODIGO_AGRUPADO',

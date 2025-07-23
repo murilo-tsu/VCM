@@ -230,7 +230,7 @@ print('Excluindo linhas da demanda para as quais não foi possível localizar um
 print('Avaliar os SKU ausentes :: [CALL TO ACTION] Demanda vs. Status Lista Técnica')
 demanda = demanda.dropna(subset = ['pk'])
 excluded_volume = demanda_excluida['QUANTIDADE'].sum().round(2)
-demanda.loc[demanda['pk'].isna(),:].to_excel(os.path.join(cwd,exec_log_path+'[CALL TO ACTION] Linhas Expurgadas da Demanda.xlsx'),index=False)
+demanda_excluida.to_excel(os.path.join(cwd,exec_log_path+'[CALL TO ACTION] Linhas Expurgadas da Demanda.xlsx'),index=False)
 demanda = demanda.groupby(['pk']).agg({'QUANTIDADE':'sum'}).reset_index()
 print('Preenchendo o estrutura topológica...')
 wizard_spot_demanda_produto_faixa = fx.left_outer_join(wizard_spot_demanda_produto_faixa, demanda, left_on = 'pk', right_on = 'pk',

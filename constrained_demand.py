@@ -65,6 +65,7 @@ from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 # =======================================================================================================================
 
 print('Iniciando...')
+print('Tempo de execução esperado: por volta de 2 min \n')
 print('Tabelas carregadas...')
 # DataFrame :: Horizonte (Período) de Otimização
 # applymap(padronizar) não aplicado por se tratar de dados com a estrutura final do VCM
@@ -246,7 +247,7 @@ proxy_unidade_resultado_vcm['perc'] = proxy_unidade_resultado_vcm['Quantidade_x'
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm[['proxy_unidade','DEPOSITO','PLANTA','perc']].rename(columns={'PLANTA':'UNIDADE_FATURAMENTO','DEPOSITO':'UNIDADE_PRODUTORA'})
 Explosion = RendSaida.copy()
 Explosion = fx.left_outer_join(Explosion, RendEntr, left_on = ['Unidade','Receita'], right_on = ['Unidade','Receita'],
-            name_left='Rendimento Saída', name_right='Rendimento Entrada')
+            name_left='Rendimento Saída', name_right='Rendimento Entrada', struct=False)
 Explosion = Explosion.rename(columns={'Produto_x':'FG','Produto_y':'RM','ValorEntrada':'CompVol'})
 Explosion = Explosion.drop(columns='ValorSaida')
 
