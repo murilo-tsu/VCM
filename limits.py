@@ -186,6 +186,7 @@ template_saida = fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','
 template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
 template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
 template_saida['Limite'] = template_saida['Limite'].fillna(0.0)
+template_saida['Limite'] = template_saida['Limite'].round(2)
 template_saida.to_csv(os.path.join(cwd,output_path+'tmpOutSaida.csv'), index = False, sep=';', encoding='utf-8-sig')
 print('\nLimites de capacidade de expedição preenchidos!')
 
@@ -216,6 +217,7 @@ template_entrada = template_entrada[['Unidade','Periodo','Limite_y','Ativo_y']]
 template_entrada = template_entrada.rename(columns={'Limite_y':'Limite','Ativo_y':'Ativo'})
 template_entrada['Ativo'] = template_entrada['Ativo'].fillna('False')
 template_entrada['Limite'] = template_entrada['Limite'].fillna(0.0)
+template_entrada['Limite'] = template_entrada['Limite'].round(2)
 template_entrada.to_csv(os.path.join(cwd,output_path+'tmpOutEntrada.csv'), index=False, sep=';', encoding='utf-8-sig')
 
 # (08/07/2025) Como conversado com o Matheus, estou desativando a etapa 

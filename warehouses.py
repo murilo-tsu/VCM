@@ -177,7 +177,7 @@ df_template_hand_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosHandling
 df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade',
                                           name_left='Template de Custos Variáveis', name_right='Localização')
 df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
-                                          name_left='Template de Custos Variáveis', name_right='ADO PRIMARIO DE ARMAZENAGEM E HANDLING')
+                                          name_left='Template de Custos Variáveis', name_right='DADO PRIMARIO DE ARMAZENAGEM E HANDLING')
 df_template_var_armz['Custo Variável'] = df_template_var_armz['Armazenagem (R$/ton)'].fillna(0.0)
 # (03/12/2024) Como pedido pelo Ricardo, caso o custo variável esteja zerado, preencher com um valor específico para cada unidade.
 df_template_var_armz['ID'] = df_template_var_armz['Unidade'].str[:3]
