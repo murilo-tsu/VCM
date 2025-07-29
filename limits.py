@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  limits.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 08/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 29/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (10/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -148,7 +148,7 @@ template_capacidade = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
 print('║  >>  LIMITES DE SAÍDA  <<                                                                                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
-print('║ # Popula a capacidade de expedição das plantas (IMP) e dos portos (APO)                                        ║')
+print('║ # Popula a capacidade de expedição das plantas (UP) e dos portos (APO)                                        ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 # PARTE 1 :: LIMITES DE CAPACIDADE DE EXPEDIÇÃO PLANTAS + PORTOS
 print('Iniciando preenchimento de limites de expedição')
@@ -167,7 +167,7 @@ df_cap_portos = df_cap_portos[['NOME_AZ_PORTO_VCM','Nome VCM','Capacidade']]
 df_cap_portos = df_cap_portos.rename(columns={'NOME_AZ_PORTO_VCM':'Unidade','Nome VCM':'Periodo','Capacidade':'Limite'})
 df_cap_portos = df_cap_portos.dropna()
 df_cap_portos['Limite'] = df_cap_portos['Limite']*1000
-print('Etapa 02 :: CAPACIDADE DAS PLANTAS :: index = IMP')
+print('Etapa 02 :: CAPACIDADE DAS PLANTAS :: index = UP')
 df_cap_producao = df_cap_producao[df_cap_producao['Agrupador'] == 'CAPACIDADE PRODUCAO'].copy()
 df_cap_producao['DEPOSITO'] = '1001'
 df_cap_producao = fx.left_outer_join(df_cap_producao,df_periodos,left_on='Dt/Ref', right_on='Nome',
@@ -178,7 +178,7 @@ df_cap_producao = fx.left_outer_join(df_cap_producao,df_unidades,left_on=['Unida
                    name_right='Depara de Unidades')
 df_cap_producao = df_cap_producao.rename(columns={'Unidade':'Sigla','NOME_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
 template_saida = template_saida.drop(columns={'Limite','Ativo'})
-df_cap_producao = df_cap_producao[['UNIDADE_EXPEDICAO_VCM','Periodo','Limite']].rename(columns={'UNIDADE_EXPEDICAO_VCM':'Unidade'})
+df_cap_producao = df_cap_producao[['UP_MISTURADORA_VCM','Periodo','Limite']].rename(columns={'UP_MISTURADORA_VCM':'Unidade'})
 df_cap = pd.concat([df_cap_portos, df_cap_producao])
 df_cap['Ativo'] = True
 template_saida = fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'],
@@ -199,14 +199,18 @@ print('╚═══════════════════════�
 unid_arm = df_unidades[['DEPOSITO','PLANTA','UNIDADE_ARMAZENAGEM_VCM']]
 df_cap_arm = df_cap_arm[(df_cap_arm['Agrupador'] == 'CAPACIDADE DESCARGA')&(df_cap_arm['Local'] == 'INTERNO')].copy()
 df_cap_arm['Unidade'] = df_cap_arm['Unidade'].replace(list(dicgen['DE']), list(dicgen['PARA']))
-df_cap_arm = df_cap_arm.merge(df_periodos, how = 'cross')
+# (29/07/2025) Mudando esse merge pois temos as datas de referência.
+df_cap_arm = fx.left_outer_join(df_cap_arm, df_periodos, left_on='Dt/Ref', right_on='Nome',
+                   name_left = ' Capacidade de Armazenagem das Fábricas', name_right = 'Períodos')
+# df_cap_arm = df_cap_arm.merge(df_periodos, how = 'cross')
 df_cap_arm['DEPOSITO'] = '1001'
 df_cap_arm['Ativo'] = True
-# (08/07/2025) Desativar a média!! :)
+
+# (08/07/2025) Desativando a ideia de média pois o erro estava no merge com períodos, que duplicava as unidades.
 # (25/06/2025) Fazendo uma média das quantidades por unidade, para tirar as duplicatas.
-df_cap_arm = df_cap_arm.groupby(by=['Unidade','DEPOSITO','Nome VCM','Ativo'])['Quantidade'].mean().round(2)
-df_cap_arm = df_cap_arm.to_frame()
-df_cap_arm.reset_index(inplace = True)
+# df_cap_arm = df_cap_arm.groupby(by=['Unidade','DEPOSITO','Nome VCM','Ativo'])['Quantidade'].mean().round(2)
+# df_cap_arm = df_cap_arm.to_frame()
+# df_cap_arm.reset_index(inplace = True)
 df_cap_arm = fx.left_outer_join(df_cap_arm, unid_arm, left_on=['Unidade','DEPOSITO'], right_on=['PLANTA','DEPOSITO'],
                    name_left='Unidades de Armazenagem x Depara de Unidades de Armazenagem')
 df_cap_arm = df_cap_arm[['UNIDADE_ARMAZENAGEM_VCM','Nome VCM','Quantidade','Ativo']]
@@ -249,7 +253,7 @@ template_entrada.to_csv(os.path.join(cwd,output_path+'tmpOutEntrada.csv'), index
 # template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
 # template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
 # template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
-# template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(0.0)
+# template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(500000)
 # template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 end_time = time.time()
 print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>   sku_activation.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 29/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (09/06/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -345,6 +345,8 @@ for i in tqdm(range(template_limites.shape[0])):
     else:
         template_limites['Nivel Detalhe'][i] = 'Sem Definição'
 
+# (29/07/2025) Retirando a coluna "Ativo" como foi pedido pelo time de OP2B
+template_limites = template_limites.drop(columns=['Ativo'])
 template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutputDefinicaoLimites.csv'), sep = ';', encoding = 'utf-8-sig', index = False)
 print('Arquivo DefinicaoLimites.xlsx foi Atualizado com Sucesso!')
 print('DefinicaoLimites.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')

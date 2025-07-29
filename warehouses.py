@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  warehouses.py  <<                                              ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 23/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 29/07/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (24/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -222,7 +222,7 @@ template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin,
 template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
 template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
 template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
-template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(0.0)
+template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(500000)
 template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 
 # (08/07/2025) Como conversado com o Matheus, desativando o trecho abaixo,
