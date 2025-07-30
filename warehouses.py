@@ -223,7 +223,7 @@ template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
 template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
 template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
 template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(500000)
-template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
+template_capacidade.to_excel(os.path.join(cwd,output_path+'tbOutCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 
 # (08/07/2025) Como conversado com o Matheus, desativando o trecho abaixo,
 # pois estamos usando a lógica que estava em limits.

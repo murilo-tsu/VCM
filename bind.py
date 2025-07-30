@@ -364,7 +364,7 @@ for i in tqdm(range(template_limites.shape[0])):
     else:
         template_limites['Nivel Detalhe'][i] = template_limites['Nivel Detalhe'][i]
 
-#template_limites.to_csv(os.path.join(cwd,output_path + 'DefinicaoLimites.csv'), encoding = '1252', index = False)
+#template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutDefinicaoLimites.csv'), encoding = '1252', index = False)
 #print('DefinicaoLimites.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')
 print('Importante atualizar WIZARD CORRENTES INPUT a partir dos dados do VCM!')
 
@@ -393,7 +393,7 @@ decimals_kg = 2
 template_correntes['Limite'] = template_correntes['Limite'].apply(lambda x: round(x, decimals_kg))
 
 # 12/04/2024: Alterando enconding para utf-8 conforme alinhamento com OP2B
-template_correntes.to_csv(os.path.join(cwd,output_path + 'Wizard de Limites.csv'),\
+template_correntes.to_csv(os.path.join(cwd,output_path + 'tbOutLimitesMinEntrada.csv'),\
                   index = False, encoding = 'utf-8-sig', sep = ';')
 
 print('Wizard de Limites :: Atualizado com Sucesso!')

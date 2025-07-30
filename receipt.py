@@ -248,7 +248,7 @@ df_receita_movimentacao_periodos['Valor'] = df_receita_movimentacao_periodos['Va
 # (03/07/2025) Zerando receita movimentação pois já usamos preço fixo para isso.
 df_receita_movimentacao_periodos['Valor'] = 0.0
 # 12/04/2024: Alterando enconding para utf-8 como alinhado com o time da OP2B
-df_receita_movimentacao_periodos.to_csv(os.path.join(cwd,output_path + "Receita Movimentacao Para VCM.csv"),
+df_receita_movimentacao_periodos.to_csv(os.path.join(cwd,output_path + "tbOutReceitaMov.csv"),
                                           sep = ';', encoding = 'utf-8-sig', index = False)
 
 print('Atualização de Receitas de Movimentação finalizada!')

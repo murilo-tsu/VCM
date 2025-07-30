@@ -473,7 +473,7 @@ wizard_custo_frete_structure = wizard_custo_frete_structure.fillna(0.0)
 wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure['ValorVariavel'].replace(0.0,1000000.00)
 wizard_custo_frete_structure['ValorVariavel'] = wizard_custo_frete_structure['ValorVariavel'].round(2)
 
-wizard_custo_frete_structure.to_excel(os.path.join(cwd,output_path + 'WIZARD_CUSTO_FRETE.xlsx'), index = False, sheet_name = 'FRETES_PERIODOS')
+wizard_custo_frete_structure.to_excel(os.path.join(cwd,output_path + 'tbOutFretes.xlsx'), index = False, sheet_name = 'FRETES_PERIODOS')
 fretes_outbound_nao_listados.to_excel(os.path.join(cwd,exec_log_path + 'LOG ERROR - Erros Frete Outbound.xlsx'), index = False, sheet_name = 'Erros')
 frete_inbound_rodo_sem_valor.to_excel(os.path.join(cwd,exec_log_path + 'LOG ERROR - Erros Frete Inbound.xlsx'), index = False, sheet_name = 'Erros')
 print('Arquivo WIZARD_CUSTO_FRETE.xlsx foi Atualizado com Sucesso!')

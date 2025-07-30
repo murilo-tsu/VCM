@@ -283,6 +283,7 @@ demanda_unidade_terceira_na = demanda_unidade_terceira_na.merge(proxy,how='left'
 # Desativando aqui pq não precisa manter o msm tmanho (eu acho)
 #fx.left_outer_join(demanda_unidade_terceira_na,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL'],right_on=['UNIDADE PRODUTORA','GERENCIA'], struct=False)
 proxy = df_gerencia.loc[df_gerencia.CONSULTORIA.notna(),:].reset_index().drop(columns='index')
+proxy['CONSULTORIA'] = proxy['CONSULTORIA'].astype(str)
 demanda_unidade_terceira_notna = demanda_unidade_terceira_notna.merge(proxy,how='left',left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['UNIDADE PRODUTORA','GERENCIA','CONSULTORIA'])
 # Desativando aqui pq não precisa manter o msm tmanho (eu acho)
 #fx.left_outer_join(demanda_unidade_terceira_notna,proxy,left_on=['UNIDADE PRODUTORA','REGIONAL','SUPERVISAO'],right_on=['UNIDADE PRODUTORA','GERENCIA','CONSULTORIA'], struct=False)
@@ -347,9 +348,9 @@ for i in tqdm(range(template_limites.shape[0])):
 
 # (29/07/2025) Retirando a coluna "Ativo" como foi pedido pelo time de OP2B
 template_limites = template_limites.drop(columns=['Ativo'])
-template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutputDefinicaoLimites.csv'), sep = ';', encoding = 'utf-8-sig', index = False)
-print('Arquivo DefinicaoLimites.xlsx foi Atualizado com Sucesso!')
-print('DefinicaoLimites.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')
+template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutDefinicaoLimMinEnt.csv'), sep = ';', encoding = 'utf-8-sig', index = False)
+print('Arquivo (tbOutDefinicaoLimMinEnt.xlsx) foi Atualizado com Sucesso!')
+print('tbOutDefinicaoLimMinEnt.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')
 print('Importante atualizar WIZARD CORRENTES INPUT a partir dos dados do VCM!')
 
 

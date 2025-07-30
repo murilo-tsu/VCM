@@ -197,8 +197,8 @@ for i in range(wizard_volumes_iniciais.shape[0]):
         wizard_volumes_iniciais['Valor'][i] = wizard_volumes_iniciais['ACTUAL_STOCK'][i]
 wizard_volumes_iniciais = wizard_volumes_iniciais[['Unidade','Produto','Valor']]
 wizard_volumes_iniciais['Valor'] = wizard_volumes_iniciais['Valor'].round(2)
-wizard_volumes_iniciais.to_excel(os.path.join(cwd,output_path + 'Wizard_Volume_Inicial.xlsx'), sheet_name = 'VOLUME_INICIAL', index = False)
-print('Arquivo (Wizard_Volume_Inicial.xlsx) foi Atualizado com Sucesso!\n')
+wizard_volumes_iniciais.to_excel(os.path.join(cwd,output_path + 'tbOutEstoqueInicial.xlsx'), sheet_name = 'VOLUME_INICIAL', index = False)
+print('Arquivo (tbOutEstoqueInicial.xlsx) foi Atualizado com Sucesso!\n')
 
 end_time = time.time()
 print(f'Tempo de Execução: {round(end_time - start_time,2)} segundos')

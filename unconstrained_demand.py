@@ -309,8 +309,8 @@ wizard_spot_demanda_produto_faixa = wizard_spot_demanda_produto_faixa[columns]
 decimals_kg = 2
 wizard_spot_demanda_produto_faixa['Demanda Mínima'] = wizard_spot_demanda_produto_faixa['Demanda Mínima'].apply(lambda x: round(x, decimals_kg))
 wizard_spot_demanda_produto_faixa['Demanda Máxima'] = wizard_spot_demanda_produto_faixa['Demanda Máxima'].apply(lambda x: round(x, decimals_kg))
-wizard_spot_demanda_produto_faixa.to_excel(os.path.join(cwd,output_path + 'WIZARD_SPOT_DEMANDA_PRODUTO_FAIXA.xlsx'), sheet_name='SPOT_DEMANDA_PRODUTO_FAIXA', index = False)
-print('Arquivo [WIZARD_SPOT_DEMANDA_PRODUTO_FAIXA.xlsx] foi Atualizado com Sucesso!')
+wizard_spot_demanda_produto_faixa.to_excel(os.path.join(cwd,output_path + 'tbOutDemandaProdFaixa.xlsx'), sheet_name='SPOT_DEMANDA_PRODUTO_FAIXA', index = False)
+print('Arquivo [tbOutDemandaProdFaixa.xlsx] foi Atualizado com Sucesso!')
 demanda_resumida = wizard_spot_demanda_produto_faixa.copy()
 demanda_resumida = fx.left_outer_join(demanda_resumida, periodos, left_on = 'Periodo', right_on = 'NOME_PERIODO',
                    name_left='Demanda Resumida', name_right='Períodos')

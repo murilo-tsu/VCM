@@ -460,7 +460,7 @@ deliveries_resultados_vcm['PERIODO'] = deliveries_resultados_vcm['PERIODO'].dt.d
 headers = ['PERIODO','DIRETORIA','GERENCIA','CONSULTORIA','UNIDADE PRODUTORA','UNIDADE FATURAMENTO',
            'CULTURA','GRUPO PRODUTO','PRODUTO','CODIGO PRODUTO','MATERIA PRIMA','CODIGO MP','QUANTIDADE']
 deliveries_resultados_vcm = deliveries_resultados_vcm[headers]
-deliveries_resultados_vcm.to_excel(os.path.join(cwd,output_path+'Demanda Restrita.xlsx'), sheet_name='Demanda Restrita', index=False)
+deliveries_resultados_vcm.to_excel(os.path.join(cwd,output_path+'tbOutDemandaRestrita.xlsx'), sheet_name='Demanda Restrita', index=False)
 print('Demanda Restrita criada na pasta Output!')
 end_time = time.time()
 print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

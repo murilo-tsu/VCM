@@ -356,7 +356,7 @@ df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
 
 # Criando arquivo output para ICMS de Saída
 # 12/04/2024: Alterando encoding para utf-8 e delimitador (sep) para >> ; <<
-df_template_icms_saida.to_csv(os.path.join(cwd,output_path + "Impostos ICMS Saida Para VCM.csv"),
+df_template_icms_saida.to_csv(os.path.join(cwd,output_path + "tbOutImpICMSSaida.csv"),
                                           #sheet_name = "ICMS_Saida",
                                           sep = ';', encoding = 'utf-8-sig',
                                           index = False)
@@ -461,7 +461,7 @@ df_template_icms_entrada = df_template_icms_entrada[["Unidade Destino",
 
 # Criando arquivo de output para o ICMS de Entrada
 # 12/04/2024: Alterando o encoding para utf-8 e especificando o delimitador (sep) para >> ; <<
-df_template_icms_entrada.to_csv(os.path.join(cwd,output_path + "Impostos ICMS Entrada Para VCM.csv"),
+df_template_icms_entrada.to_csv(os.path.join(cwd,output_path + "tbOutImpICMSEntrada.csv"),
                                           #sheet_name = "ICMS_Entrada",
                                           sep = ';', encoding = 'utf-8-sig',
                                           index = False)

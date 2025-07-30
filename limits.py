@@ -85,24 +85,23 @@ df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodo
                          dtype=tp_dado_arquivos['periodos'])
 df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
 
-# DataFrame :: Dicionário Genérico
-df_dicionario = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
-                              sheet_name = arquivos_primarios['dicgen'].split('.')[0],
-                              usecols = list(tp_dado_arquivos['dicgen'].keys()),
-                              dtype = tp_dado_arquivos['dicgen'])
-
 # DataFrame :: Capacidade de Produtivas / Armazenagem / Expedição
 df_cap_producao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_prod']),
                          sheet_name= arquivos_primarios['cap_prod_sn'], 
                        usecols=list(tp_dado_arquivos['cap_prod'].keys()),
                        dtype=tp_dado_arquivos['cap_prod']).applymap(fx.padronizar)
-df_cap_producao['Unidade'] = df_cap_producao['Unidade'].replace(list(df_dicionario['DE']), list(df_dicionario['PARA']))
+# (30/07/2025) Criando log de erro para unidades que não foram encontradas no dicgen.
+unidades_originais = df_cap_producao.copy()
+df_cap_producao['Unidade'] = df_cap_producao['Unidade'].replace(list(dicgen['DE']), list(dicgen['PARA']))
+nao_convertidos = unidades_originais[unidades_originais['Unidade'] == df_cap_producao['Unidade']]
+nao_convertidos.to_excel(os.path.join(cwd,exec_log_path+'LOG ERROR - Unidades nao encontradas no dicionario generico.xlsx'), sheet_name='Cap_Prod_Armz_Exp', index=False)
+
 
 # DataFrame :: Capacidade de Armazenagem das Fábricas
 df_cap_arm = df_cap_producao.copy()
 df_cap_arm_maxmin = df_cap_producao.copy()
 # DataFrame :: Capacidade de Descarga das Fábricas
-df_cap_desc = df_cap_producao.copy()
+# df_cap_desc = df_cap_producao.copy()
 
 # DataFrame :: Depara Unidades Portuárias :: Porto APO
 df_unidades_port = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_por']),
@@ -187,7 +186,7 @@ template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
 template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
 template_saida['Limite'] = template_saida['Limite'].fillna(0.0)
 template_saida['Limite'] = template_saida['Limite'].round(2)
-template_saida.to_csv(os.path.join(cwd,output_path+'tmpOutSaida.csv'), index = False, sep=';', encoding='utf-8-sig')
+template_saida.to_csv(os.path.join(cwd,output_path+'tbOutCapProdPor_LimMaxS.csv'), index = False, sep=';', encoding='utf-8-sig')
 print('\nLimites de capacidade de expedição preenchidos!')
 
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
@@ -222,7 +221,8 @@ template_entrada = template_entrada.rename(columns={'Limite_y':'Limite','Ativo_y
 template_entrada['Ativo'] = template_entrada['Ativo'].fillna('False')
 template_entrada['Limite'] = template_entrada['Limite'].fillna(0.0)
 template_entrada['Limite'] = template_entrada['Limite'].round(2)
-template_entrada.to_csv(os.path.join(cwd,output_path+'tmpOutEntrada.csv'), index=False, sep=';', encoding='utf-8-sig')
+template_entrada.to_csv(os.path.join(cwd,output_path+'tbOutCapDescarga_LimMaxE.csv'), index=False, sep=';', encoding='utf-8-sig')
+print('\nLimites de capacidade de descarga preenchidos!')
 
 # (08/07/2025) Como conversado com o Matheus, estou desativando a etapa 
 # abaixo no script de limites e levando-a para warehouses.
@@ -254,6 +254,6 @@ template_entrada.to_csv(os.path.join(cwd,output_path+'tmpOutEntrada.csv'), index
 # template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
 # template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
 # template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(500000)
-# template_capacidade.to_excel(os.path.join(cwd,output_path+'tmpCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
+# template_capacidade.to_excel(os.path.join(cwd,output_path+'tbOutCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 end_time = time.time()
 print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

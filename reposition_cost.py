@@ -386,7 +386,7 @@ wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa[['Unidade','Produt
 wizard_suprimento_faixa = fx.left_outer_join(wizard_suprimento_faixa, wizard_custo_suprimento_faixa, left_on = ['Unidade','Produto','Periodo'],
                                              right_on = ['Unidade','Produto','Periodo'], name_left='Template SUprimento Faixa', name_right='Wizard de Custos')
 wizard_suprimento_faixa = wizard_suprimento_faixa.fillna(0.0)
-wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path + 'WIZARD_CUSTOS_FORNECIMENTO.xlsx'), sheet_name = 'CUSTO_PRODUTO', index = False)
-print('Arquivo (Wizard_Custos_Fornecimento.xlsx) foi Atualizado com Sucesso!')
+wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path + 'tbOutCustosFornecCFR.xlsx'), sheet_name = 'CUSTO_PRODUTO', index = False)
+print('Arquivo (tbOutCustosFornecCFR.xlsx) foi Atualizado com Sucesso!')
 end_time = time.time()
 print(f'Tempo de Execução: {round(end_time - start_time,2)} segundos')

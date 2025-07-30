@@ -322,7 +322,7 @@ df_template_rmov.fillna(0.0, inplace = True)
 df_template_rmov = df_template_rmov.drop(columns={'Unidade-Destino', 'PeriodoFrete', 'Valor'})
 
 # 12/04/2024: Alterando enconding para utf-8 como alinhado com o time da OP2B
-df_template_rmov.to_csv(os.path.join(cwd,output_path + "Precos Fixos Para VCM.csv"),
+df_template_rmov.to_csv(os.path.join(cwd,output_path + "tbOutPrecoExatoMC.csv"),
                                           sep = ';', encoding = 'utf-8-sig', index = False)
 
 print('\nAtualização de Preços Fixos finalizada!')

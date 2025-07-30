@@ -183,18 +183,24 @@ demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
 demanda['UNIDADE PRODUTORA'] = demanda['UNIDADE PRODUTORA'].replace(list(dicgen['DE']),list(dicgen['PARA']))
 
 # DataFrame :: Template de Rendimento de Receitas Saída
-fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']))
 template_saida = pd.read_excel(os.path.join(cwd,path + arquivos_primarios['template_RendSaida']),
                                 sheet_name = arquivos_primarios['template_RendSaida_sn01'],
                                 usecols=list(tp_dado_arquivos['template_RendSaida'].keys()),
                                 dtype = tp_dado_arquivos['template_RendSaida'])
+# template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']),
+#                     usecols = list(tp_dado_arquivos['template_RendSaida'].keys()),
+#                     dtype = tp_dado_arquivos['template_RendSaida'], sep = ';')
 
 # DataFrame :: Template de Rendimento de Receitas de Entrada
-fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']))
+#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']))
 template_entrada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
                                  sheet_name = arquivos_primarios['template_RendEntr_sn01'],
                                  usecols = list(tp_dado_arquivos['template_RendEntr'].keys()),
                                  dtype = tp_dado_arquivos['template_RendEntr'])
+# template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
+#                     usecols = list(tp_dado_arquivos['template_RendEntr'].keys()),
+#                     dtype = tp_dado_arquivos['template_RendEntr'], sep = ';')
 
 # DataFrame :: Criação de uma Lista Técnica Alternativa com  base em preenchimentos anteriores VCM - Opção 03
 bom_alt_vcm = template_saida.copy()
@@ -257,7 +263,7 @@ template_saida['ValorSaida'] = output
 
 print('Matriz de Produtos Acabados preenchida com sucesso!')
 cols_to_keep = ['Unidade','Receita','Produto','ValorSaida']
-template_saida[cols_to_keep].to_excel(os.path.join(cwd,output_path + 'WIZARD_RENDIMENTO_SAIDA.xlsx'), 
+template_saida[cols_to_keep].to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosSaida.xlsx'), 
                         index = False, sheet_name = 'RENDIMENTO_SAIDA_PROD')
 
 template_saida = template_saida[(template_saida['ValorSaida'] == 1.0)][['Proxy PR','Receita']].copy()
@@ -504,7 +510,7 @@ template_entrada['ValorEntrada'] = np.select(condicao, resultado, default=0.0)
 # ================================================= DEPRECADO ============================================================
 
 template_entrada = template_entrada[['Unidade','Receita','Produto','ValorEntrada']]
-template_entrada.to_excel(os.path.join(cwd,output_path + 'WIZARD_RENDIMENTO_ENTRADA.xlsx'),
+template_entrada.to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosEntrada.xlsx'),
                           index = False, sheet_name = 'RENDIMENTO_ENTRADA_PROD')
 
 end_time = time.time()

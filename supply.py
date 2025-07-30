@@ -316,8 +316,8 @@ columns = ['Unidade','Produto','Periodo','Suprimento Mínimo','Suprimento Máxim
 wizard_suprimento_faixa = wizard_suprimento_faixa[columns]
 wizard_suprimento_faixa = wizard_suprimento_faixa.fillna(0.0)
 wizard_suprimento_faixa = wizard_suprimento_faixa.round({'Suprimento Mínimo':2,'Suprimento Máximo':2}) # arredonda com duas casas decimais
-wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path+'WIZARD_SUPRIMENTO_FAIXA.xlsx'),sheet_name='SUPRIMENTO_FAIXA',index = False)
-print('Arquivo WIZARD_SUPRIMENTO_FAIXA.xlsx foi Atualizado com Sucesso!')
+wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path+'tbOutSuprimentoFaixa.xlsx'),sheet_name='SUPRIMENTO_FAIXA',index = False)
+print('Arquivo tbOutSuprimentoFaixa.xlsx foi Atualizado com Sucesso!')
 # =============================================================================================================
 # 2025-05-30 :: LINHAS DEPRECADAS porque as capacidades portuárias serão atualizadas pelo script de limites
 # =============================================================================================================
@@ -343,9 +343,9 @@ print('Arquivo WIZARD_SUPRIMENTO_FAIXA.xlsx foi Atualizado com Sucesso!')
 # wizard_capacidade_portos = wizard_capacidade_portos[['Unidade','Periodo','Limite']]
 # wizard_capacidade_portos['Ativo'] = 'True'
 # wizard_capacidade_portos = wizard_capacidade_portos.round({'Limite':2})
-# wizard_capacidade_portos.to_csv(os.path.join(cwd, output_path + 'WIZARD_CAPACIDADE_PORTOS.csv'),
+# wizard_capacidade_portos.to_csv(os.path.join(cwd, output_path + 'tbOutCapProdPor_LimMaxS.csv'),
 #                                 sep = ';', encoding = 'UTF-8-sig', index = False)
-# print('Arquivo WIZARD_CAPACIDADE_PORTOS.csv foi atualizado com sucesso!')
+# print('Arquivo tbOutCapProdPor_LimMaxS.csv foi atualizado com sucesso!')
 
 # =============================================================================================================
 # 2025-05-30 :: LINHAS DEPRECADAS porque os leadtimes não estão ativados para execução no supply.py
@@ -465,7 +465,7 @@ print('Arquivo WIZARD_SUPRIMENTO_FAIXA.xlsx foi Atualizado com Sucesso!')
 
 # # Aplicando a função e ajustando os leadtimes
 # wizard_leadtime['Valor'] = wizard_leadtime['Valor'].apply(fx.custom_round)
-# #wizard_leadtime.to_excel(os.path.join(cwd,output_path+'Wizard_Leadtimes.xlsx'),sheet_name='Leadtimes',index = False)
+# #wizard_leadtime.to_excel(os.path.join(cwd,output_path+'tbOutLeadTimes.xlsx'),sheet_name='Leadtimes',index = False)
 # print('Arquivo WIZARD_LEADTIMES.xlsx calculado, mas não preenchido!')
 end_time = time.time()
 print(f'Tempo de Execução: {round(end_time - start_time,2)} segundos')
