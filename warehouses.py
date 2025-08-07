@@ -167,10 +167,10 @@ print('╚═══════════════════════�
 
 df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade',
                                            name_left='Template de Custos de Handling', name_right='Localização')
-# Substituindo o nome pela sigla.
-df_custos_armz['Estado'] = df_custos_armz['Estado'].replace(['BAHIA', 'ESPIRITO SANTO', 'GOIAS',
-                    'PARANA', 'RIO GRANDE DO SUL', 'SANTA CATARINA', 'SAO PAULO', 'SERGIPE',],\
-                    ['BA', 'ES', 'GO', 'PR', 'RS', 'SC', 'SP', 'SE'])
+# # Substituindo o nome pela sigla.
+# df_custos_armz['Estado'] = df_custos_armz['Estado'].replace(['BAHIA', 'ESPIRITO SANTO', 'GOIAS',
+#                     'PARANA', 'RIO GRANDE DO SUL', 'SANTA CATARINA', 'SAO PAULO', 'SERGIPE',],\
+#                     ['BA', 'ES', 'GO', 'PR', 'RS', 'SC', 'SP', 'SE'])
 df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
                                            name_left='Template de Custos de Handling', name_right='DADO PRIMARIO DE ARMAZENAGEM E HANDLING')
 df_template_hand_armz['Recebimento'] = df_template_hand_armz['Handling (R$/ton)'].fillna(0.0)
