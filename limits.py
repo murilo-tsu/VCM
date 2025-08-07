@@ -136,9 +136,9 @@ template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['temp
 
 # DataFrame :: Template Capacidade
 #fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
-template_capacidade = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
-                       usecols=list(tp_dado_arquivos['template_capacidade'].keys()),
-                       dtype=tp_dado_arquivos['template_capacidade'])
+# template_capacidade = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
+#                        usecols=list(tp_dado_arquivos['template_capacidade'].keys()),
+#                        dtype=tp_dado_arquivos['template_capacidade'])
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS

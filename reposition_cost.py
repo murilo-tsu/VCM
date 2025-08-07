@@ -79,7 +79,7 @@ from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 # CARREGAR DATAFRAMES
 # =======================================================================================================================
 print('Carregando arquivos... \n')
-# print('Tempo de execução esperado: por volta de 30 seg (era pra demorar mais) \n')
+print('Tempo de execução esperado: por volta de 3 min \n')
 
 # DataFrame :: Horizonte (Período) de Otimização
 df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodos']),
@@ -270,7 +270,7 @@ custos_mp = custos_mp.merge(df_periodos[['PERIODO','NOME_PERIODO']], how = 'cros
 
 # Caso haja período do VCM sem valor, usa o LAST_UPDATED_COST
 last_updated_cost = custos_mp.copy()
-last_updated_cost = last_updated_cost[['PERIODO','CD_PRODUTO_FTO','CODIGO_MOEDA','CUSTO_REPOSICAO_MERCADO']]
+last_updated_cost = last_updated_cost[['PERIODO','CD_PRODUTO','CODIGO_MOEDA','CUSTO_REPOSICAO_MERCADO']]
 last_updated_cost = last_updated_cost.sort_values(by = 'PERIODO', ascending = False)
 last_updated_cost = last_updated_cost.reset_index().drop(columns = 'index')
 last_updated_cost['Custo VCM (BRL/ton)'] = np.nan
@@ -279,35 +279,35 @@ for i in range(last_updated_cost.shape[0]):
         last_updated_cost['Custo VCM (BRL/ton)'][i] = last_updated_cost['CUSTO_REPOSICAO_MERCADO'][i] * ptax_UF
     else:
         last_updated_cost['Custo VCM (BRL/ton)'][i] = last_updated_cost['CUSTO_REPOSICAO_MERCADO'][i]
-last_updated_cost = last_updated_cost.drop_duplicates(subset=['CD_PRODUTO_FTO'], keep = 'first')
+last_updated_cost = last_updated_cost.drop_duplicates(subset=['CD_PRODUTO'], keep = 'first')
 
 # (11/02/2025) Olhando primeiro o código específico, depois o agrupado.
 # Utilizando o "Agrupamento" do cadastro de produtos.
 agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset=['COD_ESPECIFICO'])
 agrupamento_produtos = fx.left_outer_join(agrupamento_produtos, cadastro_mp, right_on = 'CODIGO_ITEM', left_on = 'CODIGO_AGRUPADO',
                                           name_left='Agrupamento de Produtos', name_right='Cadastro de Produtos - MP')
-last_updated_cost = fx.left_outer_join(last_updated_cost, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO',
+last_updated_cost = fx.left_outer_join(last_updated_cost, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO',
                                        name_left='Último Custo Atualizado', name_right='Agrupamento de Produtos')
 # last_updated_cost['COD_ESPECIFICO'] = last_updated_cost['COD_ESPECIFICO'].fillna('0')
 # agrupamento_custo = last_updated_cost.loc[last_updated_cost['COD_ESPECIFICO']=='0']
-# agrupamento_custo = agrupamento_custo[['CD_PRODUTO_FTO','Custo VCM (BRL/ton)']]
-# agrupamento_custo = fx.left_outer_join(agrupamento_custo, agrupamento_produtos, right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO_FTO',)
+# agrupamento_custo = agrupamento_custo[['CD_PRODUTO','Custo VCM (BRL/ton)']]
+# agrupamento_custo = fx.left_outer_join(agrupamento_custo, agrupamento_produtos, right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO',)
 # agrupamento_custo['CODIGO_AGRUPADO'] = agrupamento_custo['CODIGO_AGRUPADO'].fillna('0')
 # agrupamento_custo = agrupamento_custo.loc[agrupamento_custo['CODIGO_AGRUPADO']!='0']
 # last_updated_cost = last_updated_cost.loc[last_updated_cost['CODIGO_AGRUPADO']!='0']
 # last_updated_cost = pd.concat([last_updated_cost,agrupamento_custo])
-last_updated_cost = last_updated_cost[['Custo VCM (BRL/ton)','PRD-VCM','CD_PRODUTO_FTO']]
+last_updated_cost = last_updated_cost[['Custo VCM (BRL/ton)','PRD-VCM','CD_PRODUTO']]
 last_updated_cost = last_updated_cost.dropna().reset_index().drop(columns = 'index')
 last_updated_cost = last_updated_cost[['PRD-VCM','Custo VCM (BRL/ton)']].rename(columns = {'Custo VCM (BRL/ton)':'LAST_UPDATED_COST','PRD-VCM':'ID'})
 
 # (11/02/2025) Olhando primeiro o código específico, depois o agrupado.
-custos_mp = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO',
+custos_mp = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO',
                                                   name_left='Custo de Reposição', name_right='Agrupamento de Produtos')
 # tbDadoPrimarioCustoReposicao['COD_ESPECIFICO'] = tbDadoPrimarioCustoReposicao['COD_ESPECIFICO'].fillna('0')
 # agrupamento_custo = tbDadoPrimarioCustoReposicao.loc[tbDadoPrimarioCustoReposicao['COD_ESPECIFICO']=='0']
-# agrupamento_custo = agrupamento_custo[['DH_VIGOR','DH_REFERENCIA', 'Data Inicial', 'Data Final', 'CD_PRODUTO_FTO','DESCRICAO_ITEM',
+# agrupamento_custo = agrupamento_custo[['DH_VIGOR','DH_REFERENCIA', 'Data Inicial', 'Data Final', 'CD_PRODUTO','DESCRICAO_ITEM',
 #                                     'CODIGO_ORGANIZACAO','CODIGO_MOEDA','PTAX_DIA_ANTERIOR','CUSTO_REPOSICAO_MERCADO','PERIODO','NOME_PERIODO']]
-# agrupamento_custo = fx.left_outer_join(agrupamento_custo, agrupamento_produtos, right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO_FTO',)
+# agrupamento_custo = fx.left_outer_join(agrupamento_custo, agrupamento_produtos, right_on = 'CODIGO_AGRUPADO', left_on = 'CD_PRODUTO',)
 # agrupamento_custo['CODIGO_AGRUPADO'] = agrupamento_custo['CODIGO_AGRUPADO'].fillna('0')
 # agrupamento_custo = agrupamento_custo.loc[agrupamento_custo['CODIGO_AGRUPADO']!='0']
 # tbDadoPrimarioCustoReposicao = tbDadoPrimarioCustoReposicao.loc[tbDadoPrimarioCustoReposicao['COD_ESPECIFICO']!='0']
@@ -318,7 +318,7 @@ custos_mp = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_
 custos_mp['Validar'] = (custos_mp['PERIODO'] >= custos_mp['Data Inicial']) & (custos_mp['PERIODO'] <= custos_mp['Data Final'])
 custos_mp = custos_mp.loc[custos_mp.Validar == True]
 custos_mp = custos_mp.reset_index().drop(columns = ['index','Validar','Data Inicial','Data Final'])
-custos_mp = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO_FTO',)
+custos_mp = fx.left_outer_join(custos_mp, agrupamento_produtos, right_on = 'COD_ESPECIFICO', left_on = 'CD_PRODUTO',)
 custos_mp['Custo VCM (BRL/ton)'] = np.nan
 for i in range(custos_mp.shape[0]):
     if custos_mp['CODIGO_MOEDA'][i] == 'USD':
@@ -384,8 +384,9 @@ for i in tqdm(range(wizard_custo_suprimento_faixa.shape[0])):
 wizard_custo_suprimento_faixa['Custo do Produto'] = wizard_custo_suprimento_faixa['Custo MP BRL/ton'] + wizard_custo_suprimento_faixa['Demurrage BRL/ton']
 wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa[['Unidade','Produto','Periodo','Custo do Produto']]
 wizard_suprimento_faixa = fx.left_outer_join(wizard_suprimento_faixa, wizard_custo_suprimento_faixa, left_on = ['Unidade','Produto','Periodo'],
-                                             right_on = ['Unidade','Produto','Periodo'], name_left='Template SUprimento Faixa', name_right='Wizard de Custos')
+                                             right_on = ['Unidade','Produto','Periodo'], name_left='Template Suprimento Faixa', name_right='Wizard de Custos')
 wizard_suprimento_faixa = wizard_suprimento_faixa.fillna(0.0)
+wizard_suprimento_faixa['Custo do Produto'] = wizard_suprimento_faixa['Custo do Produto'].round(2)
 wizard_suprimento_faixa.to_excel(os.path.join(cwd,output_path + 'tbOutCustosFornecCFR.xlsx'), sheet_name = 'CUSTO_PRODUTO', index = False)
 print('Arquivo (tbOutCustosFornecCFR.xlsx) foi Atualizado com Sucesso!')
 end_time = time.time()

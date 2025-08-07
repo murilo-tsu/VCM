@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  warehouses.py  <<                                              ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 23/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 29/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 06/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (24/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -80,7 +80,7 @@ from _dicionarios import arquivos_primarios, tp_dado_arquivos, rename_dataframes
 # =======================================================================================================================
 
 print('Carregando arquivos necessários... \n')
-#print('Tempo de execução esperado: por volta de 20s \n')
+print('Tempo de execução esperado: por volta de 4 min \n')
 
 # DataFrame ::  Dicionário Genérico
 dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
@@ -121,6 +121,9 @@ df_periodos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['periodo
                          usecols=list(tp_dado_arquivos['periodos'].keys()),
                          dtype=tp_dado_arquivos['periodos'])
 df_periodos = df_periodos.rename(columns=rename_dataframes['df_periodos'])
+
+# Dataframe :: Custo CFR - Output de Reposition_cost
+wizard_suprimento_faixa = pd.read_excel(os.path.join(cwd, output_path + 'tbOutCustosFornecCFR.xlsx'))
 
 # DataFrame :: TEMPLATE DE CUSTO DE HANDLING PARA ARMAZÉNS EXTERNOS
 #validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
@@ -176,6 +179,12 @@ df_template_hand_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosHandling
 
 df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade',
                                           name_left='Template de Custos Variáveis', name_right='Localização')
+df_template_var_armz = df_template_var_armz.merge(wizard_suprimento_faixa, how='left',
+                                                                    on=['Unidade','Produto','Periodo'])
+df_template_var_armz['Custo do Produto'] = df_template_var_armz['Custo do Produto'].fillna(0.0)
+df_template_var_armz['Valor'] = df_template_var_armz['Custo do Produto']
+tbTemplateCustosVariaveisArmz = df_template_var_armz.drop(columns={'Custo do Produto'})
+
 df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
                                           name_left='Template de Custos Variáveis', name_right='DADO PRIMARIO DE ARMAZENAGEM E HANDLING')
 df_template_var_armz['Custo Variável'] = df_template_var_armz['Armazenagem (R$/ton)'].fillna(0.0)
@@ -223,6 +232,7 @@ template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
 template_capacidade = template_capacidade[['Unidade_x','Periodo','Volume Mínimo','Volume Máximo']]
 template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
 template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(500000)
+template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].round(2)
 template_capacidade.to_excel(os.path.join(cwd,output_path+'tbOutCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 
 # (08/07/2025) Como conversado com o Matheus, desativando o trecho abaixo,

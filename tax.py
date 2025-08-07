@@ -177,7 +177,7 @@ df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data I
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
 
-df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_produtos,left_on='CD_PRODUTO_FTO',right_on='COD_ESPECIFICO',
+df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_produtos,left_on='CD_PRODUTO',right_on='COD_ESPECIFICO',
                                      name_right='Custo de Reposição',name_left='Agrupamento de Produtos')
 df_valor_venda = fx.left_outer_join(df_valor_venda,agrupamento_produtos,left_on='Código do Produto',right_on='COD_ESPECIFICO',
                                     name_right='Lista Preço',name_left='Agrupamento de Produtos')
