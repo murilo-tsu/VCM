@@ -152,11 +152,11 @@ agrupamento_produtos_pf = agrupamento_produtos_pf.drop_duplicates(subset = 'COD_
 # Agrupamento de Matérias-Primas
 agrupamento_produtos_mp = agrupamento_produtos.copy()
 agrupamento_produtos_mp = agrupamento_produtos_mp[agrupamento_produtos_mp['TIPO_MATERIAL'] == 'MP']
-proxy_agrupamento_mp = cadastro_pf[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_mp = cadastro_mp[['CODIGO_ITEM','DESCRICAO']]
 proxy_agrupamento_mp = proxy_agrupamento_mp.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
 proxy_agrupamento_mp['CODIGO_AGRUPADO'] = proxy_agrupamento_mp['COD_ESPECIFICO']
 proxy_agrupamento_mp['AGRUPAMENTO'] = proxy_agrupamento_mp['DESCRICAO_ESPECIFICA']
-agrupamento_produtos_mp = pd.concat([agrupamento_produtos_mp,proxy_agrupamento_pf])
+agrupamento_produtos_mp = pd.concat([agrupamento_produtos_mp,proxy_agrupamento_mp])
 agrupamento_produtos_mp = agrupamento_produtos_mp.drop_duplicates(subset = 'COD_ESPECIFICO')
 
 # DataFrame :: Unidades Produtoras relevantes para lista técnica

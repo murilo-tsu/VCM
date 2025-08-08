@@ -127,7 +127,8 @@ agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                             sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn02']).applymap(fx.padronizar)
-
+# agrupamento_produtos = agrupamento_produtos.loc[agrupamento_produtos['TIPO_MATERIAL']=='MP']
+agrupamento_produtos = agrupamento_produtos.drop(columns='TIPO_MATERIAL')
 proxy_agrupamento = cadastro_produtos[['CODIGO_ITEM','DESCRICAO']]
 proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
 proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']

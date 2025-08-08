@@ -26,7 +26,7 @@ arquivos_primarios = {
      'cap_prod_sn': 'iptCapOperPlantas',
      'cap_desc' : 'iptCapOperPlantas.xlsx',
      'cap_desc_sn' : 'iptCapOperPlantas',
-     'bom':'iptListaTecnica.csv',
+     'bom':'iptListaTecnica.xlsx',
      # Unidades Armazenagem / Produtivas / Expedição
      'unidades_exp':'depUnidadesProdutivas.xlsx',
      'unidades_exp_sn': 'depUnidadesProdutivas',
