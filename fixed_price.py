@@ -4,13 +4,15 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  fixed_price.py  <<                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 11/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 17/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 07/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (23/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
 print('║                                                                                                                ║')
 print('║ - v1.0.1 (15/07/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
+print('║                                                                                                                ║')
+print('║ - v1.0.2 (07/08/2025): Adicionando filtro de MP/PF no agrupamento de produtos.                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Precificação                                                                                                ║')
@@ -104,6 +106,8 @@ agrupamento_pf = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cada
                                   sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                                   usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
+agrupamento_pf = agrupamento_pf.loc[agrupamento_pf['TIPO_MATERIAL']=='PF']
+agrupamento_pf = agrupamento_pf.drop(columns='TIPO_MATERIAL')
 proxy_agrupamento = df_produtos[['CODIGO_ITEM','DESCRICAO']]
 proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
 proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']

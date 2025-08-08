@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  limits.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 08/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 29/07/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 07/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (10/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -184,7 +184,8 @@ template_saida = fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','
                    name_left = 'Template Saída', name_right = 'Capacidades Expedição Portos + Unidades')
 template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
 template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
-template_saida['Limite'] = template_saida['Limite'].fillna(0.0)
+# (07/08/2025) Como solicitado pelo Matheus, alterando o que não teve resultado de 0 para 500000
+template_saida['Limite'] = template_saida['Limite'].fillna(500000)
 template_saida['Limite'] = template_saida['Limite'].round(2)
 template_saida.to_csv(os.path.join(cwd,output_path+'tbOutCapProdPor_LimMaxS.csv'), index = False, sep=';', encoding='utf-8-sig')
 print('\nLimites de capacidade de expedição preenchidos!')
