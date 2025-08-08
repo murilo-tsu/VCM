@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  warehouses.py  <<                                              ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 23/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 06/08/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (24/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')

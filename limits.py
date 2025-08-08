@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  limits.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 08/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 07/08/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (10/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')

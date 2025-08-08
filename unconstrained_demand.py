@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                        >>  unconstrained_demand.py  <<                                         ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado  por: Murilo Lima Ribeiro             Data: 20/03/2025                                                  ║')
-print('║ Editado por: Isabela Nunes dos Santos        Data: 16/07/2025                                                  ║')
+print('║ Editado por: Isabela Nunes dos Santos        Data: 08/08/2025                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (20/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')

@@ -11,7 +11,7 @@ print('║ - v1.0.0 (02/04/2025): Criação da primeira versão do script unific
 print('║                        depara e dado primário.                                                                 ║')
 print('║ - v1.0.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
 print('║ - v2.0.0 (30/05/2025): Adequação de LOGs de ERRO para acomodar primeria versão de topologia unificada          ║')
-print('║ - v2.1.0 (30/05/2025): Ajuste de fontes de dados para CSV e aplicação de filtro de tipo de material            ║')
+print('║ - v2.1.0 (08/08/2025): Ajuste de fontes de dados para CSV e aplicação de filtro de tipo de material            ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Lista Técnica VCM                                                                                           ║')
