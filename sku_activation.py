@@ -127,14 +127,27 @@ agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                             sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn02']).applymap(fx.padronizar)
-# agrupamento_produtos = agrupamento_produtos.loc[agrupamento_produtos['TIPO_MATERIAL']=='MP']
-agrupamento_produtos = agrupamento_produtos.drop(columns='TIPO_MATERIAL')
-proxy_agrupamento = cadastro_produtos[['CODIGO_ITEM','DESCRICAO']]
-proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
-proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
-proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
-agrupamento_produtos = pd.concat([agrupamento_produtos,proxy_agrupamento])
-agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECIFICO')
+
+# Agrupamento de Produtos Acabados
+agrupamento_produtos_pf = agrupamento_produtos.copy()
+agrupamento_produtos_pf = agrupamento_produtos_pf[agrupamento_produtos_pf['TIPO_MATERIAL'] == 'PF']
+proxy_agrupamento_pf = cadastro_pf[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_pf = proxy_agrupamento_pf.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_pf['CODIGO_AGRUPADO'] = proxy_agrupamento_pf['COD_ESPECIFICO']
+proxy_agrupamento_pf['AGRUPAMENTO'] = proxy_agrupamento_pf['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_pf = pd.concat([agrupamento_produtos_pf,proxy_agrupamento_pf])
+agrupamento_produtos_pf = agrupamento_produtos_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
+
+# Agrupamento de Matérias-Primas
+agrupamento_produtos_mp = agrupamento_produtos.copy()
+agrupamento_produtos_mp = agrupamento_produtos_mp[agrupamento_produtos_mp['TIPO_MATERIAL'] == 'MP']
+proxy_agrupamento_mp = cadastro_mp[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_mp = proxy_agrupamento_mp.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_mp['CODIGO_AGRUPADO'] = proxy_agrupamento_mp['COD_ESPECIFICO']
+proxy_agrupamento_mp['AGRUPAMENTO'] = proxy_agrupamento_mp['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_mp = pd.concat([agrupamento_produtos_mp,proxy_agrupamento_mp])
+agrupamento_produtos_mp = agrupamento_produtos_mp.drop_duplicates(subset = 'COD_ESPECIFICO')
+agrupamento_produtos_mp = agrupamento_produtos_mp.drop(columns='TIPO_MATERIAL')
 
 # DataFrame :: dado primário de capacidade portuária
 capacidade_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['capacidade_portos']),
@@ -201,7 +214,7 @@ companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
 df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
-df_revisao_importada = fx.left_outer_join(df_revisao_importada, agrupamento_produtos, left_on='CODIGO_MP', right_on='COD_ESPECIFICO',
+df_revisao_importada = fx.left_outer_join(df_revisao_importada, agrupamento_produtos_mp, left_on='CODIGO_MP', right_on='COD_ESPECIFICO',
                                           name_left = 'Revisão de Chegadas >>Importada<<', name_right = 'Agrupamento de Produtos')
 df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO',
                                           name_left = 'Revisão de Chegadas >>Importada<<', name_right = 'Períodos')
@@ -214,7 +227,7 @@ df_revisao_nacional = df_revisao_nacional.melt(id_vars = id_vars, var_name = 'PR
                                                value_name = 'BALANCE_TONS')
 df_revisao_nacional['COMPANY'] = df_revisao_nacional['COMPANY'].replace(companies)
 df_revisao_nacional['PORTO'] = df_revisao_nacional['PORTO'] + '-' + df_revisao_nacional['PLANTA']
-df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO',
+df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, agrupamento_produtos_mp, left_on = 'CODIGO_MP', right_on = 'COD_ESPECIFICO',
                                          name_left='Revisão de Chegadas >>Nacional<<', name_right='Agrupamento de Produtos')
 df_revisao_nacional = fx.left_outer_join(df_revisao_nacional, df_periodos, left_on = 'PROXY_PERIODO', right_on = 'pk_NOME_PERIODO',
                                          name_left='Revisão de Chegadas >>Nacional<<', name_right='Períodos')
@@ -250,7 +263,7 @@ df_comercial['ID'] = df_comercial['GERENCIA'] + '-' + df_comercial['CONSULTORIA'
 rename_cols = {'CODIGO PRODUTO':'PRODUTO ID','QUANTIDADE':'VOLUME',
                'GERENCIA':'REGIONAL','CONSULTORIA':'SUPERVISAO', 'PERIODO':'PERIODO'}
 df_demanda = df_demanda.rename(columns = rename_cols)
-df_demanda = fx.left_outer_join(df_demanda,agrupamento_produtos,left_on='PRODUTO ID',right_on='COD_ESPECIFICO',
+df_demanda = fx.left_outer_join(df_demanda,agrupamento_produtos_pf,left_on='PRODUTO ID',right_on='COD_ESPECIFICO',
                                 name_left='Demanda', name_right='Agrupamento de Produtos')
 df_demanda = fx.left_outer_join(df_demanda, cadastro_pf, left_on = 'CODIGO_AGRUPADO', right_on = 'CODIGO_ITEM',
                                 name_left='Demanda', name_right='Cadastro de Produtos - Filtro PF')

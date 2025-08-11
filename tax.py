@@ -94,6 +94,10 @@ df_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastr
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 df_produtos = df_produtos.rename(columns=rename_dataframes['df_produtos'])
 
+# DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
+cadastro_mp = df_produtos[(df_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'MP')]
+cadastro_pf = df_produtos[(df_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'PF')]
+
 # DataFrame :: Update de Correntes
 df_correntes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
                                     sheet_name= arquivos_primarios['arq_tbUpdateCorrentes_sn'], 
@@ -146,13 +150,25 @@ agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                                           usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                                           dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
 
-proxy_agrupamento = df_produtos[['ITEM_CODE','DESCRICAO']]
-proxy_agrupamento = proxy_agrupamento.rename(columns={'ITEM_CODE':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
-proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
-proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
-agrupamento_produtos = pd.concat([agrupamento_produtos,proxy_agrupamento])
-agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECIFICO')
+# Agrupamento de Produtos Acabados
+agrupamento_produtos_pf = agrupamento_produtos.copy()
+agrupamento_produtos_pf = agrupamento_produtos_pf[agrupamento_produtos_pf['TIPO_MATERIAL'] == 'PF']
+proxy_agrupamento_pf = cadastro_pf[['ITEM_CODE','DESCRICAO']]
+proxy_agrupamento_pf = proxy_agrupamento_pf.rename(columns={'ITEM_CODE':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_pf['CODIGO_AGRUPADO'] = proxy_agrupamento_pf['COD_ESPECIFICO']
+proxy_agrupamento_pf['AGRUPAMENTO'] = proxy_agrupamento_pf['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_pf = pd.concat([agrupamento_produtos_pf,proxy_agrupamento_pf])
+agrupamento_produtos_pf = agrupamento_produtos_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
 
+# Agrupamento de Matérias-Primas
+agrupamento_produtos_mp = agrupamento_produtos.copy()
+agrupamento_produtos_mp = agrupamento_produtos_mp[agrupamento_produtos_mp['TIPO_MATERIAL'] == 'MP']
+proxy_agrupamento_mp = cadastro_mp[['ITEM_CODE','DESCRICAO']]
+proxy_agrupamento_mp = proxy_agrupamento_mp.rename(columns={'ITEM_CODE':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_mp['CODIGO_AGRUPADO'] = proxy_agrupamento_mp['COD_ESPECIFICO']
+proxy_agrupamento_mp['AGRUPAMENTO'] = proxy_agrupamento_mp['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_mp = pd.concat([agrupamento_produtos_mp,proxy_agrupamento_mp])
+agrupamento_produtos_mp = agrupamento_produtos_mp.drop_duplicates(subset = 'COD_ESPECIFICO')
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
@@ -177,9 +193,9 @@ df_valor_venda['Validar'] = (df_valor_venda['PERIODO'] >= df_valor_venda['Data I
 df_valor_venda = df_valor_venda.loc[df_valor_venda.Validar == True]
 df_valor_venda = df_valor_venda.reset_index().drop(columns=['index','Validar','Data Inicio','Data fim'])
 
-df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_produtos,left_on='CD_PRODUTO',right_on='COD_ESPECIFICO',
+df_valor_compra = fx.left_outer_join(df_valor_compra,agrupamento_produtos_mp,left_on='CD_PRODUTO',right_on='COD_ESPECIFICO',
                                      name_right='Custo de Reposição',name_left='Agrupamento de Produtos')
-df_valor_venda = fx.left_outer_join(df_valor_venda,agrupamento_produtos,left_on='Código do Produto',right_on='COD_ESPECIFICO',
+df_valor_venda = fx.left_outer_join(df_valor_venda,agrupamento_produtos_pf,left_on='Código do Produto',right_on='COD_ESPECIFICO',
                                     name_right='Lista Preço',name_left='Agrupamento de Produtos')
 df_valor_venda = df_valor_venda.dropna(subset = 'COD_ESPECIFICO')
 df_valor_compra.rename(columns = {"CODIGO_AGRUPADO": "ITEM_CODE"},
@@ -200,7 +216,7 @@ df_valor_compra['Desc. Empresa'] = df_valor_compra['Desc. Empresa'].replace(['AR
 df_valor_compra = df_valor_compra[["Periodo_VCM","Moeda", "ITEM_CODE",
                                    "Desc. Empresa", "Ptax Dia Anterior",
                                    "Custo Rep. Mercado"]]
-df_valor_compra = df_valor_compra.merge(df_produtos[["ITEM_CODE", "PRD-VCM"]],
+df_valor_compra = df_valor_compra.merge(cadastro_mp[["ITEM_CODE", "PRD-VCM"]],
                                         on = "ITEM_CODE", how="inner")
 # Convertendo preços de USD para BRL quando necessário
 df_valor_compra["Preço Compra"] = np.where(df_valor_compra["Moeda"] == "BRL",
@@ -244,7 +260,7 @@ df_valor_venda["Preço Venda"] = np.where(df_valor_venda["Moeda"] == "BRL",
 
 # Tirando a apóstrofe que está presente também no ITEM_CODE nesta planilha
 df_valor_venda["ITEM_CODE"] = df_valor_venda["ITEM_CODE"].str.replace("'","")
-df_valor_venda = df_valor_venda.merge(df_produtos[["ITEM_CODE", "PRD-VCM"]],
+df_valor_venda = df_valor_venda.merge(cadastro_pf[["ITEM_CODE", "PRD-VCM"]],
                                         on = "ITEM_CODE", how="inner")
 
 df_valor_venda["Desc. Empresa"] = df_valor_venda["Nome da Lista"]

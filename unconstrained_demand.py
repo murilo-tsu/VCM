@@ -7,10 +7,11 @@ print('║ Criado  por: Murilo Lima Ribeiro             Data: 20/03/2025        
 print('║ Editado por: Isabela Nunes dos Santos        Data: 08/08/2025                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0.0 (20/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
-print('║                        de depara e dado primário.                                                              ║')
-print('║ - v1.0.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
-print('║ - v1.0.2 (16/07/2025): Inclusão do dicionário genérico + alterando depósito 1001 para o que é usado na demanda.║')
+print('║ - v1.0 (20/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos  de   ║')
+print('║                      depara e dado primário.                                                                   ║')
+print('║ - v1.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados.                       ║')
+print('║ - v1.2 (16/07/2025): Inclusão do dicionário genérico + alterando depósito 1001 para o que é usado na demanda.  ║')
+print('║ - v2.0 (08/08/2025): Versão de Referência :: Cherrypick                                                        ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Demanda Irrestrita                                                                                          ║')
@@ -89,7 +90,8 @@ agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn02']).applymap(fx.padronizar)
 
-proxy_agrupamento = cadastro_produtos[['CODIGO_ITEM','DESCRICAO']]
+agrupamento_produtos = agrupamento_produtos[agrupamento_produtos['TIPO_MATERIAL'] == 'PF']
+proxy_agrupamento = pf_cadastrada[['CODIGO_ITEM','DESCRICAO']]
 proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
 proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
 proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']

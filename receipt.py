@@ -93,12 +93,18 @@ df_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastr
                                   usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 
+# DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
+cadastro_pf = df_produtos[(df_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'PF')]
+
+
 # Dataframe :: Agrupamento
 agrupamento_pf = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
                                   sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                                   usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
-proxy_agrupamento = df_produtos[['CODIGO_ITEM','DESCRICAO']]
+agrupamento_pf = agrupamento_pf[agrupamento_pf['TIPO_MATERIAL'] == 'PF']
+agrupamento_pf.drop(columns='TIPO_MATERIAL')
+proxy_agrupamento = cadastro_pf[['CODIGO_ITEM','DESCRICAO']]
 proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
 proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
 proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
@@ -153,7 +159,7 @@ df_valor_venda = fx.left_outer_join(df_valor_venda, agrupamento_produtos, left_o
                                     name_left='Lista Preço', name_right='Agrupamento de Produtos')
 df_valor_venda.rename(columns = {"CODIGO_AGRUPADO": "CODIGO_ITEM"}, inplace=True)
 df_valor_venda = df_valor_venda.astype({'Ptax USD':np.float32,'Preço':np.float32})
-df_valor_venda = df_valor_venda.merge(df_produtos[["CODIGO_ITEM", "PRD-VCM"]], on = "CODIGO_ITEM", how="inner")
+df_valor_venda = df_valor_venda.merge(cadastro_pf[["CODIGO_ITEM", "PRD-VCM"]], on = "CODIGO_ITEM", how="inner")
 
 # Convertendo de dólares para reais quando necessário
 df_valor_venda["Preço Venda"] = np.where(df_valor_venda["Moeda"] == "BRL",
@@ -199,7 +205,7 @@ df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao,valor_venda
 df_receita_movimentacao["Preço Venda Médio"] = (df_receita_movimentacao["Preço Venda Médio"].fillna(0))
 
 # Classificação de produtos para eliminar o que não é produto final
-df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao, df_produtos[["PRD-VCM", "TIPO_MATERIAL"]], left_on = "PRD-VCM", right_on="PRD-VCM",
+df_receita_movimentacao = fx.left_outer_join(df_receita_movimentacao, cadastro_pf[["PRD-VCM", "TIPO_MATERIAL"]], left_on = "PRD-VCM", right_on="PRD-VCM",
                                              name_left='Receita Movimentação', name_right='Cadastro de Produtos')
 
 # O que não é produto final fica com preço zerado

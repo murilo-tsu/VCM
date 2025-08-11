@@ -90,6 +90,7 @@ df_cap_producao = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap
                          sheet_name= arquivos_primarios['cap_prod_sn'], 
                        usecols=list(tp_dado_arquivos['cap_prod'].keys()),
                        dtype=tp_dado_arquivos['cap_prod']).applymap(fx.padronizar)
+
 # (30/07/2025) Criando log de erro para unidades que não foram encontradas no dicgen.
 unidades_originais = df_cap_producao.copy()
 df_cap_producao['Unidade'] = df_cap_producao['Unidade'].replace(list(dicgen['DE']), list(dicgen['PARA']))
@@ -147,7 +148,7 @@ template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['temp
 print('╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗')
 print('║  >>  LIMITES DE SAÍDA  <<                                                                                      ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
-print('║ # Popula a capacidade de expedição das plantas (UP) e dos portos (APO)                                        ║')
+print('║ # Popula a capacidade de produção das plantas (UP) e expedição dos portos (APO)                                ║')
 print('╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝')
 # PARTE 1 :: LIMITES DE CAPACIDADE DE EXPEDIÇÃO PLANTAS + PORTOS
 print('Iniciando preenchimento de limites de expedição')
@@ -162,28 +163,64 @@ df_cap_portos = fx.left_outer_join(df_cap_portos,portos_apo,left_on='Porto', rig
                                    name_left='Capacidade Portos', name_right='Depara Unidades Portuárias')
 df_cap_portos = fx.left_outer_join(df_cap_portos,df_periodos,left_on='PERIODO', right_on='Nome',
                                    name_left='Capacidade Portos', name_right='Períodos')
+
 df_cap_portos = df_cap_portos[['NOME_AZ_PORTO_VCM','Nome VCM','Capacidade']]
 df_cap_portos = df_cap_portos.rename(columns={'NOME_AZ_PORTO_VCM':'Unidade','Nome VCM':'Periodo','Capacidade':'Limite'})
 df_cap_portos = df_cap_portos.dropna()
 df_cap_portos['Limite'] = df_cap_portos['Limite']*1000
+df_cap_portos['Ativo'] = 'True'
+
 print('Etapa 02 :: CAPACIDADE DAS PLANTAS :: index = UP')
 df_cap_producao = df_cap_producao[df_cap_producao['Agrupador'] == 'CAPACIDADE PRODUCAO'].copy()
-df_cap_producao['DEPOSITO'] = '1001'
-df_cap_producao = fx.left_outer_join(df_cap_producao,df_periodos,left_on='Dt/Ref', right_on='Nome',
-                                     name_left='Cap. por Unidade', name_right='Períodos')
-df_cap_producao = df_cap_producao.dropna()
-df_cap_producao['Ativo'] = 'True'
-df_cap_producao = fx.left_outer_join(df_cap_producao,df_unidades,left_on=['Unidade','DEPOSITO'], right_on=['PLANTA','DEPOSITO'],name_left='Cap. por Unidade',
+
+# 2025-08-11 :: Deprecando depósito = 1001 por decisão do negócio, pois precisamos
+# diferencias as capacidades internas e externas
+df_cap_producao_interno = df_cap_producao[df_cap_producao['Local'] == 'INTERNO'].copy()
+df_cap_producao_externo = df_cap_producao[df_cap_producao['Local'] == 'EXTERNO'].copy()
+
+# CAPACIDADE :: EXTERNO
+# Obtendo o DE-PARA para as unidades externas sem especificar unidade faturamentora
+df_unidades_limites = df_unidades[df_unidades['NOME_UNIDADE_LIMITES'].notna()].copy()
+df_cap_producao_externo = fx.left_outer_join(df_left = df_cap_producao_externo, 
+                                     df_right = df_unidades_limites[['NOME_UNIDADE_LIMITES','UP_MISTURADORA_VCM']],
+                                     left_on = 'Nome Unidade', right_on = 'NOME_UNIDADE_LIMITES',
+                                     name_left = 'CAPACIDADE PRODUCAO', name_right = 'DEPARA DE UNIDADES',
+                                     struct=False)
+df_cap_producao_externo = df_cap_producao_externo.dropna(subset='UP_MISTURADORA_VCM')
+df_cap_producao_externo = df_cap_producao_externo.groupby(by=['UP_MISTURADORA_VCM','Dt/Ref'])['Quantidade'].mean().reset_index()
+df_cap_producao_externo = fx.left_outer_join(df_cap_producao_externo, df_periodos, left_on='Dt/Ref', right_on='Nome',
+                                             name_left='Cap. por Unidade', name_right='Períodos')
+
+df_cap_producao_externo['Ativo'] = 'True'
+
+# CAPACIDADE :: INTERNO
+df_cap_producao_interno['DEPOSITO'] = '1001'
+df_cap_producao_interno = fx.left_outer_join(df_cap_producao_interno,df_unidades,left_on=['Unidade','DEPOSITO'], right_on=['PLANTA','DEPOSITO'],name_left='Cap. por Unidade',
                    name_right='Depara de Unidades')
-df_cap_producao = df_cap_producao.rename(columns={'Unidade':'Sigla','NOME_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
+df_cap_producao_interno = fx.left_outer_join(df_cap_producao_interno,df_periodos,left_on='Dt/Ref', right_on='Nome',
+                                     name_left='Cap. por Unidade', name_right='Períodos')
+df_cap_producao_interno['Ativo'] = 'True'
+
+# Mesclar DataFrames
+cols_cap = {
+    'UP_MISTURADORA_VCM':'Unidade',
+    'Nome VCM':'Periodo',
+    'Quantidade':'Limite',
+    'Ativo':'Ativo'
+}
+df_cap_producao_externo = df_cap_producao_externo[list(cols_cap.keys())]
+df_cap_producao_interno = df_cap_producao_interno[list(cols_cap.keys())]
+df_cap_producao = pd.concat([df_cap_producao_interno, df_cap_producao_externo])
+df_cap_producao = df_cap_producao.rename(columns=cols_cap)
+# df_cap_producao = df_cap_producao.rename(columns={'Unidade':'Sigla','NOME_VCM':'Unidade','Nome VCM':'Periodo','Quantidade':'Limite'})
 template_saida = template_saida.drop(columns={'Limite','Ativo'})
-df_cap_producao = df_cap_producao[['UP_MISTURADORA_VCM','Periodo','Limite']].rename(columns={'UP_MISTURADORA_VCM':'Unidade'})
+# df_cap_producao = df_cap_producao[['UP_MISTURADORA_VCM','Periodo','Limite']].rename(columns={'UP_MISTURADORA_VCM':'Unidade'})
+# df_cap['Ativo'] = True
 df_cap = pd.concat([df_cap_portos, df_cap_producao])
-df_cap['Ativo'] = True
 template_saida = fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','Periodo'], right_on=['Unidade','Periodo'],
                    name_left = 'Template Saída', name_right = 'Capacidades Expedição Portos + Unidades')
 template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
-template_saida['Ativo'] = template_saida['Ativo'].fillna('False')
+template_saida['Ativo'] = template_saida['Ativo'].fillna('True')
 # (07/08/2025) Como solicitado pelo Matheus, alterando o que não teve resultado de 0 para 500000
 template_saida['Limite'] = template_saida['Limite'].fillna(500000)
 template_saida['Limite'] = template_saida['Limite'].round(2)

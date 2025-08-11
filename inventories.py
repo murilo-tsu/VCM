@@ -105,21 +105,41 @@ depara_armazens = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['uni
                                   dtype = tp_dado_arquivos['unidades_exp']).applymap(fx.padronizar)
 
 # Dataframe :: Cadastro Produtos
-mp_cadastrada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
+cadastro_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
                                   sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
                                   usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
 
-pf_pvo_cadastrada = mp_cadastrada.copy()
+# DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
+cadastro_mp = cadastro_produtos[(cadastro_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'MP')]
+cadastro_pf = cadastro_produtos[(cadastro_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'PF')]
+
 
 # Dataframe :: Agrupamento
-mp_estoques = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
+agrupamento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
                                   sheet_name = arquivos_primarios['cadastro_produtos_sn02'],
                                   usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                                   dtype = tp_dado_arquivos['cadastro_produtos_sn02'])
 
-mp_estoques = mp_estoques[['COD_ESPECIFICO','CODIGO_AGRUPADO']]
+# Agrupamento de Produtos Acabados
+agrupamento_produtos_pf = agrupamento.copy()
+agrupamento_produtos_pf = agrupamento_produtos_pf[agrupamento_produtos_pf['TIPO_MATERIAL'] == 'PF']
+proxy_agrupamento_pf = cadastro_pf[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_pf = proxy_agrupamento_pf.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_pf['CODIGO_AGRUPADO'] = proxy_agrupamento_pf['COD_ESPECIFICO']
+proxy_agrupamento_pf['AGRUPAMENTO'] = proxy_agrupamento_pf['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_pf = pd.concat([agrupamento_produtos_pf,proxy_agrupamento_pf])
+agrupamento_produtos_pf = agrupamento_produtos_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
 
+# Agrupamento de Matérias-Primas
+agrupamento_produtos_mp = agrupamento.copy()
+agrupamento_produtos_mp = agrupamento_produtos_mp[agrupamento_produtos_mp['TIPO_MATERIAL'] == 'MP']
+proxy_agrupamento_mp = cadastro_mp[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_mp = proxy_agrupamento_mp.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_mp['CODIGO_AGRUPADO'] = proxy_agrupamento_mp['COD_ESPECIFICO']
+proxy_agrupamento_mp['AGRUPAMENTO'] = proxy_agrupamento_mp['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_mp = pd.concat([agrupamento_produtos_mp,proxy_agrupamento_mp])
+agrupamento_produtos_mp = agrupamento_produtos_mp.drop_duplicates(subset = 'COD_ESPECIFICO')
 
 # =======================================================================================================================
 # EXECUÇÃO DE SCRIPTS
@@ -153,9 +173,6 @@ depara_armazens['CHAVE-ESTOQUE'] = depara_armazens['PLANTA'] + "-" + depara_arma
 
 estoques_iniciais = estoques_iniciais.merge(depara_armazens, how = 'inner', left_on = 'CHAVE-ESTOQUE', right_on = 'CHAVE-ESTOQUE')
 
-mp_cadastrada = mp_cadastrada.loc[mp_cadastrada.TIPO_MATERIAL.str[:2] == 'MP',:]
-pf_pvo_cadastrada = pf_pvo_cadastrada.loc[pf_pvo_cadastrada.TIPO_MATERIAL == 'PF',:]
-mp_estoques = mp_estoques.drop_duplicates(subset = ['COD_ESPECIFICO'])
 estoques_iniciais = estoques_iniciais.loc[(estoques_iniciais.SUBINVENTORY != 'EMBALAGEM'),:]
 
 # ==============================================================================================================
@@ -166,17 +183,17 @@ estoques_iniciais = estoques_iniciais.loc[(estoques_iniciais.SUBINVENTORY != 'EM
 estoques_iniciais_pvo = estoques_iniciais.copy()
 # Substituir PRODUCTION_UNIT por UNIDADE_ARMAZENAGEM_VCM??
 estoques_iniciais_pvo = estoques_iniciais_pvo.loc[estoques_iniciais_pvo.UNIDADE_ARMAZENAGEM_VCM == 'PVO',:]
-estoques_iniciais_pvo = estoques_iniciais_pvo.merge(mp_estoques, how = 'left', left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO')
+estoques_iniciais_pvo = estoques_iniciais_pvo.merge(agrupamento_produtos_pf, how = 'left', left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO')
 estoques_iniciais_pvo = estoques_iniciais_pvo.drop(columns = ['ITEM_CODE','COD_ESPECIFICO']).rename(columns = {'CODIGO_AGRUPADO':'ITEM_CODE'})
-estoques_iniciais_pvo = estoques_iniciais_pvo.merge(pf_pvo_cadastrada, how = 'left', right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE')
+estoques_iniciais_pvo = estoques_iniciais_pvo.merge(cadastro_pf, how = 'left', right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE')
 
 # ==============================================================================================================
 
 # Matérias-primas
-estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_estoques, left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO',
+estoques_iniciais = fx.left_outer_join(estoques_iniciais, agrupamento_produtos_mp, left_on = 'ITEM_CODE', right_on = 'COD_ESPECIFICO',
                                                                                name_left='Estoques Iniciais', name_right='Agrupamento de Produtos')
 estoques_iniciais = estoques_iniciais.drop(columns = ['ITEM_CODE','COD_ESPECIFICO']).rename(columns = {'CODIGO_AGRUPADO':'ITEM_CODE'})
-estoques_iniciais = fx.left_outer_join(estoques_iniciais, mp_cadastrada, right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE',
+estoques_iniciais = fx.left_outer_join(estoques_iniciais, cadastro_mp, right_on = 'CODIGO_ITEM', left_on = 'ITEM_CODE',
                                        name_left='Estoques Iniciais', name_right='Cadastro de Produtos - MP')
 
 # Utilizar o pd.concat para agrupar os relatórios de PVO e de MPs
