@@ -359,9 +359,10 @@ demanda_corrente_agrupada['Ativo'] = True
 # AMARRAÇÃO DAS CORRENTES DE FORNECIMENTO
 # =======================================
 df_revisao_correntes_grouped = df_revisao.groupby(['CORRENTE','NOME_PERIODO','PRD-VCM'])['BALANCE_TONS'].sum().reset_index()
-wizard_suprimento_amarracao = df_revisao_correntes_grouped
-wizard_suprimento_amarracao = wizard_suprimento_amarracao.rename(columns={'CORRENTE':'Unidade','NOME_PERIODO)':'Período', 'PRD-VCM':'Produto','BALANCE_TONS':'Limite'})
+wizard_suprimento_amarracao = df_revisao_correntes_grouped.copy()
+wizard_suprimento_amarracao = wizard_suprimento_amarracao.rename(columns={'CORRENTE':'Unidade','NOME_PERIODO':'Período', 'PRD-VCM':'Produto','BALANCE_TONS':'Limite'})
 wizard_suprimento_amarracao['Ativo'] = True
+wizard_suprimento_amarracao = wizard_suprimento_amarracao.loc[wizard_suprimento_amarracao['Limite']>0.0]
 wizard_amarracao = pd.concat([demanda_corrente_agrupada,wizard_suprimento_amarracao])
 wizard_amarracao['ID-RIGHT'] = wizard_amarracao['Unidade'] + wizard_amarracao['Período'] + wizard_amarracao['Produto']
 
