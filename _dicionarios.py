@@ -1,5 +1,5 @@
 import numpy as np
-# 2025-08-08 :: Dicionários revisados
+# 2025-08-13 :: Dicionários revisados
 # =======================================================================================================================
 # DEFINIR ARQUIVOS
 # =======================================================================================================================
@@ -93,6 +93,7 @@ arquivos_primarios = {
      'demurrage_sn': 'iptDemurrage',
      'custos_armz': 'iptCustosArmazens.xlsx',
      'custos_armz_sn': 'iptCustosArmazens',
+     'df_custo':'Custo_Financ',
 }
 
 tp_dado_arquivos = {
@@ -172,6 +173,7 @@ tp_dado_arquivos = {
      'ptax': {'Cotação (BRL/USD)': np.float64},
      'custos_armz': {'Estado':str, 'Terceiro':str, 'Armazenagem (R$/ton)':np.float64, 'Handling (R$/ton)':np.float64},
      'template_correntes':{'Unidade':str, 'Periodo':str, 'Produto':str, 'Limite':str, 'Ativo':str},
+     'df_custo':{'Custo':np.float64},
 }
 
 rename_dataframes = {

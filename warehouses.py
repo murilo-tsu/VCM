@@ -4,15 +4,15 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                             >>  warehouses.py  <<                                              ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 23/04/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/08/2025                                                ║')
+print('║ Editado por:   Isabela Nunes dos Santos        Data: 13/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (24/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
 print('║                        de depara e dado primário.                                                              ║')
-print('║                                                                                                                ║')
 print('║ - v1.0.1 (08/07/2025): Trazendo o trecho de capacidade de armazenagem do script de limits.                     ║')
-print('║                                                                                                                ║')
 print('║ - v1.0.2 (08/07/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
+print('║ - v2.0.0 (08/08/2025): Versão de Referência :: Cherrypick                                                      ║')
+print('║ - v2.0.1 (13/08/2025): Adicionando o Custo Financeiro a partir do excel.                                       ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Custos de Armazenagem e Handling                                                                            ║')
@@ -116,6 +116,12 @@ df_custos_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cust
                          sheet_name= arquivos_primarios['custos_armz_sn'],
                          usecols=list(tp_dado_arquivos['custos_armz'].keys()),
                          dtype=tp_dado_arquivos['custos_armz']).applymap(fx.padronizar)
+
+# DataFrame :: Dado Primário de Custo Financeiro
+df_custo_financeiro = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custos_armz']),
+                         sheet_name= arquivos_primarios['df_custo'],
+                         usecols=list(tp_dado_arquivos['df_custo'].keys()),
+                         dtype=tp_dado_arquivos['df_custo'])
 
 # DataFrame :: DADO PRIMARIO DE CAPACIDADE DE ARMAZENAGEM INTERNA E EXTERNA
 df_cap_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cap_prod']),
@@ -225,10 +231,6 @@ print('╚═══════════════════════�
 
 df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_unidades_armz,left_on='Unidade', right_on='Unidade',
                                            name_left='Template de Custos de Handling', name_right='Localização')
-# # Substituindo o nome pela sigla.
-# df_custos_armz['Estado'] = df_custos_armz['Estado'].replace(['BAHIA', 'ESPIRITO SANTO', 'GOIAS',
-#                     'PARANA', 'RIO GRANDE DO SUL', 'SANTA CATARINA', 'SAO PAULO', 'SERGIPE',],\
-#                     ['BA', 'ES', 'GO', 'PR', 'RS', 'SC', 'SP', 'SE'])
 df_template_hand_armz = fx.left_outer_join(df_template_hand_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
                                            name_left='Template de Custos de Handling', name_right='DADO PRIMARIO DE ARMAZENAGEM E HANDLING')
 df_template_hand_armz['Recebimento'] = df_template_hand_armz['Handling (R$/ton)'].fillna(0.0)
@@ -377,13 +379,14 @@ for i in tqdm(range(wizard_custo_suprimento_faixa.shape[0])):
 
 wizard_custo_suprimento_faixa['Custo do Produto'] = wizard_custo_suprimento_faixa['Custo MP BRL/ton'] + wizard_custo_suprimento_faixa['Demurrage BRL/ton']
 wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa[['Unidade','Produto','Periodo','Custo do Produto']]
-# Encerra aqui a lógica replicada de reposition_cost.py
+
+# >> Encerra aqui a lógica replicada de reposition_cost.py <<
 
 df_template_var_armz = df_template_var_armz.merge(wizard_custo_suprimento_faixa, how='left',
                                                                     on=['Unidade','Produto','Periodo'])
 df_template_var_armz['Custo do Produto'] = df_template_var_armz['Custo do Produto'].fillna(0.0)
-df_template_var_armz['Valor'] = df_template_var_armz['Custo do Produto']
-tbTemplateCustosVariaveisArmz = df_template_var_armz.drop(columns={'Custo do Produto'})
+df_template_var_armz['Valor'] = df_template_var_armz['Custo do Produto'].round(2)
+df_template_var_armz = df_template_var_armz.drop(columns={'Custo do Produto'})
 
 df_template_var_armz = fx.left_outer_join(df_template_var_armz,df_custos_armz,left_on=['Estado','Unidade'], right_on=['Estado','Terceiro'],
                                           name_left='Template de Custos Variáveis', name_right='DADO PRIMARIO DE ARMAZENAGEM E HANDLING')
@@ -395,8 +398,10 @@ custo_paliativo = {'ID':['AEX', 'APO', 'AIN', 'TER'],\
 custo_paliativo = pd.DataFrame.from_dict(custo_paliativo)
 df_template_var_armz = df_template_var_armz.merge(custo_paliativo, how='left', on='ID')
 df_template_var_armz['Custo Variável'] = df_template_var_armz.apply(lambda x: x['Custo Paliativo'] if 
-                                                            x['Custo Variável']==0.0 else x['Custo Variável'], axis=1).round(2)
-
+                                                            x['Custo Variável']==0.0 else x['Custo Variável'], axis=1)
+df_template_var_armz['Custo Financeiro'] = 0.0
+df_template_var_armz['Custo Financeiro'] = np.where(df_template_var_armz['Custo Financeiro'] == 0.0,
+                                                               df_custo_financeiro['Custo'], df_template_var_armz['Custo Financeiro'])
 df_template_var_armz = df_template_var_armz[['Unidade','Produto','Periodo','Valor','Custo Financeiro','Custo Variável']]
 df_template_var_armz.to_excel(os.path.join(cwd,output_path+'tbOutCustosVariaveisArmz.xlsx'),index=False, sheet_name='CUSTOS_VARIAVEIS')
 print('\nFinalizado: Wizard de Custos de Armazenagem')
