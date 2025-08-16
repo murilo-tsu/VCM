@@ -237,7 +237,9 @@ mp_fornecimento_nacional = mp_fornecimento_nacional.drop_duplicates()
 companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','ECFTO':'E600','SFT':'E890'}
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
-df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
+# 2025-08-15 :: OffSet deve ser removido
+# df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
+df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA']
 df_revisao_importada = fx.left_outer_join(df_revisao_importada,agrupamento_produtos_mp,left_on='CODIGO_MP',right_on='COD_ESPECIFICO',
                        name_left='Revisão de Chegadas >>Importada<<', name_right='Agrupamento de Produtos')
 df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO',

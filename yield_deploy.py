@@ -315,7 +315,9 @@ for i in range(proxy_bom.shape[0]):
 
 proxy_bom = proxy_bom[proxy_bom['pk_eval'] == True].copy()
 proxy_bom = proxy_bom.groupby(by = ['FORMULA_CODE','FG_CODE','FINISHED_GOOD','RM_CODE','RM_DESCRIPTION'])['COMPONENT_QTY'].sum().reset_index()
-proxy_bom = proxy_bom.sort_values(by=['FG_CODE','FORMULA_CODE'], ascending = True).reset_index().drop(columns='index')
+proxy_bom['PRIORITY'] = [1 if proxy_bom['FORMULA_CODE'][i].split('-')[0] == proxy_bom['FORMULA_CODE'][i].split('-')[1] else 2 \
+    for i in range(proxy_bom.shape[0])]
+proxy_bom = proxy_bom.sort_values(by=['FG_CODE','FORMULA_CODE','PRIORITY'], ascending = False).reset_index().drop(columns='index')
 proxy_bom['ACC_QTY'] = 0.0
 fg_list = []
 lt = False
@@ -464,7 +466,55 @@ for files in bom["DESCRICAO_PLANTA"].unique():
     proxy_full = pd.concat([proxy_full, proxy[proxy['QUANTIDADE_NA_DEMANDA'] > 0.0]])
 
 proxy_full.to_excel(os.path.join(cwd,exec_log_path + '[CALL TO ACTION] Fechamento Lista Técnica Completa vs. Demanda Total.xlsx'), index=False)
+
+# Criar um log de erros da demanda para excel incluindo a unidade produtiva VCM
+# ------------------------------------------------------------------------------
+
+unique = unidades_terc['UNIDADE PRODUTORA'].drop_duplicates().to_list()
+# Preencher proxy.Faturamento somente se for uma unidade terceira
+demanda['proxy.Faturamento'] = demanda['UNIDADE PRODUTORA'].apply(lambda x: x if x not in unique else np.nan)
+# Separar o arquivo de demanda com base na existência ou não na lista "unique"
+demanda_unidade_standard = demanda[(demanda['proxy.Faturamento'].notna())].reset_index().drop(columns='index')
+demanda_unidade_terceira = demanda[(demanda['proxy.Faturamento'].isna())].reset_index().drop(columns='index')
+print(f"Foram identificados {demanda.loc[demanda['proxy.Faturamento'].isna(),:].shape[0]} linhas da demanda com problemas no depUnidadesGerencias.xlsx")
+print('Verificar se todas as gerências estão cadastradas!')
+# Para o DataFrame >> demanda_unidade_standard << a Unidade Faturamento é a própria unidade produtora
+demanda_unidade_standard['UNIDADE FATURAMENTO'] = demanda_unidade_standard['proxy.Faturamento']
+# Para o DataFrame >> demanda_unidade_terceira << a Unidade Faturamento é determinada através de regras
+# 01: Se e existe uma CONSULTORIA específica no arquivo depUnidadesGerencias.xlsx, então, existe uma regra especial para 
+# atribuir a UNIDADE FATURAMENTO a partir do depUnidadesGerencias, logo: >> demanda_unidade_terceira_na <<
+# 02: Não existe CONSULTORIA específica, portanto, podemos seguir uma regra geral por GERENCIA, logo: >> demanda_unidade_terceira_notna <<
+unique = unidades_terc.loc[unidades_terc['CONSULTORIA'].notna(),:]['GERENCIA'].drop_duplicates().to_list()
+demanda_unidade_terceira['proxy.Consultoria'] = demanda_unidade_terceira['GERENCIA'].apply(lambda x: np.nan if x not in unique else x)
+# Tratando os casos em que a CONSULTORIA está vazia
+demanda_unidade_terceira_na = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Consultoria'].isna(),:].reset_index().drop(columns='index')
+proxy_unidades_terc = unidades_terc.loc[unidades_terc['CONSULTORIA'].isna(),:].reset_index().drop(columns='index')
+proxy_unidades_terc = proxy_unidades_terc.rename(columns={'UNIDADE PRODUTORA':'UNIDADE PRODUTORA.2',
+                                                          'CONSULTORIA':'CONSULTORIA.2','GERENCIA':'GERENCIA.2'})
+demanda_unidade_terceira_na = fx.left_outer_join(demanda_unidade_terceira_na, proxy_unidades_terc,
+                              left_on = ['UNIDADE PRODUTORA','GERENCIA'],
+                              right_on = ['UNIDADE PRODUTORA.2','GERENCIA.2'],
+                              name_left='Unidades Terceiras', name_right='De-Para Unidades')
+# Tratando as exceções em que a CONSULTORIA é relevante para determinação da UNIDADE DE FATURAMENTO
+proxy_unidades_terc = unidades_terc.loc[unidades_terc['CONSULTORIA'].notna(),:].reset_index().drop(columns='index')
+demanda_unidade_terceira_notna = demanda_unidade_terceira.loc[demanda_unidade_terceira['proxy.Consultoria'].notna(),:].reset_index().drop(columns='index')
+proxy_unidades_terc = proxy_unidades_terc.rename(columns={'UNIDADE PRODUTORA':'UNIDADE PRODUTORA.2',
+                                                          'CONSULTORIA':'CONSULTORIA.2','GERENCIA':'GERENCIA.2'})
+demanda_unidade_terceira_notna = fx.left_outer_join(demanda_unidade_terceira_notna, proxy_unidades_terc,
+                                 left_on = ['UNIDADE PRODUTORA','GERENCIA'],
+                                 right_on = ['UNIDADE PRODUTORA.2','GERENCIA.2'],
+                                 name_left='Unidades Terceiras', name_right='De-Para Unidades')
+demanda = pd.concat([demanda_unidade_standard, demanda_unidade_terceira_na, demanda_unidade_terceira_notna])
+demanda['UNIDADE PRODUTORA'] = demanda['UNIDADE PRODUTORA'].replace(list(dicgen['DE']), list(dicgen['PARA']))
+demanda['UNIDADE FATURAMENTO'] = demanda['UNIDADE FATURAMENTO'].replace(list(dicgen['DE']), list(dicgen['PARA']))
+
+demanda = fx.left_outer_join(demanda, unidades_produtoras[['DEPOSITO','PLANTA','UNIDADE_VCM']], left_on=['UNIDADE PRODUTORA','UNIDADE FATURAMENTO'],
+                             right_on=['DEPOSITO','PLANTA'], name_left='DEMANDA', name_right='UNIDADES PRODUTORAS')
+
+cols_to_drop = ['proxy.Faturamento','proxy.Consultoria','UNIDADE PRODUTORA.2','GERENCIA.2','CONSULTORIA.2','DEPOSITO','PLANTA']
+demanda = demanda.drop(columns=cols_to_drop)
 demanda.to_excel(os.path.join(cwd, exec_log_path + '[CALL TO ACTION] Demanda vs. Status Lista Técnica.xlsx'), index=False)
+
 bom = bom.sort_values(by=['UNIDADE_VCM','FG_CODE','QUANTIDADE_NA_DEMANDA'])
 bom_unique = bom.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','COMPONENT_QTY'])['QUANTIDADE_NA_DEMANDA'].max()
 bom_unique = bom_unique.reset_index()
@@ -514,7 +564,7 @@ template_entrada = template_entrada[['Proxy PR','Unidade', 'Receita', 'Produto',
                                      'MP-VCM', 'FORMULA_CODE', 'COMPONENT_QTY']]
 print('\nEstratégia 03 :: Criando uma lista técnica alternativa baseada em ciclos anteriores...')
 bom_alt_vcm = fx.left_outer_join(bom_alt_vcm,bom_alt_vcm_mp, left_on=['Unidade','Receita'], right_on=['Unidade','Receita'],
-                                 name_left="Mesclagem (17) => BOM ALT VCM", name_right="BOM ALT VCM (MP)")
+                                 name_left="Mesclagem (17) => BOM ALT VCM", name_right="BOM ALT VCM (MP)", struct = False)
 bom_alt_vcm['Produto'] = bom_alt_vcm['MP']
 bom_alt_vcm = bom_alt_vcm.drop(columns=['ValorSaida','MP']).rename(columns={'ValorEntrada':'COMPONENT_QTY_NV2'})
 template_entrada = fx.left_outer_join(template_entrada, bom_alt_vcm, left_on = ['Unidade','Receita','Produto'], 
