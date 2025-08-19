@@ -114,6 +114,10 @@ cadastro_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['c
                             sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn01']).applymap(fx.padronizar)
+# (19/08/2025) Pegando aqui os produtos que não existem de fato.
+produtos_inexistentes = cadastro_produtos['PRD-VCM'].loc[cadastro_produtos['CODIGO_ITEM'].str.startswith(('MP', 'PF'))].to_list()
+# (19/08/2025) Filtrando os códigos que não (~) começam com 'MP' ou 'PF', para pegar apenas produtos que existem de fato.
+cadastro_produtos = cadastro_produtos.loc[~cadastro_produtos['CODIGO_ITEM'].str.startswith(('MP', 'PF'))]
 
 # DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
 cadastro_mp = cadastro_produtos[(cadastro_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'MP')]
@@ -274,6 +278,7 @@ wizard_suprimento_faixa = fx.left_outer_join(wizard_suprimento_faixa, suprimento
 wizard_suprimento_faixa['Quantidade'] = wizard_suprimento_faixa['Quantidade'].fillna(0.0)
 wizard_suprimento_faixa['BALANCE_TONS'] = wizard_suprimento_faixa['BALANCE_TONS'].fillna(0.0)
 wizard_suprimento_faixa['BALANCE_TONS'] = wizard_suprimento_faixa['BALANCE_TONS'] + wizard_suprimento_faixa['Quantidade']
+
 print('\nAplicando premissas para compras firmes...')
 print(' >> Horizonte Compras Importadas: M+0 até M+3')
 print(' >> Horizonte Compras Nacionais: M+0 até M+1')
@@ -290,7 +295,8 @@ for i in tqdm(range(wizard_suprimento_faixa.shape[0]), desc = 'Processando...', 
     
     # Caso 2: Não está no horizonte de fornecimento importado congelado e o fornecimento é importado
     elif wizard_suprimento_faixa['Periodo'][i].split(' ')[0] not in purchase_range \
-       and wizard_suprimento_faixa['Unidade'][i][:3] == 'POR':
+       and wizard_suprimento_faixa['Unidade'][i][:3] == 'POR' \
+       and wizard_suprimento_faixa['Produto'][i] not in produtos_inexistentes:
         wizard_suprimento_faixa['Suprimento Mínimo'][i] = wizard_suprimento_faixa['BALANCE_TONS'][i]
         wizard_suprimento_faixa['Suprimento Máximo'][i] = 100000.0
     
