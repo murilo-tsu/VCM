@@ -1,7 +1,7 @@
 # 🚀 Para Usuários Finais (Baixar e Executar)
 
 Uma pipeline de transformação de dados abrangente e orientada por GUI, projetada para processar dados operacionais e de cadeia de suprimentos brutos em inputs otimizados para a ferramenta de otimização VCM.
-![Roadmap VCM - versão 6.0] (/images/VCM Roadmap_v6.png)
+![Roadmap VCM - versão 6.0](https://github.com/murilo-tsu/VCM/blob/16365c2f3e6c87036b87f47848b83ce1913ad8fb/images/VCM%20Roadmap_v6.png)
 # 🛠️ Para Desenvolvedores / Contribuidores
 - Python 3.X
 - Numpy, Pandas, tqdm, tkinter
