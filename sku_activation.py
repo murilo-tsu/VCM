@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>   sku_activation.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 20/08/2025                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0.0 (09/06/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
@@ -115,6 +115,8 @@ cadastro_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['c
                             sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn01']).applymap(fx.padronizar)
+# (19/08/2025) Filtrando os códigos que não (~) começam com 'MP' ou 'PF' para pegar apenas produtos que existem de fato.
+cadastro_produtos = cadastro_produtos.loc[~cadastro_produtos['CODIGO_ITEM'].str.startswith(('MP', 'PF'))]
 
 # DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
 cadastro_mp = cadastro_produtos[(cadastro_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'MP')]
@@ -213,7 +215,10 @@ mp_fornecimento_nacional = mp_fornecimento_nacional.drop_duplicates()
 companies = {'FTO':'E600','FH':'E900','SAL':'E890','CMISS':'E890','FHG':'E900','ECFTO':'E600','SFT':'E890'}
 df_revisao_importada['COMPANY'] = df_revisao_importada['COMPANY'].replace(companies)
 df_revisao_importada = df_revisao_importada[(df_revisao_importada['STATUS'] == 'COMPRADO')]
-df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
+
+# 2025-08-15 :: OffSet deve ser removido
+# df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA'] - pd.offsets.MonthBegin(1)
+df_revisao_importada['DT_REMESSA'] = df_revisao_importada['DT_REMESSA']
 df_revisao_importada = fx.left_outer_join(df_revisao_importada, agrupamento_produtos_mp, left_on='CODIGO_MP', right_on='COD_ESPECIFICO',
                                           name_left = 'Revisão de Chegadas >>Importada<<', name_right = 'Agrupamento de Produtos')
 df_revisao_importada = fx.left_outer_join(df_revisao_importada, df_periodos, left_on = 'DT_REMESSA', right_on = 'PERIODO',

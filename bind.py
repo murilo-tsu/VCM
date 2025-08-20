@@ -4,7 +4,7 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  bind.py  <<                                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 14/05/2025                                                ║')
-print('║ Editado por:   Murilo Lima Ribeiro             Data: 08/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 20/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v1.0 (21/05/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos  de   ║')
@@ -118,6 +118,9 @@ df_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastr
                             sheet_name = arquivos_primarios['cadastro_produtos_sn01'],
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn01'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn01'])
+
+# (19/08/2025) Filtrando os códigos que não (~) começam com 'MP' ou 'PF' para pegar apenas produtos que existem de fato.
+cadastro_produtos = df_produtos.loc[~df_produtos['CODIGO_ITEM'].str.startswith(('MP', 'PF'))]
 
 # DataFrame :: cadastro de matérias-primas :: filtro no tipo de material da tabela CADASTRO
 cadastro_mp = df_produtos[(df_produtos['TIPO_MATERIAL'].str.split('-',expand=True)[0].str.strip() == 'MP')]
@@ -269,7 +272,8 @@ df_revisao = df_revisao.reset_index().drop(columns='index')
 df_revisao = fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_on = 'PORTO',
              name_left='Revisão de Chegadas >>ALL<<', name_right='Portos')
 
-df_revisao = df_revisao.merge(df_correntes, how='left', left_on=['NOME_PORTO_VCM','PORTO'], right_on=['NOME_PORTO_VCM','PORTO'])
+# 2025-08-18 :: Incluindo a informação de PLANTA para aumentar a granularidade do BIND.py
+df_revisao = df_revisao.merge(df_correntes, how='left', left_on=['NOME_PORTO_VCM','PORTO','PLANTA'], right_on=['NOME_PORTO_VCM','PORTO','UNIDADE'])
 
 
 # Tá no arquivo de supply, faz sentido ter isso em bind?
