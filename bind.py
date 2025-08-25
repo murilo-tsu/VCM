@@ -4,14 +4,10 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  bind.py  <<                                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 14/05/2025                                                ║')
-print('║ Editado por:   Murilo Lima Ribeiro             Data: 20/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 25/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0 (21/05/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos  de   ║')
-print('║                      depara e dado primário.                                                                   ║')
-print('║                                                                                                                ║')
-print('║ - v1.1 (16/07/2025): Criação de orientação a objeto para execução de scripts integrados.                       ║')
-print('║ - v2.0 (08/08/2025): Versão de Referência :: CHERRYPICK                                                        ║')
+print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Amarração das Correntes de Fornecimento                                                                     ║')
@@ -350,8 +346,8 @@ demanda = fx.left_outer_join(demanda, df_periodos, left_on = 'PERIODO', right_on
 demanda['ID Origem-Destino'] = demanda['UNIDADE_EXPEDICAO_VCM'] + '-' + demanda['VCM']
 demanda = demanda.dropna(subset = ['PRD-VCM'])
 
-##########################################################
-##########################################################
+#####################################################################################################
+#####################################################################################################
 
 # AMARRAÇÃO DAS CORRENTES DE CONSUMO
 # ==================================
@@ -416,7 +412,7 @@ template_correntes['Limite'] = template_correntes['Limite'].apply(lambda x: roun
 
 # 12/04/2024: Alterando enconding para utf-8 conforme alinhamento com OP2B
 template_correntes.to_csv(os.path.join(cwd,output_path + 'tbOutLimitesMinEntrada.csv'),\
-                  index = False, encoding = 'utf-8-sig', sep = ';')
+                  index = False, encoding = 'utf-8', sep = ';')
 
 print('Wizard de Limites :: Atualizado com Sucesso!')
 end_time = time.time()

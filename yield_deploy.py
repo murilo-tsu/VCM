@@ -4,14 +4,10 @@ print('║                                         ATUALIZACAO DE DADOS - VCM   
 print('║                                            >> yield_deploy.py <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado  por: Murilo Lima Ribeiro  Data: 02/04/2025                                                             ║')
-print('║ Editado por: Murilo Lima Ribeiro  Data: 08/08/2025                                                             ║')
+print('║ Editado por: Murilo Lima Ribeiro  Data: 25/08/2025                                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0 (02/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos de    ║')
-print('║                        depara e dado primário.                                                                 ║')
-print('║ - v1.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados                        ║')
-print('║ - v1.2 (30/05/2025): Adequação de LOGs de ERRO para acomodar primeria versão de topologia unificada            ║')
-print('║ - v2.0 (08/08/2025): Ajuste de fontes de dados para CSV e filtro de tipo de material  :: Cherrypick            ║')
+print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Lista Técnica VCM                                                                                           ║')
@@ -281,7 +277,7 @@ cols_to_keep = ['Unidade','Receita','Produto','ValorSaida']
 # template_saida[cols_to_keep].to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosSaida.xlsx'), 
 #                         index = False, sheet_name = 'RENDIMENTO_SAIDA_PROD')
 template_saida[cols_to_keep].to_csv(os.path.join(cwd, output_path + 'WIZARD_RENDIMENTO_SAIDA.csv'),
-                                    index=False, sep = ';', encoding='utf-8-sig')
+                                    index=False, sep = ';', encoding='utf-8')
 
 template_saida = template_saida[(template_saida['ValorSaida'] == 1.0)][['Proxy PR','Receita']].copy()
 print('\nEstratégia 01 :: Avaliando balanceamento da lista técnica')
@@ -601,7 +597,7 @@ template_entrada = template_entrada[['Unidade','Receita','Produto','ValorEntrada
 # template_entrada.to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosEntrada.xlsx'),
 #                           index = False, sheet_name = 'RENDIMENTO_ENTRADA_PROD')
 template_entrada.to_csv(os.path.join(cwd, output_path + 'WIZARD_RENDIMENTO_ENTRADA.csv'),
-                        index = False, sep = ';', encoding = 'utf-8-sig')
+                        index = False, sep = ';', encoding = 'utf-8')
 
 end_time = time.time()
 print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

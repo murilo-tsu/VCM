@@ -4,12 +4,10 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>   sku_activation.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
-print('║ Editado por:   Murilo Lima Ribeiro             Data: 20/08/2025                                             ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 25/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0.0 (09/06/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
-print('║                        de depara e dado primário.                                                              ║')
-print('║                                                                                                                ║')
+print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Definição de Limites                                                                                        ║')
@@ -367,7 +365,7 @@ for i in tqdm(range(template_limites.shape[0])):
 
 # (29/07/2025) Retirando a coluna "Ativo" como foi pedido pelo time de OP2B
 template_limites = template_limites.drop(columns=['Ativo'])
-template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutDefinicaoLimMinEnt.csv'), sep = ';', encoding = 'utf-8-sig', index = False)
+template_limites.to_csv(os.path.join(cwd,output_path + 'tbOutDefinicaoLimMinEnt.csv'), sep = ';', encoding = 'utf-8', index = False)
 print('Arquivo (tbOutDefinicaoLimMinEnt.xlsx) foi Atualizado com Sucesso!')
 print('tbOutDefinicaoLimMinEnt.xlsx deverá ser atualizada no VCM para ativar/desativar as correntes!')
 print('Importante atualizar WIZARD CORRENTES INPUT a partir dos dados do VCM!')

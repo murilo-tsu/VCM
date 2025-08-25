@@ -4,12 +4,10 @@ print('║                                         ATUALIZACAO DE DADOS - VCM   
 print('║                                         >> constrained_demand.py <<                                            ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado  por: Murilo Lima Ribeiro  Data: 10/03/2025                                                             ║')
-print('║ Editado por: Murilo Lima Ribeiro  Data: 08/08/2025                                                             ║')
+print('║ Editado por: Murilo Lima Ribeiro  Data: 21/08/2025                                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0.0 (02/04/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos de  ║')
-print('║                        depara e dado primário.                                                                 ║')
-print('║ - v1.0.1 (30/05/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
+print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Demanda Restrita :: Criação do Arquivo de Forecast a partir do resultado VCM                                ║')
@@ -88,13 +86,31 @@ agrupamento_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                             usecols = list(tp_dado_arquivos['cadastro_produtos_sn02'].keys()),
                             dtype = tp_dado_arquivos['cadastro_produtos_sn02']).applymap(fx.padronizar)
 
-proxy_agrupamento = cadastro[['CODIGO_ITEM','DESCRICAO']]
-proxy_agrupamento = proxy_agrupamento.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
-proxy_agrupamento['CODIGO_AGRUPADO'] = proxy_agrupamento['COD_ESPECIFICO']
-proxy_agrupamento['AGRUPAMENTO_MP'] = proxy_agrupamento['DESCRICAO_ESPECIFICA']
-agrupamento_produtos = pd.concat([agrupamento_produtos,proxy_agrupamento])
-agrupamento_produtos = agrupamento_produtos.drop_duplicates(subset = 'COD_ESPECIFICO')
-agrupamento_cadastro = agrupamento_produtos.copy()
+# Agrupamento de Produtos Acabados
+agrupamento_produtos_pf = agrupamento_produtos.copy()
+agrupamento_produtos_pf = agrupamento_produtos_pf[agrupamento_produtos_pf['TIPO_MATERIAL'] == 'PF']
+proxy_agrupamento_pf = cadastro_pf[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_pf = proxy_agrupamento_pf.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_pf['CODIGO_AGRUPADO'] = proxy_agrupamento_pf['COD_ESPECIFICO']
+proxy_agrupamento_pf['AGRUPAMENTO'] = proxy_agrupamento_pf['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_pf = pd.concat([agrupamento_produtos_pf,proxy_agrupamento_pf])
+agrupamento_produtos_pf = agrupamento_produtos_pf.drop_duplicates(subset = 'COD_ESPECIFICO')
+
+# Agrupamento de Matérias-Primas
+agrupamento_produtos_mp = agrupamento_produtos.copy()
+agrupamento_produtos_mp = agrupamento_produtos_mp[agrupamento_produtos_mp['TIPO_MATERIAL'] == 'MP']
+proxy_agrupamento_mp = cadastro_mp[['CODIGO_ITEM','DESCRICAO']]
+proxy_agrupamento_mp = proxy_agrupamento_mp.rename(columns={'CODIGO_ITEM':'COD_ESPECIFICO','DESCRICAO':'DESCRICAO_ESPECIFICA'})
+proxy_agrupamento_mp['CODIGO_AGRUPADO'] = proxy_agrupamento_mp['COD_ESPECIFICO']
+proxy_agrupamento_mp['AGRUPAMENTO'] = proxy_agrupamento_mp['DESCRICAO_ESPECIFICA']
+agrupamento_produtos_mp = pd.concat([agrupamento_produtos_mp,proxy_agrupamento_mp])
+agrupamento_produtos_mp = agrupamento_produtos_mp.drop_duplicates(subset = 'COD_ESPECIFICO')
+
+# DataFrame ::  Dicionário Genérico
+dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
+                       sheet_name = arquivos_primarios['dicgen'].split('.')[0],
+                       usecols = list(tp_dado_arquivos['dicgen'].keys()),
+                       dtype = tp_dado_arquivos['dicgen'])
 
 # DataFrame :: DE-PARA de unidades produtoras em relação aos dados da demanda
 tbDeparaUnidadesProdutoras = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
@@ -124,19 +140,26 @@ demanda_irrestrita = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['
 demanda_irrestrita = demanda_irrestrita.loc[demanda_irrestrita.QUANTIDADE > 0.0,:].reset_index().drop(columns='index')
 
 # DataFrame :: WIZARD_RENDIMENTO_ENTRADA :: Carrega lista técnica que foi utilizada no VCM :: Componentes
-RendEntr = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_RendEntr']),
-                             sheet_name = arquivos_primarios['arq_RendEntr_sn01'].split('.')[0],
+# RendEntr = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_RendEntr']),
+#                              sheet_name = arquivos_primarios['arq_RendEntr_sn01'].split('.')[0],
+#                              usecols = list(tp_dado_arquivos['arq_RendEntr'].keys()),
+#                              dtype = tp_dado_arquivos['arq_RendEntr'])
+RendEntr = pd.read_csv(os.path.join(cwd, output_path + arquivos_primarios['arq_RendEntr']),
                              usecols = list(tp_dado_arquivos['arq_RendEntr'].keys()),
-                             dtype = tp_dado_arquivos['arq_RendEntr'])
+                             dtype = tp_dado_arquivos['arq_RendEntr'], sep = ';', encoding='utf-8-sig')
 
 RendEntr = RendEntr.loc[RendEntr['ValorEntrada'] > 0.0,:]
 RendEntr = RendEntr.reset_index().drop(columns='index')
 
 # DataFrame :: WIZARD_RENDIMENTO_SAIDA :: Carrega lista técnica que foi utilizada no VCM :: Produtos
-RendSaida = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_RendSaida']),
-                             sheet_name = arquivos_primarios['arq_RendSaida_sn01'].split('.')[0],
+# RendSaida = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_RendSaida']),
+#                              sheet_name = arquivos_primarios['arq_RendSaida_sn01'].split('.')[0],
+#                              usecols = list(tp_dado_arquivos['arq_RendSaida'].keys()),
+#                              dtype = tp_dado_arquivos['arq_RendSaida'])
+RendSaida = pd.read_csv(os.path.join(cwd, output_path + arquivos_primarios['arq_RendSaida']),
                              usecols = list(tp_dado_arquivos['arq_RendSaida'].keys()),
-                             dtype = tp_dado_arquivos['arq_RendSaida'])
+                             dtype = tp_dado_arquivos['arq_RendSaida'], sep = ';', encoding='utf-8-sig')
+
 
 RendSaida = RendSaida.loc[RendSaida['ValorSaida'] == 1.0]
 RendSaida = RendSaida.reset_index().drop(columns='index')
@@ -171,7 +194,7 @@ print('╚═══════════════════════�
 print('Iniciando...')
 
 # DataFrame da Demanda Irrestrita :: Realizar tratamento
-demanda_irrestrita = fx.left_outer_join(demanda_irrestrita, agrupamento_cadastro, left_on = 'CODIGO PRODUTO', right_on = 'COD_ESPECIFICO',
+demanda_irrestrita = fx.left_outer_join(demanda_irrestrita, agrupamento_produtos_pf, left_on = 'CODIGO PRODUTO', right_on = 'COD_ESPECIFICO',
                      name_left='Demanda Irrestrita',name_right='Agrupamento de Produtos')
 demanda_irrestrita['CODIGO PRODUTO'] = demanda_irrestrita['CODIGO_AGRUPADO']
 demanda_irrestrita = demanda_irrestrita.drop(columns=['CODIGO_AGRUPADO','COD_ESPECIFICO'])
@@ -230,9 +253,12 @@ esqueleto_explosao = deliveries_resultados_vcm[['Produto-VCM','Unidade-Origem-VC
 proxy_unidade_resultado_vcm = resultados_vcm.copy()
 # CORRIGINDO NOME!!!!!!!!!!
 tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.rename(columns={'UNIDADE_EXPEDICAO_VCM':'UNIDADE_VCM'})
+tbDeparaUnidadesProdutoras = tbDeparaUnidadesProdutoras.drop_duplicates(subset = 'UNIDADE_VCM')
 proxy_unidade_resultado_vcm = fx.left_outer_join(proxy_unidade_resultado_vcm, tbDeparaUnidadesProdutoras,
                               left_on = 'Unidade-Origem-VCM', right_on = 'UNIDADE_VCM',
                               name_left='Unidades VCM no Resultado', name_right='Depara Unidades VCM')
+# -------------------------------------------------------------------------------------------------------------------------------
+
 proxy_unidade_resultado_vcm = proxy_unidade_resultado_vcm.loc[proxy_unidade_resultado_vcm['UNIDADE_VCM'].notnull(),:].reset_index().drop(columns='index')
 proxy_unidade_resultado_vcm = fx.left_outer_join(proxy_unidade_resultado_vcm,periodos, left_on = 'Período-VCM', right_on = 'NOME_PERIODO',
                               name_left='Unidades VCM no Resultado', name_right='Períodos')
@@ -333,6 +359,7 @@ deliveries_resultados_vcm_1_sem_cultura_OK = deliveries_resultados_vcm_1_sem_cul
 deliveries_resultados_vcm_1_sem_cultura_preencher = deliveries_resultados_vcm_1_sem_cultura.loc[deliveries_resultados_vcm_1_sem_cultura['CULTURA'].isna(),:].drop(columns=['CULTURA','perc'])
 deliveries_resultados_vcm_1_sem_cultura_preencher = deliveries_resultados_vcm_1_sem_cultura_preencher.merge(di_cultura_cons, how = 'left', on = 'CONSULTORIA')
 deliveries_resultados_vcm_1_sem_cultura_preencher['QUANTIDADE'] = deliveries_resultados_vcm_1_sem_cultura_preencher['QUANTIDADE']*deliveries_resultados_vcm_1_sem_cultura_preencher['perc']
+deliveries_resultados_vcm_1_sem_cultura = pd.concat([deliveries_resultados_vcm_1_sem_cultura_OK, deliveries_resultados_vcm_1_sem_cultura_preencher])
 deliveries_resultados_vcm_1 = pd.concat([deliveries_resultados_vcm_1_com_cultura,deliveries_resultados_vcm_1_sem_cultura])
 headers = ['id','id_highlevel','PERIODO','DIRETORIA','GERENCIA','CONSULTORIA','UNIDADE PRODUTORA','UNIDADE FATURAMENTO','CULTURA','PRODUTO','CODIGO PRODUTO','MATERIA PRIMA','CODIGO MP','QUANTIDADE']
 deliveries_resultados_vcm_1 = deliveries_resultados_vcm_1[headers]
@@ -460,6 +487,11 @@ deliveries_resultados_vcm['PERIODO'] = deliveries_resultados_vcm['PERIODO'].dt.d
 headers = ['PERIODO','DIRETORIA','GERENCIA','CONSULTORIA','UNIDADE PRODUTORA','UNIDADE FATURAMENTO',
            'CULTURA','GRUPO PRODUTO','PRODUTO','CODIGO PRODUTO','MATERIA PRIMA','CODIGO MP','QUANTIDADE']
 deliveries_resultados_vcm = deliveries_resultados_vcm[headers]
+deliveries_resultados_vcm['UNIDADE PRODUTORA'] = np.where(deliveries_resultados_vcm['UNIDADE PRODUTORA'] == '1001',
+                                     deliveries_resultados_vcm['UNIDADE FATURAMENTO'],
+                                     deliveries_resultados_vcm['UNIDADE PRODUTORA'])
+deliveries_resultados_vcm['UNIDADE PRODUTORA'] = deliveries_resultados_vcm['UNIDADE PRODUTORA'].replace(list(dicgen['PARA']),list(dicgen['DE']))
+deliveries_resultados_vcm['UNIDADE FATURAMENTO'] = deliveries_resultados_vcm['UNIDADE FATURAMENTO'].replace(list(dicgen['PARA']),list(dicgen['DE']))
 deliveries_resultados_vcm.to_excel(os.path.join(cwd,output_path+'tbOutDemandaRestrita.xlsx'), sheet_name='Demanda Restrita', index=False)
 print('Demanda Restrita criada na pasta Output!')
 end_time = time.time()

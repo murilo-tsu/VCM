@@ -4,13 +4,10 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                 >>  tax.py  <<                                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 25/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0.0 (27/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
-print('║                        de depara e dado primário.                                                              ║')
-print('║                                                                                                                ║')
-print('║ - v1.0.1 (07/07/2025): Criação de orientação a objeto para execução de scripts integrados                      ║')
+print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> ICMS de Entrada                                                                                             ║')
@@ -114,13 +111,13 @@ df_corrente_produto = df_corrente_produto.rename(columns={'Produto':'PRD-VCM'})
 # Dataframe :: Template Impostos Entrada
 #validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
 df_template_icms_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']), delimiter = ';',
-                       encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_entrada'].keys()),
+                       encoding = 'utf-8-bom', usecols=list(tp_dado_arquivos['template_imp_entrada'].keys()),
                        dtype=tp_dado_arquivos['template_imp_entrada'])
 
 # Dataframe :: Template Impostos Saida
 #validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']))
 df_template_icms_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']), delimiter = ';',
-                       encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
+                       encoding = 'utf-8-bom', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
                        dtype=tp_dado_arquivos['template_imp_saida'])
 
 # Dataframe :: Custo de Reposição
@@ -374,7 +371,7 @@ df_template_icms_saida = df_template_icms_saida[["Unidade Origem",
 # 12/04/2024: Alterando encoding para utf-8 e delimitador (sep) para >> ; <<
 df_template_icms_saida.to_csv(os.path.join(cwd,output_path + "tbOutImpICMSSaida.csv"),
                                           #sheet_name = "ICMS_Saida",
-                                          sep = ';', encoding = 'utf-8-sig',
+                                          sep = ';', encoding = 'utf-8',
                                           index = False)
 
 print('Arquivos de ICMS de Saída preenchido com Sucesso!')
@@ -479,7 +476,7 @@ df_template_icms_entrada = df_template_icms_entrada[["Unidade Destino",
 # 12/04/2024: Alterando o encoding para utf-8 e especificando o delimitador (sep) para >> ; <<
 df_template_icms_entrada.to_csv(os.path.join(cwd,output_path + "tbOutImpICMSEntrada.csv"),
                                           #sheet_name = "ICMS_Entrada",
-                                          sep = ';', encoding = 'utf-8-sig',
+                                          sep = ';', encoding = 'utf-8',
                                           index = False)
 
 print('\nArquivos de ICMS de Entrada preenchido com Sucesso!')

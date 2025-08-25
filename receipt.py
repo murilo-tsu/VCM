@@ -4,13 +4,10 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                               >>  receipt.py  <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 24/03/2025                                                ║')
-print('║ Editado por:   Isabela Nunes dos Santos        Data: 08/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 25/08/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
-print('║ - v1.0.0 (24/03/2025): Criação da primeira versão do script unificado com edições estruturais nos arquivos     ║')
-print('║                        de depara e dado primário.                                                              ║')
-print('║                                                                                                                ║')
-print('║ - v1.0.1 (07/07/2025): Criação de orientação a objeto para execução de scripts integrados.                     ║')
+print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Receitas de Movimentação                                                                                    ║')
@@ -255,7 +252,7 @@ df_receita_movimentacao_periodos['Valor'] = df_receita_movimentacao_periodos['Va
 df_receita_movimentacao_periodos['Valor'] = 0.0
 # 12/04/2024: Alterando enconding para utf-8 como alinhado com o time da OP2B
 df_receita_movimentacao_periodos.to_csv(os.path.join(cwd,output_path + "tbOutReceitaMov.csv"),
-                                          sep = ';', encoding = 'utf-8-sig', index = False)
+                                          sep = ';', encoding = 'utf-8', index = False)
 
 print('Atualização de Receitas de Movimentação finalizada!')
 end_time = time.time()

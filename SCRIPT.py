@@ -2,6 +2,7 @@
 import os
 import sys
 import subprocess
+import webbrowser
 import warnings
 warnings.filterwarnings('ignore')
 import tkinter as tk
@@ -10,52 +11,55 @@ from PIL import Image, ImageTk, ImageSequence
 
 # Funções de Importação dos Scripts
 def supply():
-    import supply
+    import supply # OK
 
 def bind():
-    import bind
+    import bind # OK
 
 def sku_activation():
-    import sku_activation
+    import sku_activation # OK
     
-def yield_first_deploy():
-    import yield_first_deploy
+def yield_deploy():
+    import yield_deploy # OK
     
-def yield_second_deploy():
-    import yield_second_deploy
-
 def receipt():
-    import receipt
+    import receipt # OK
 
 def tax():
-    import tax
+    import tax # OK
 
 def unconstrained_demand():
-    import unconstrained_demand
+    import unconstrained_demand # OK
 
 def inventories():
-    import inventories
+    import inventories # OK
 
 def reposition_cost():
-    import reposition_cost
+    import reposition_cost # OK
 
 def freight():
-    import freight
+    import freight # OK
 
 def warehouses():
     import warehouses
 
 def fixed_price():
-    import fixed_price
+    import fixed_price # OK
 
 def constrained_demand():
     import constrained_demand
+
+def limits():
+    import limits # OK
 
 # Funções para loading de informações
 def help():
     cwd = os.getcwd()
     path = os.path.join(cwd, 'Guide.pdf')
     os.startfile(path)
+
+def abrir_git():
+    webbrowser.open("https://github.com/murilo-tsu/VCM")
 
 def changelog():
     subprocess.call(['notepad.exe','Changelog.txt'])
@@ -72,8 +76,8 @@ def combine_funcs(*funcs):
 class App(ctk.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.geometry("550x600")  # Increased height to accommodate the GIF
-        self.title('ECFTO - VCM Data Preparation')
+        self.geometry("600x600")  # Increased height to accommodate the GIF
+        self.title('Data Preparation App')
         
         # GIF Animation Setup
         img_path = os.path.join('images', 'A realidade.gif')
@@ -115,50 +119,50 @@ class App(ctk.CTk):
         col1_frame = ctk.CTkFrame(button_frame)
         col1_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
         
-        sku_activation_bt = ctk.CTkButton(col1_frame, width=250, text="Definição Limites", command=sku_activation)
+        sku_activation_bt = ctk.CTkButton(col1_frame, width=250, text="[1] Ativação SKU por correntes", command=sku_activation)
         sku_activation_bt.pack(pady=5, fill="x")
         
-        unconstrained_demand_bt = ctk.CTkButton(col1_frame, width=250, text="Demanda Irrestrita", command=unconstrained_demand)
-        unconstrained_demand_bt.pack(pady=5, fill="x")
-        
-        deploy_one_bt = ctk.CTkButton(col1_frame, width=250, text="1st Deploy: Prever SKUs da Demanda", command=yield_first_deploy)
+        deploy_one_bt = ctk.CTkButton(col1_frame, width=250, text="[2] Deploy: Gerar Listas Técnicas", command=yield_deploy)
         deploy_one_bt.pack(pady=5, fill="x")
         
-        deploy_two_bt = ctk.CTkButton(col1_frame, width=250, text="2nd Deploy: Preencher Formulações", command=yield_second_deploy)
-        deploy_two_bt.pack(pady=5, fill="x")
-        
-        supply_bt = ctk.CTkButton(col1_frame, width=250, text="Suprimento e Cap. Portuárias", command=supply)
+        unconstrained_demand_bt = ctk.CTkButton(col1_frame, width=250, text="[3] Demanda Irrestrita", command=unconstrained_demand)
+        unconstrained_demand_bt.pack(pady=5, fill="x")
+                      
+        supply_bt = ctk.CTkButton(col1_frame, width=250, text="[4] Suprimento e Cap. Portuárias", command=supply)
         supply_bt.pack(pady=5, fill="x")
+
+        bind_bt = ctk.CTkButton(col1_frame, width=250, text="[5] Amarração", command=bind)
+        bind_bt.pack(pady=5, fill="x")
         
-        inventories_bt = ctk.CTkButton(col1_frame, width=250, text="Estoque Inicial", command=inventories)
+        inventories_bt = ctk.CTkButton(col1_frame, width=250, text="[6] Estoque Inicial", command=inventories)
         inventories_bt.pack(pady=5, fill="x")
         
-        rep_cost_bt = ctk.CTkButton(col1_frame, width=250, text="Custo de Reposição", command=reposition_cost)
+        rep_cost_bt = ctk.CTkButton(col1_frame, width=250, text="[7] Custo de Reposição", command=reposition_cost)
         rep_cost_bt.pack(pady=5, fill="x")
         
         # Column 2 buttons
         col2_frame = ctk.CTkFrame(button_frame)
         col2_frame.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
         
-        receipt_bt = ctk.CTkButton(col2_frame, width=250, text="Receitas de Movimentação", command=receipt)
+        receipt_bt = ctk.CTkButton(col2_frame, width=250, text="[8] Receitas de Movimentação", command=receipt)
         receipt_bt.pack(pady=5, fill="x")
         
-        tax_bt = ctk.CTkButton(col2_frame, width=250, text="Atualização dos Impostos", command=tax)
+        tax_bt = ctk.CTkButton(col2_frame, width=250, text="[9] Atualização dos Impostos", command=tax)
         tax_bt.pack(pady=5, fill="x")
         
-        freight_bt = ctk.CTkButton(col2_frame, width=250, text="Custos de Fretes", command=freight)
+        freight_bt = ctk.CTkButton(col2_frame, width=250, text="[10] Custos de Fretes", command=freight)
         freight_bt.pack(pady=5, fill="x")
-        
-        bind_bt = ctk.CTkButton(col2_frame, width=250, text="Amarração", command=bind)
-        bind_bt.pack(pady=5, fill="x")
-        
-        warehouses_bt = ctk.CTkButton(col2_frame, width=250, text="Custos e Cap. de Armazenagem", command=warehouses)
+         
+        warehouses_bt = ctk.CTkButton(col2_frame, width=250, text="[11] Capacidade e Custo Armazenagem/Handling", command=warehouses)
         warehouses_bt.pack(pady=5, fill="x")
         
-        prec_bt = ctk.CTkButton(col2_frame, width=250, text="Precificação", command=fixed_price)
+        prec_bt = ctk.CTkButton(col2_frame, width=250, text="[12] Preço Fixo Produtos", command=fixed_price)
         prec_bt.pack(pady=5, fill="x")
         
-        cons_dem = ctk.CTkButton(col2_frame, width=250, text="Gerar Demanda Restrita", command=constrained_demand)
+        lim_bt = ctk.CTkButton(col2_frame, width=250, text="[13] Limites: Descarga e Produção", command=fixed_price)
+        lim_bt.pack(pady=5, fill="x")
+        
+        cons_dem = ctk.CTkButton(col2_frame, width=250, text="[14] Gerar Demanda Restrita", command=constrained_demand)
         cons_dem.pack(pady=5, fill="x")
         
         # Configure grid weights to make columns expand equally
@@ -174,13 +178,15 @@ class App(ctk.CTk):
 
         help_bt = ctk.CTkButton(help_frame, text="Manual do Usuário", command=help)
         help_bt.pack(side="left", padx=5)
+        
+        git_bt = ctk.CTkButton(help_frame, text="Git Hub Page", command=abrir_git)
+        git_bt.pack(side="left", padx=5)
 
     def animate(self):
-        """Update the GIF frame"""
         try:
             self.gif_label.configure(image=self.frames[self.current_frame])
             self.current_frame = (self.current_frame + 1) % len(self.frames)
-            self.after(100, self.animate)  # Update every 100ms (adjust for speed)
+            self.after(100, self.animate)
         except:
             pass
 
