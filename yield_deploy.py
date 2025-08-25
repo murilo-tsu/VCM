@@ -276,7 +276,7 @@ print('Matriz de Produtos Acabados preenchida com sucesso!')
 cols_to_keep = ['Unidade','Receita','Produto','ValorSaida']
 # template_saida[cols_to_keep].to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosSaida.xlsx'), 
 #                         index = False, sheet_name = 'RENDIMENTO_SAIDA_PROD')
-template_saida[cols_to_keep].to_csv(os.path.join(cwd, output_path + 'WIZARD_RENDIMENTO_SAIDA.csv'),
+template_saida[cols_to_keep].to_csv(os.path.join(cwd, output_path + 'tbOutRendimentoSai.csv'),
                                     index=False, sep = ';', encoding='utf-8')
 
 template_saida = template_saida[(template_saida['ValorSaida'] == 1.0)][['Proxy PR','Receita']].copy()
@@ -596,7 +596,7 @@ template_entrada['ValorEntrada'] = np.select(condicao, resultado, default=0.0)
 template_entrada = template_entrada[['Unidade','Receita','Produto','ValorEntrada']]
 # template_entrada.to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosEntrada.xlsx'),
 #                           index = False, sheet_name = 'RENDIMENTO_ENTRADA_PROD')
-template_entrada.to_csv(os.path.join(cwd, output_path + 'WIZARD_RENDIMENTO_ENTRADA.csv'),
+template_entrada.to_csv(os.path.join(cwd, output_path + 'tbOutRendimentoEnt.csv'),
                         index = False, sep = ';', encoding = 'utf-8')
 
 end_time = time.time()

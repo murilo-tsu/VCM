@@ -47,16 +47,6 @@ path = 'Input Data/'                           # Dados de entrada (ciclo de plan
 output_path = 'Output Data/'                   # Dados de saída (input para o VCM)
 exec_log_path = 'Error Logs/'                  # Logs de erros durante a execução
 
-# Configuração do logger
-logging.basicConfig(
-    filename=os.path.join(exec_log_path, 'execution_log.log'),
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
-logging.info("Iniciando execução do script.")
-
-
 # =======================================================================================================================
 # FUNÇÕES
 # =======================================================================================================================
@@ -144,13 +134,13 @@ df_revisao_nacional = df_revisao_nacional.rename(columns=rename_dataframes['df_r
 custos_mp = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custo_reposicao']),
                                   sheet_name = arquivos_primarios['custo_reposicao_sn'],
                                   usecols = list(tp_dado_arquivos['custo_reposicao'].keys()),
-                                  dtype = tp_dado_arquivos['custo_reposicao'])
+                                  dtype = tp_dado_arquivos['custo_reposicao']).applymap(fx.padronizar)
 custos_mp = custos_mp.loc[custos_mp['CUSTO_REPOSICAO_MERCADO'] > 0.0,:].reset_index().drop(columns='index')
 
 # Dataframe :: Demurrage
 demurrage = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demurrage']),
                                   sheet_name = arquivos_primarios['demurrage_sn'],
-                                  dtype = tp_dado_arquivos['demurrage'])
+                                  dtype = tp_dado_arquivos['demurrage']).applymap(fx.padronizar)
 ptax_demurrage = pd.read_excel(os.path.join(path + arquivos_primarios['demurrage']), sheet_name = 'PTAX',
                                   dtype =tp_dado_arquivos['ptax'])
 
