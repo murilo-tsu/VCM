@@ -4,7 +4,7 @@ print('║                                         ATUALIZACAO DE DADOS - VCM   
 print('║                                            >> yield_deploy.py <<                                               ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado  por: Murilo Lima Ribeiro  Data: 02/04/2025                                                             ║')
-print('║ Editado por: Murilo Lima Ribeiro  Data: 25/08/2025                                                             ║')
+print('║ Editado por: Murilo Lima Ribeiro  Data: 29/08/2025                                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
@@ -20,19 +20,21 @@ print('\n')
 
 import os
 import sys
+import math
 import pandas as pd
 import numpy as np
 import time
 import datetime
-from tqdm import tqdm
+import warnings
 import logging
 import inspect
-from tqdm import tqdm
+from decimal import Decimal
 from pandas.tseries.offsets import MonthEnd
 from pandas.tseries.offsets import MonthBegin
 from tkinter import messagebox
 from unidecode import unidecode
-import warnings 
+from tqdm import tqdm
+ 
 pd.options.mode.chained_assignment = None  # default='warn'
 warnings.filterwarnings('ignore')
 
@@ -94,7 +96,7 @@ bom['COMPONENT_QTY'] = np.where(bom['COMPANY_CODE'] == 'ECFHG',
                                 bom['COMPONENT_QTY'])
 
 bom['ID'] = bom['PLANT_CODE'] + '-' + bom['PRODUCTION_SITE'] + '-' + bom['FG_CODE']
-bom['COMPONENT_QTY'] = bom['COMPONENT_QTY'].round(3)
+bom['COMPONENT_QTY'] = bom['COMPONENT_QTY'].apply(lambda x: round(x,3))
 bom['UOM_FORMULA'] = np.where(bom['UOM_FORMULA'] == 'TO','TN',bom['UOM_FORMULA'])
 bom = bom[(bom['UOM_FORMULA'] == 'TN')]
 bom['FORMULA_CODE'] = bom['ID']
@@ -161,6 +163,7 @@ unidades_produtoras = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
                                     usecols = list(tp_dado_arquivos['unidades_exp'].keys()),
                                     dtype = tp_dado_arquivos['unidades_exp'])
 
+
 # ================================================= DEPRECADO ============================================================
 # 2025-06-06 :: Etapa deprecada porque com a nova atualização das bases de dados,
 # a informação que se pretende buscar encontra-se disponível imediatamente no de-para
@@ -170,6 +173,7 @@ unidades_produtoras = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
 # Alterar o nome da coluna UP_MISTURADORA_VCM para reduzir as alterações de código e receber o nome
 # de variável anteriormente fornecido pelo método .melt
 # ========================================================================================================================
+
 
 unidades_produtoras = unidades_produtoras.rename(columns={'UP_MISTURADORA_VCM':'UNIDADE_VCM'})
 unidades_produtoras = unidades_produtoras[(unidades_produtoras['UNIDADE_VCM'].notna())]
@@ -199,6 +203,7 @@ demanda['UNIDADE PRODUTORA'] = demanda['UNIDADE PRODUTORA'].replace(list(dicgen[
 #                                 sheet_name = arquivos_primarios['template_RendSaida_sn01'],
 #                                 usecols=list(tp_dado_arquivos['template_RendSaida'].keys()),
 #                                 dtype = tp_dado_arquivos['template_RendSaida'])
+
 template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']),
                     usecols = list(tp_dado_arquivos['template_RendSaida'].keys()),
                     dtype = tp_dado_arquivos['template_RendSaida'], sep = ';')
@@ -209,6 +214,7 @@ template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['templa
 #                                  sheet_name = arquivos_primarios['template_RendEntr_sn01'],
 #                                  usecols = list(tp_dado_arquivos['template_RendEntr'].keys()),
 #                                  dtype = tp_dado_arquivos['template_RendEntr'])
+
 template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
                     usecols = list(tp_dado_arquivos['template_RendEntr'].keys()),
                     dtype = tp_dado_arquivos['template_RendEntr'], sep = ';')
@@ -278,11 +284,11 @@ cols_to_keep = ['Unidade','Receita','Produto','ValorSaida']
 #                         index = False, sheet_name = 'RENDIMENTO_SAIDA_PROD')
 template_saida[cols_to_keep].to_csv(os.path.join(cwd, output_path + 'tbOutRendimentoSai.csv'),
                                     index=False, sep = ';', encoding='utf-8')
-
+template_saida_corr = template_saida.copy()
 template_saida = template_saida[(template_saida['ValorSaida'] == 1.0)][['Proxy PR','Receita']].copy()
+
 print('\nEstratégia 01 :: Avaliando balanceamento da lista técnica')
 print('Contagem de componentes...')
-
 bom = fx.left_outer_join(bom, proxy_comp_count, left_on = 'ID', right_on = 'ID',
                          name_left = 'Mesclagem (1) => BOM', name_right = 'Contagem de Componentes')
 print('Fechamento das fórmulas...')
@@ -294,7 +300,6 @@ bom_alt = bom.copy()
 bom = bom[(bom['STATUS'] == 'Balanceada')].copy()
 proxy_bom = bom.copy()
 proxy_bom['ID'] = proxy_bom['FG_CODE']
-
 proxy_bom = proxy_bom.sort_values(by=["PLANT_CODE","PRODUCTION_SITE","FG_CODE","RM_CODE"])
 pk_unique_fg_control = []
 pk_rm_control = []
@@ -314,27 +319,53 @@ proxy_bom = proxy_bom.groupby(by = ['FORMULA_CODE','FG_CODE','FINISHED_GOOD','RM
 proxy_bom['PRIORITY'] = [1 if proxy_bom['FORMULA_CODE'][i].split('-')[0] == proxy_bom['FORMULA_CODE'][i].split('-')[1] else 2 \
     for i in range(proxy_bom.shape[0])]
 proxy_bom = proxy_bom.sort_values(by=['FG_CODE','FORMULA_CODE','PRIORITY'], ascending = False).reset_index().drop(columns='index')
-proxy_bom['ACC_QTY'] = 0.0
+
+def truncate(value, decimals=3):
+    multiplier = 10 ** decimals
+    return math.floor(value * multiplier) / multiplier
+
+# Initialize
+# proxy_bom['COMPONENT_QTY_TRUNC'] = proxy_bom['COMPONENT_QTY'].apply(lambda x: truncate(x, 3))
+proxy_bom['COMPONENT_QTY_TRUNC'] = proxy_bom['COMPONENT_QTY'].apply(lambda x: round(x, 3))
 fg_list = []
 lt = False
 fechamento = 0.0
-for i in tqdm(range(proxy_bom.shape[0]), desc = 'Avaliação de fechamento da BOM'):
-    if i == 0:
-        proxy_bom['ACC_QTY'][i] = proxy_bom['COMPONENT_QTY'][i]
-        fechamento = proxy_bom['ACC_QTY'][i]
-    elif fechamento + proxy_bom['COMPONENT_QTY'][i] <= 1.0 and proxy_bom['FG_CODE'][i] in fg_list and lt == False:
-        proxy_bom['ACC_QTY'][i] = fechamento + proxy_bom['COMPONENT_QTY'][i]
-        fechamento = proxy_bom['ACC_QTY'][i]
-    elif (fechamento + proxy_bom['COMPONENT_QTY'][i] > 1.0 or lt == True) and proxy_bom['FG_CODE'][i] in fg_list:
-        lt = True
-        proxy_bom['ACC_QTY'][i] = 0.0
-        fechamento = proxy_bom['ACC_QTY'][i]
-    else:
-        fg_list.append(proxy_bom['FG_CODE'][i])
-        proxy_bom['ACC_QTY'][i] = proxy_bom['COMPONENT_QTY'][i]
-        fechamento = proxy_bom['ACC_QTY'][i]
-        lt = False
 
+for i in tqdm(range(proxy_bom.shape[0]), desc='Avaliação de fechamento da BOM'):
+    current_qty = proxy_bom['COMPONENT_QTY_TRUNC'][i]
+    current_fg = proxy_bom['FG_CODE'][i]
+    sum_check = fechamento + current_qty
+    
+    if i == 0:
+        proxy_bom.at[i, 'ACC_QTY'] = current_qty
+        fechamento = current_qty
+        fg_list.append(current_fg)
+    
+    elif current_fg not in fg_list:
+        fg_list.append(current_fg)
+        proxy_bom.at[i, 'ACC_QTY'] = current_qty
+        fechamento = current_qty
+        lt = False
+    
+    elif lt:
+        proxy_bom.at[i, 'ACC_QTY'] = 0.0
+    
+    elif sum_check <= 1.0:
+        proxy_bom.at[i, 'ACC_QTY'] = sum_check
+        fechamento = sum_check
+    
+    else:
+        needed = truncate(1.0 - fechamento, 3)
+        proxy_bom.at[i, 'ACC_QTY'] = needed
+        fechamento = 1.0  # Mark as complete
+        lt = True  # Flag for subsequent components
+        
+        remaining = truncate(current_qty - needed, 3)
+        if remaining > 0:
+            # Inativado por enquanto
+            pass
+
+proxy_bom['COMPONENT_QTY'] = proxy_bom['COMPONENT_QTY_TRUNC']
 proxy_bom = proxy_bom[(proxy_bom['ACC_QTY'] > 0.0)].copy()
 proxy_bom['COMPONENT_QTY'] = proxy_bom['COMPONENT_QTY'].round(3)
 plants = pd.DataFrame(list(bom_alt['PLANT_CODE'].unique())).rename(columns={0:'PLANT_CODE'})
@@ -343,6 +374,7 @@ production_sites = pd.DataFrame(list(bom_alt['PRODUCTION_SITE'].unique())).renam
 finished_goods = pd.DataFrame(list(proxy_bom['FG_CODE'].unique())).rename(columns={0:'FG_CODE'}).drop_duplicates()
 finished_goods = finished_goods.merge(proxy_bom[['FG_CODE','FINISHED_GOOD']].drop_duplicates(), how = 'inner', on = 'FG_CODE')
 production_sites = pd.concat([production_sites, plants.rename(columns={'PLANT_CODE':'PRODUCTION_SITE'})]).drop_duplicates()
+
 print('\nEstratégia 02 :: Avaliando balanceamento alternativo de SKUs')
 # 2025-07-18 :: Quero pegar todos os FG_CODE para todas as unidades
 #bom_alt = bom_alt[(bom_alt['STATUS'] == 'Desbalanceada')].copy()
@@ -361,6 +393,7 @@ bom_alt = bom_alt.sort_values(by=['PLANT_CODE','PRODUCTION_SITE','FG_CODE','RM_C
 fg_list = []
 lt = False
 fechamento = 0.0
+
 # ========================================= DEPRECADO ==================================================
 # Não é necessário mais avaliar o fechamento, pois a partir da proxy_bom, todos fecham em 1.0
 # bom_alt['ACC_QTY'] = 0.0
@@ -384,6 +417,7 @@ fechamento = 0.0
 # ========================================= DEPRECADO ==================================================
 
 bom_alt_sum = bom_alt.copy()
+bom_alt_sum['COMPONENT_QTY'] = bom_alt_sum['COMPONENT_QTY'].apply(lambda x: round(x,3))
 bom_alt_sum = bom_alt_sum.groupby(by=['PLANT_CODE','PRODUCTION_SITE','FG_CODE'])['COMPONENT_QTY'].sum().reset_index()
 bom_alt_sum['COMPONENT_QTY'] = bom_alt_sum['COMPONENT_QTY'].round(3)
 bom_alt_sum = bom_alt_sum[(bom_alt_sum['COMPONENT_QTY'] == 1)]
@@ -426,6 +460,7 @@ bom = fx.left_outer_join(bom, cadastro_mp, left_on = 'CODIGO_AGRUPADO', right_on
                          name_left="Mesclagem (9) => BOM", name_right="Cadastro MP")
 columns = ['PLANT_CODE', 'PRODUCTION_SITE', 'PF-VCM','FG_CODE', 'FINISHED_GOOD', 
            'PRD-VCM','RM_CODE','RM_DESCRIPTION', 'COMPONENT_QTY', 'FORMULA_CODE', 'STATUS']
+
 bom = bom[columns].rename(columns={'PRD-VCM':'MP-VCM'})
 bom = fx.left_outer_join(bom, unidades_produtoras, left_on = ['PLANT_CODE','PRODUCTION_SITE'], right_on = ['PLANTA','DEPOSITO'],
                          name_left="Mesclagem (10) => BOM", name_right="Unidades Produtoras")
@@ -450,6 +485,7 @@ demanda = fx.left_outer_join(demanda, bom[['pk_sku_check', 'STATUS']].drop_dupli
                              name_left="Mesclagem (X/19) => DEMANDA", name_right="BOM-PK")
 bom = bom.drop(columns='pk_sku_check')
 demanda['STATUS'] = demanda['STATUS'].fillna('Ausente')
+
 try:
     os.makedirs(os.path.join(cwd, exec_log_path + "/[CALL TO ACTION] Lista Técnica Completa vs. Demanda Total/"))
 except:
@@ -503,81 +539,231 @@ demanda_unidade_terceira_notna = fx.left_outer_join(demanda_unidade_terceira_not
 demanda = pd.concat([demanda_unidade_standard, demanda_unidade_terceira_na, demanda_unidade_terceira_notna])
 demanda['UNIDADE PRODUTORA'] = demanda['UNIDADE PRODUTORA'].replace(list(dicgen['DE']), list(dicgen['PARA']))
 demanda['UNIDADE FATURAMENTO'] = demanda['UNIDADE FATURAMENTO'].replace(list(dicgen['DE']), list(dicgen['PARA']))
-
 demanda = fx.left_outer_join(demanda, unidades_produtoras[['DEPOSITO','PLANTA','UNIDADE_VCM']], left_on=['UNIDADE PRODUTORA','UNIDADE FATURAMENTO'],
                              right_on=['DEPOSITO','PLANTA'], name_left='DEMANDA', name_right='UNIDADES PRODUTORAS')
-
 cols_to_drop = ['proxy.Faturamento','proxy.Consultoria','UNIDADE PRODUTORA.2','GERENCIA.2','CONSULTORIA.2','DEPOSITO','PLANTA']
 demanda = demanda.drop(columns=cols_to_drop)
 demanda.to_excel(os.path.join(cwd, exec_log_path + '[CALL TO ACTION] Demanda vs. Status Lista Técnica.xlsx'), index=False)
-
 bom = bom.sort_values(by=['UNIDADE_VCM','FG_CODE','QUANTIDADE_NA_DEMANDA'])
-bom_unique = bom.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','COMPONENT_QTY'])['QUANTIDADE_NA_DEMANDA'].max()
-bom_unique = bom_unique.reset_index()
+bom['Proxy PR'] = bom['UNIDADE_VCM'] + '-' + bom['PF-VCM']
+# bom_unique = bom.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','Proxy PR','PLANT_CODE','PRODUCTION_SITE']).agg(
+#                         QUANTIDADE_NA_DEMANDA=('QUANTIDADE_NA_DEMANDA','max'),
+#                         COMPONENT_QTY=('COMPONENT_QTY','sum')).reset_index()
+# bom_unique = bom.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','Proxy PR','PLANT_CODE','PRODUCTION_SITE','COMPONENT_QTY']).agg(
+#                         QUANTIDADE_NA_DEMANDA=('QUANTIDADE_NA_DEMANDA','max')).reset_index()
+bom_unique = bom[['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','Proxy PR','PLANT_CODE','PRODUCTION_SITE','COMPONENT_QTY','QUANTIDADE_NA_DEMANDA']]
+bom_unique = bom_unique.sort_values(by=['FORMULA_CODE','PLANT_CODE','PRODUCTION_SITE','Proxy PR','MP-VCM'])
+# bom_unique = bom.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','COMPONENT_QTY'])['QUANTIDADE_NA_DEMANDA'].max().reset_index()
+# bom_unique = bom[['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','COMPONENT_QTY','QUANTIDADE_NA_DEMANDA']]
 bom_to_vcm = bom_unique.copy()
+
+# ========================================= DEPRECADO ==================================================
+# lt = False
+# control_list = []
+# formula_code = str()
+# fechamento = 0.0
+# bom_to_vcm['ACC_QTY'] = 0.0
+# bom_to_vcm = bom_to_vcm.sort_values(by=['UNIDADE_VCM','PF-VCM','FORMULA_CODE']).reset_index().drop(columns='index')
+# for i in tqdm(range(bom_to_vcm.shape[0]), desc = 'Avaliação Final :: Lista Técnica'):
+#     if i == 0:
+#         bom_to_vcm['ACC_QTY'][i] = bom_to_vcm['COMPONENT_QTY'][i]
+#         fechamento = bom_to_vcm['ACC_QTY'][i]
+#         control_list.append(bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i])
+#         formula_code = bom_to_vcm['FORMULA_CODE'][i]
+#     elif fechamento + bom_to_vcm['COMPONENT_QTY'][i] <= 1.0 and formula_code == bom_to_vcm['FORMULA_CODE'][i]\
+#     and bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i] in control_list and lt == False:
+#         bom_to_vcm['ACC_QTY'][i] = fechamento + bom_to_vcm['COMPONENT_QTY'][i]
+#         fechamento = bom_to_vcm['ACC_QTY'][i]
+#     elif (fechamento + bom_to_vcm['COMPONENT_QTY'][i] > 1.0 or lt == True or not formula_code == bom_to_vcm['FORMULA_CODE'][i]) \
+#     and bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i] in control_list:
+#         lt = True
+#         bom_to_vcm['ACC_QTY'][i] = 0.0
+#         fechamento = bom_to_vcm['ACC_QTY'][i]
+#     else: 
+#         control_list.append(bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i])
+#         formula_code = bom_to_vcm['FORMULA_CODE'][i]
+#         bom_to_vcm['ACC_QTY'][i] = bom_to_vcm['COMPONENT_QTY'][i]
+#         fechamento = bom_to_vcm['ACC_QTY'][i]
+#         lt = False
+# bom_to_vcm = bom_to_vcm[(bom_to_vcm['ACC_QTY'] > 0.0)]
+
+
+# Versão Vetorizada
+# =================
+# def process_bom(bom_to_vcm):
+#     bom_to_vcm = bom_to_vcm.copy()
+#     bom_to_vcm = bom_to_vcm.sort_values(by=['PLANT_CODE','PRODUCTION_SITE','Proxy PR','MP-VCM']).reset_index(drop=True)
+#     bom_to_vcm['formula_key'] = bom_to_vcm['UNIDADE_VCM'] + '-' + bom_to_vcm['PF-VCM'] + '-' + bom_to_vcm['FORMULA_CODE'] + bom_to_vcm['PRODUCTION_SITE']
+#     bom_to_vcm['cumulative_qty'] = bom_to_vcm.groupby('formula_key')['COMPONENT_QTY'].cumsum()
+#     formula_totals = bom_to_vcm.groupby('formula_key')['COMPONENT_QTY'].sum().reset_index(name='total_qty')
+#     bom_to_vcm = bom_to_vcm.merge(formula_totals, on='formula_key')
+#     bom_to_vcm['ACC_QTY'] = 0.0
+#     exact_formula_mask = np.isclose(bom_to_vcm['total_qty'], 1.0, atol=0.001)
+#     bom_to_vcm.loc[exact_formula_mask, 'ACC_QTY'] = bom_to_vcm.loc[exact_formula_mask, 'COMPONENT_QTY']
+#     non_exact_mask = ~exact_formula_mask
+#     first_in_formula = ~bom_to_vcm.duplicated(['formula_key'])
+#     below_threshold = bom_to_vcm['cumulative_qty'] <= 1.0
+#     keep_mask = non_exact_mask & (first_in_formula | below_threshold)
+#     bom_to_vcm.loc[keep_mask, 'ACC_QTY'] = bom_to_vcm.loc[keep_mask, 'COMPONENT_QTY']
+#     exceeds_mask = non_exact_mask & (bom_to_vcm['total_qty'] > 1.0)
+#     last_component_mask = (bom_to_vcm['cumulative_qty'] > 1.0) & (bom_to_vcm['cumulative_qty'].shift(1) <= 1.0)
+#     adjustment = 1.0 - bom_to_vcm['cumulative_qty'].shift(1)
+#     bom_to_vcm.loc[exceeds_mask & last_component_mask, 'ACC_QTY'] = adjustment
+#     result = bom_to_vcm[bom_to_vcm['ACC_QTY'] > 0].copy()
+#     return result.drop(columns=['formula_key', 'cumulative_qty', 'total_qty'])
+# ========================================= DEPRECADO ==================================================
+
+def process_bom(bom_to_vcm):
+    bom_to_vcm = bom_to_vcm.copy()
+    bom_to_vcm = bom_to_vcm.sort_values(by=['PLANT_CODE','PRODUCTION_SITE','Proxy PR','MP-VCM']).reset_index(drop=True)
+    
+    # Criando uma chave primária
+    bom_to_vcm['formula_key'] = bom_to_vcm['UNIDADE_VCM'] + '-' + bom_to_vcm['PF-VCM'] + '-' + bom_to_vcm['FORMULA_CODE'] + '-' + bom_to_vcm['PRODUCTION_SITE']
+    
+    # Calculo de fechamento cumulativo
+    bom_to_vcm['cumulative_qty'] = bom_to_vcm.groupby('formula_key')['COMPONENT_QTY'].cumsum()
+    formula_totals = bom_to_vcm.groupby('formula_key')['COMPONENT_QTY'].sum().reset_index(name='total_qty')
+    bom_to_vcm = bom_to_vcm.merge(formula_totals, on='formula_key')
+    
+    bom_to_vcm['ACC_QTY'] = 0.0
+    
+    # Caso 1: Fórmulas Exatas (total_qty ≈ 1.0)
+    exact_formula_mask = np.isclose(bom_to_vcm['total_qty'], 1.0, atol=0.001)
+    bom_to_vcm.loc[exact_formula_mask, 'ACC_QTY'] = bom_to_vcm.loc[exact_formula_mask, 'COMPONENT_QTY']
+    
+    # Caso 2: Formulas com total_qty < 1.0 - não considerar nenhum componentes
+    below_total_mask = (bom_to_vcm['total_qty'] < 0.999) 
+    bom_to_vcm.loc[below_total_mask, 'ACC_QTY'] = 0.0
+    
+    # Caso 3: Formulas com total_qty > 1.0 - pegar os componentes até fechar em 1.0
+    exceeds_mask = (bom_to_vcm['total_qty'] > 1.001) & ~exact_formula_mask
+    condition1 = exceeds_mask & (bom_to_vcm['cumulative_qty'] <= 1.0)
+    bom_to_vcm.loc[condition1, 'ACC_QTY'] = bom_to_vcm.loc[condition1, 'COMPONENT_QTY']
+    
+    def adjust_exceeding_group(group):
+        if group['total_qty'].iloc[0] <= 1.001:
+            return group
+        
+        exceed_mask = group['cumulative_qty'] > 1.0
+        if exceed_mask.any():
+            first_exceed_idx = group[exceed_mask].index[0]
+            prev_cumulative = group.loc[first_exceed_idx - 1, 'cumulative_qty'] if first_exceed_idx > group.index[0] else 0.0
+            adjustment = 1.0 - prev_cumulative
+            group.loc[first_exceed_idx, 'ACC_QTY'] = adjustment
+            
+            # Set all subsequent components to 0
+            subsequent_mask = group.index > first_exceed_idx
+            group.loc[subsequent_mask, 'ACC_QTY'] = 0.0
+        
+        return group
+    
+    bom_to_vcm = bom_to_vcm.groupby('formula_key').apply(adjust_exceeding_group).reset_index(drop=True)
+    
+    result = bom_to_vcm[bom_to_vcm['ACC_QTY'] > 0].copy()
+    return result.drop(columns=['formula_key', 'cumulative_qty', 'total_qty'])
+
+bom_to_vcm_processed = process_bom(bom_to_vcm)
+bom_to_vcm = bom_to_vcm_processed.copy()
+bom_to_vcm['Proxy PR'] = bom_to_vcm['UNIDADE_VCM'] + '-' + bom_to_vcm['PF-VCM']
 bom_to_vcm = bom_to_vcm.dropna(subset=['UNIDADE_VCM','PF-VCM','MP-VCM'])
-bom_to_vcm = bom_to_vcm.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','QUANTIDADE_NA_DEMANDA'])['COMPONENT_QTY'].sum().reset_index()
-bom_to_vcm = bom_to_vcm.sort_values(by=['UNIDADE_VCM','PF-VCM','FORMULA_CODE','QUANTIDADE_NA_DEMANDA']).reset_index().drop(columns='index')
+bom_to_vcm = bom_to_vcm.groupby(by=['UNIDADE_VCM','PF-VCM','MP-VCM','FORMULA_CODE','Proxy PR','PLANT_CODE','PRODUCTION_SITE'])['COMPONENT_QTY'].sum().reset_index()
+bom_to_vcm = bom_to_vcm.sort_values(by=['UNIDADE_VCM','PF-VCM','Proxy PR' ,'FORMULA_CODE','PLANT_CODE','PRODUCTION_SITE']).reset_index().drop(columns='index')
+# bom_to_vcm = bom_to_vcm.drop_duplicates(subset='Proxy PR', keep='first')
+bom_to_vcm['pk'] = bom_to_vcm['Proxy PR'] + '-' + bom_to_vcm['FORMULA_CODE']
 bom_to_vcm_sum = bom_to_vcm.copy()
-bom_to_vcm_sum = bom_to_vcm_sum.groupby(by=['UNIDADE_VCM','PF-VCM','FORMULA_CODE'])['COMPONENT_QTY'].sum().reset_index()
+bom_to_vcm_sum['COMPONENT_QTY'] = bom_to_vcm_sum['COMPONENT_QTY'].apply(lambda x: round(x,3))
+bom_to_vcm_sum = bom_to_vcm_sum.groupby(by=['pk','Proxy PR'])['COMPONENT_QTY'].sum().reset_index()
 bom_to_vcm_sum = bom_to_vcm_sum[(bom_to_vcm_sum['COMPONENT_QTY'] == 1.0)]
 # A medida com base no DataFrame bom_to_vcm_sum não foi utilizada, mas fica disponível caso seja necessária
-lt = False
-control_list = []
-formula_code = str()
-fechamento = 0.0
-bom_to_vcm['ACC_QTY'] = 0.0
-for i in tqdm(range(bom_to_vcm.shape[0]), desc = 'Avaliação Final :: Lista Técnica'):
-    if i == 0:
-        bom_to_vcm['ACC_QTY'][i] = bom_to_vcm['COMPONENT_QTY'][i]
-        fechamento = bom_to_vcm['ACC_QTY'][i]
-        control_list.append(bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i])
-        formula_code = bom_to_vcm['FORMULA_CODE'][i]
-    elif fechamento + bom_to_vcm['COMPONENT_QTY'][i] <= 1.0 and formula_code == bom_to_vcm['FORMULA_CODE'][i]\
-    and bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i] in control_list and lt == False:
-        bom_to_vcm['ACC_QTY'][i] = fechamento + bom_to_vcm['COMPONENT_QTY'][i]
-        fechamento = bom_to_vcm['ACC_QTY'][i]
-    elif (fechamento + bom_to_vcm['COMPONENT_QTY'][i] > 1.0 or lt == True or not formula_code == bom_to_vcm['FORMULA_CODE'][i]) \
-    and bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i] in control_list:
-        lt = True
-        bom_to_vcm['ACC_QTY'][i] = 0.0
-        fechamento = bom_to_vcm['ACC_QTY'][i]
-    else: 
-        control_list.append(bom_to_vcm['UNIDADE_VCM'][i] + '-' + bom_to_vcm['PF-VCM'][i])
-        formula_code = bom_to_vcm['FORMULA_CODE'][i]
-        bom_to_vcm['ACC_QTY'][i] = bom_to_vcm['COMPONENT_QTY'][i]
-        fechamento = bom_to_vcm['ACC_QTY'][i]
-        lt = False  
-bom_to_vcm = bom_to_vcm[(bom_to_vcm['ACC_QTY'] > 0.0)]
-bom_to_vcm['Proxy PR'] = bom_to_vcm['UNIDADE_VCM'] + '-' + bom_to_vcm['PF-VCM']
+bom_to_vcm_sum = bom_to_vcm_sum.reset_index().drop(columns=['index','Proxy PR','COMPONENT_QTY'])
+bom_to_vcm = fx.left_outer_join(df_left=bom_to_vcm, df_right=bom_to_vcm_sum, left_on='pk', right_on='pk')
+bom_to_vcm = bom_to_vcm.sort_values(by=['pk','UNIDADE_VCM','PF-VCM','MP-VCM','PLANT_CODE','PRODUCTION_SITE'])
+bom_to_vcm = bom_to_vcm.drop_duplicates(subset=['Proxy PR','MP-VCM'])
 bom_to_vcm.to_excel(os.path.join(cwd,exec_log_path+'[CONSULTA] BOM PARA VCM.xlsx'))
 bom_to_vcm = fx.left_outer_join(bom_to_vcm, template_saida, left_on = 'Proxy PR', right_on = 'Proxy PR',
                                 name_left="Mesclagem (15) => BOM_TO_VCM", name_right="Template Saida")
 template_entrada = fx.left_outer_join(template_entrada, bom_to_vcm, left_on = ['Unidade','Receita','Produto'],
                                       right_on = ['UNIDADE_VCM','Receita','MP-VCM'],
                                       name_left="Mesclagem (16) => Template Entrada", name_right="BOM_TO_VCM")
-template_entrada = template_entrada[['Proxy PR','Unidade', 'Receita', 'Produto', 'ValorEntrada',
+template_entrada = template_entrada[['Proxy PR','PF-VCM','Unidade', 'Receita', 'Produto', 'ValorEntrada',
                                      'MP-VCM', 'FORMULA_CODE', 'COMPONENT_QTY']]
-print('\nEstratégia 03 :: Criando uma lista técnica alternativa baseada em ciclos anteriores...')
-bom_alt_vcm = fx.left_outer_join(bom_alt_vcm,bom_alt_vcm_mp, left_on=['Unidade','Receita'], right_on=['Unidade','Receita'],
-                                 name_left="Mesclagem (17) => BOM ALT VCM", name_right="BOM ALT VCM (MP)", struct = False)
-bom_alt_vcm['Produto'] = bom_alt_vcm['MP']
-bom_alt_vcm = bom_alt_vcm.drop(columns=['ValorSaida','MP']).rename(columns={'ValorEntrada':'COMPONENT_QTY_NV2'})
-template_entrada = fx.left_outer_join(template_entrada, bom_alt_vcm, left_on = ['Unidade','Receita','Produto'], 
-                                      right_on = ['Unidade','Receita','Produto'],
-                                      name_left="Mesclagem (18) => Template Entrada", name_right="BOM ALT VCM")
+template_saida['PF-VCM'] = template_saida['Proxy PR'].str.split('-PF',expand=True)[1]
+template_saida['PF-VCM'] = 'PF' + template_saida['PF-VCM']
+template_saida['Proxy PR'] = template_saida['Proxy PR'].str.split('-PF',expand=True)[0] + '-' + template_saida['Receita']
+template_saida = template_saida.drop(columns='Receita')
+template_saida = template_saida.rename(columns={'PF-VCM':'PF-VCM-SAIDA'})
+template_entrada['Proxy PR'] = template_entrada['Unidade'] + '-' + template_entrada['Receita']
+template_entrada = template_entrada.drop(columns='PF-VCM')
+template_entrada = fx.left_outer_join(template_entrada, template_saida, left_on='Proxy PR', right_on='Proxy PR')
+bom_to_vcm = bom_to_vcm.sort_values(by=['pk','MP-VCM','COMPONENT_QTY'], ascending = False)
+proxy_bom = bom_to_vcm[['pk','PF-VCM','MP-VCM','COMPONENT_QTY']].copy().reset_index().drop(columns='index')
+# proxy_bom['COMPONENT_QTY'] = np.trunc(1000*proxy_bom['COMPONENT_QTY'])/1000
+proxy_bom['COMPONENT_QTY'] = proxy_bom['COMPONENT_QTY'].apply(lambda x: round(x,3))
+proxy_bom = proxy_bom.sort_values(by='pk', ascending=False)
+# proxy_bom = proxy_bom.reset_index().drop(columns=['pk','index'])
+proxy_bom = proxy_bom.reset_index().drop(columns=['index'])
+fg_list = []
+lt = False
+fechamento = 0.0
+proxy_bom['ACC_QTY'] = 0.0
+
+for i in tqdm(range(proxy_bom.shape[0]), desc='Avaliação de fechamento da BOM'):
+    current_qty = proxy_bom['COMPONENT_QTY'].iloc[i]
+    current_fg = proxy_bom['PF-VCM'].iloc[i]
+    sum_check = fechamento + current_qty
+    
+    if i == 0:
+        proxy_bom.at[i, 'ACC_QTY'] = current_qty
+        fechamento = current_qty
+        fg_list.append(current_fg)
+    
+    elif current_fg not in fg_list:
+        fg_list.append(current_fg)
+        proxy_bom.at[i, 'ACC_QTY'] = current_qty
+        fechamento = current_qty
+        lt = False
+    
+    elif lt:
+        proxy_bom.at[i, 'ACC_QTY'] = 0.0
+    
+    elif sum_check <= 1.0:
+        proxy_bom.at[i, 'ACC_QTY'] = sum_check
+        fechamento = sum_check
+    
+    else:
+        needed = truncate(1.0 - fechamento, 3)
+        proxy_bom.at[i, 'ACC_QTY'] = needed
+        fechamento = 1.0
+        lt = True
+        
+        remaining = truncate(current_qty - needed, 3)
+        if remaining > 0:
+            pass
+        
+proxy_bom = proxy_bom[(proxy_bom['ACC_QTY'] != 0.0)].copy().reset_index().drop(columns='index')
+proxy_bom = proxy_bom.rename(columns={'COMPONENT_QTY':'COMPONENT-QTY-NV2','MP-VCM':'PROXY-MP'})
+proxy_bom = proxy_bom.drop_duplicates(subset=['PF-VCM','PROXY-MP'])
+template_entrada = fx.left_outer_join(template_entrada, proxy_bom, left_on = ['PF-VCM-SAIDA','Produto'], right_on=['PF-VCM','PROXY-MP'])
 template_entrada_sum = template_entrada.copy()
 template_entrada_sum = template_entrada_sum.groupby(by=['Unidade','Receita'])['COMPONENT_QTY'].sum().reset_index()
-template_entrada_sum = template_entrada_sum.rename(columns={'COMPONENT_QTY':'FECHAMENTO'})
-template_entrada_sum = template_entrada_sum[(template_entrada_sum['FECHAMENTO'] == 1.0)]
+template_entrada_sum['COMPONENT_QTY'] = template_entrada_sum['COMPONENT_QTY'].apply(lambda x: round(x,3))
+template_entrada_sum = template_entrada_sum.rename(columns={'COMPONENT_QTY':'FECHAMENTO_NV1'})
+proxy_bom_sum_nv2 = proxy_bom.groupby(by='PF-VCM')['COMPONENT-QTY-NV2'].sum().reset_index()
+proxy_bom_sum_nv2['COMPONENT-QTY-NV2'] = proxy_bom_sum_nv2['COMPONENT-QTY-NV2'].apply(lambda x: round(x, 3))
+proxy_bom_sum_nv2 = proxy_bom_sum_nv2.rename(columns={'COMPONENT-QTY-NV2': 'FECHAMENTO_NV2'})
+template_entrada_sum = template_entrada_sum[(template_entrada_sum['FECHAMENTO_NV1'] == 1.0)]
 template_entrada = fx.left_outer_join(template_entrada, template_entrada_sum, left_on = ['Unidade','Receita'],
                                       right_on = ['Unidade','Receita'], name_left="Mesclagem (16) => Template Entrada",
                                       name_right="Soma Template Entrada")
+template_entrada = fx.left_outer_join(template_entrada, proxy_bom_sum_nv2, left_on='PF-VCM', right_on='PF-VCM')
+template_entrada['COMPONENT_QTY'] = template_entrada['COMPONENT_QTY'].fillna(0.0)
+template_entrada['COMPONENT-QTY-NV2'] = template_entrada['COMPONENT-QTY-NV2'].fillna(0.0)
+# condicao = [(template_entrada['FECHAMENTO_NV1'] == 1.0) & (template_entrada['MP-VCM'] == template_entrada['Produto']),
+condicao = [(template_entrada['FECHAMENTO_NV1'] == 1.0),
+            (template_entrada['FECHAMENTO_NV2'] == 1.0) \
+            & (template_entrada['PROXY-MP'] == template_entrada['Produto'])]
 
-condicao = [(template_entrada['FECHAMENTO'] ==  1.0) & (template_entrada['MP-VCM'] == template_entrada['Produto']),
-            (template_entrada['FECHAMENTO'] < 1.0) & (template_entrada['COMPONENT_QTY_NV2'] > 0.0)]
-
-resultado = [template_entrada['COMPONENT_QTY'], template_entrada['COMPONENT_QTY_NV2']]
+resultado = [template_entrada['COMPONENT_QTY'], template_entrada['COMPONENT-QTY-NV2']]
 
 template_entrada['ValorEntrada'] = np.select(condicao, resultado, default=0.0)
 
@@ -594,10 +780,23 @@ template_entrada['ValorEntrada'] = np.select(condicao, resultado, default=0.0)
 # ================================================= DEPRECADO ============================================================
 
 template_entrada = template_entrada[['Unidade','Receita','Produto','ValorEntrada']]
+template_entrada['ValorEntrada'] = template_entrada['ValorEntrada'].apply(lambda x: round(x,3))
+
+# ================================================= DEPRECADO ============================================================
 # template_entrada.to_excel(os.path.join(cwd,output_path + 'tbOutRendimentosEntrada.xlsx'),
 #                           index = False, sheet_name = 'RENDIMENTO_ENTRADA_PROD')
+# ================================================= DEPRECADO ============================================================
+
 template_entrada.to_csv(os.path.join(cwd, output_path + 'tbOutRendimentoEnt.csv'),
-                        index = False, sep = ';', encoding = 'utf-8')
+                        index = False, sep = ';', encoding = 'utf-8-sig')
+template_entrada_sum = template_entrada.groupby(by=['Unidade','Receita'])['ValorEntrada'].sum().reset_index()
+template_saida_corr = fx.left_outer_join(df_left=template_saida_corr, df_right=template_entrada_sum, left_on=['Unidade','Receita'], right_on=['Unidade','Receita'])
+template_saida_corr.to_excel(os.path.join(cwd,exec_log_path + '[CALL TO ACTION] Lista de Rendimentos de Saída Zerados.xlsx'),
+                             index = False, sheet_name = 'RendSaidaExpurgado')
+template_saida_corr['ValorSaida'] = np.where((template_saida_corr['ValorSaida']==1.0)&(template_saida_corr['ValorEntrada'] == 1.0),
+                                             template_saida_corr['ValorSaida'], 0.0)
+template_saida_corr.to_csv(os.path.join(cwd, output_path + 'tbOutRendimentoSai_corrigido.csv'),
+                                    index=False, sep = ';', encoding='utf-8')
 
 end_time = time.time()
 print(f'\nTempo de Execução: {round(end_time - start_time,2)} segundos')

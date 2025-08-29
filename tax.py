@@ -111,13 +111,13 @@ df_corrente_produto = df_corrente_produto.rename(columns={'Produto':'PRD-VCM'})
 # Dataframe :: Template Impostos Entrada
 #validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
 df_template_icms_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']), delimiter = ';',
-                       encoding = 'utf-8-bom', usecols=list(tp_dado_arquivos['template_imp_entrada'].keys()),
+                       encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_entrada'].keys()),
                        dtype=tp_dado_arquivos['template_imp_entrada'])
 
 # Dataframe :: Template Impostos Saida
 #validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']))
 df_template_icms_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']), delimiter = ';',
-                       encoding = 'utf-8-bom', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
+                       encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
                        dtype=tp_dado_arquivos['template_imp_saida'])
 
 # Dataframe :: Custo de Reposição
