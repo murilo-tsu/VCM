@@ -4,10 +4,11 @@ print('║                                         ATUALIZACAO DE DADOS - VCM   
 print('║                                               >> supply.py <<                                                  ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado  por: Murilo Lima Ribeiro  Data: 10/03/2025                                                             ║')
-print('║ Editado por: Murilo Lima Ribeiro  Data: 25/08/2025                                                             ║')
+print('║ Editado por: Murilo Lima Ribeiro  Data: 16/09/2025                                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
+print('║ - v2.1.0 (16/09/2025): Remoção de restrição do M+3                                                             ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Plano de Compras                                                                                            ║')
@@ -278,9 +279,9 @@ wizard_suprimento_faixa['BALANCE_TONS'] = wizard_suprimento_faixa['BALANCE_TONS'
 wizard_suprimento_faixa['BALANCE_TONS'] = wizard_suprimento_faixa['BALANCE_TONS'] + wizard_suprimento_faixa['Quantidade']
 
 print('\nAplicando premissas para compras firmes...')
-print(' >> Horizonte Compras Importadas: M+0 até M+3')
+print(' >> Horizonte Compras Importadas: M+0 até M+2')
 print(' >> Horizonte Compras Nacionais: M+0 até M+1')
-purchase_range = ['Mês000','Mês001','Mês002','Mês003']
+purchase_range = ['Mês000','Mês001','Mês002']
 purchase_range_nac = ['Mês000','Mês001']
 mp_list_nac = list(mp_fornecimento_nacional['PRD-VCM-NAC'])
 for i in tqdm(range(wizard_suprimento_faixa.shape[0]), desc = 'Processando...', unit = ' row'):
