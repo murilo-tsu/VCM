@@ -4,10 +4,11 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                           >>   sku_activation.py  <<                                           ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 26/05/2025                                                ║')
-print('║ Editado por:   Murilo Lima Ribeiro             Data: 25/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 19/09/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
+print('║ - v2.1.0 (19/09/2025): Ajustes Plano de Compras                                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Definição de Limites                                                                                        ║')
@@ -100,6 +101,7 @@ df_revisao_importada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                            usecols = list(tp_dado_arquivos['df_revisao_importada'].keys()),
                            dtype = tp_dado_arquivos['df_revisao_importada']).applymap(fx.padronizar)
 df_revisao_importada = df_revisao_importada.rename(columns=rename_dataframes['df_revisao_importada'])
+df_revisao_importada = df_revisao_importada.dropna(subset=['PLANTA','CODIGO_MP'])
 
 # DataFrame :: compras importadas :: importa todas as compras firmes NACIONAIS
 df_revisao_nacional = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['df_revisao_nacional']),
@@ -107,6 +109,7 @@ df_revisao_nacional = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
                                     usecols = list(tp_dado_arquivos['df_revisao_nacional'].keys()),
                                     dtype = tp_dado_arquivos['df_revisao_nacional']).applymap(fx.padronizar)
 df_revisao_nacional = df_revisao_nacional.rename(columns=rename_dataframes['df_revisao_nacional'])
+df_revisao_nacional = df_revisao_nacional.dropna(subset=['PLANTA','CODIGO_MP'])
 
 # DataFrame :: cadastro de materiais :: busca toda a lista de materiais (MP, PI, PF) no cadastrados VCM
 cadastro_produtos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['cadastro_produtos']),
@@ -256,7 +259,7 @@ for j in range(df_revisao.shape[0]):
 id_produtos = mp_fornecimento_nacional['PRD-VCM-NAC'].to_frame().rename(columns={'PRD-VCM-NAC':'PRD-VCM'})
 portos_correntes['ID_correntes'] = ''
 for z in range(portos_correntes.shape[0]):
-    portos_correntes['ID_correntes'][z] = portos_correntes['PORTO'][z] + '-' + portos_correntes['UNIDADE'][z]
+    portos_correntes['ID_correntes'][z] = portos_correntes['PORTO'][z] + '-' + portos_correntes['UNIDADE_SAP'][z]
 
 id_correntes = portos_correntes['CORRENTE']
 id_correntes = id_correntes.drop_duplicates().to_frame()

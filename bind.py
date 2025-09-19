@@ -4,10 +4,11 @@ print('║                                           ATUALIZACAO DE DADOS - VCM 
 print('║                                                >>  bind.py  <<                                                 ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Criado por:    Isabela Nunes dos Santos        Data: 14/05/2025                                                ║')
-print('║ Editado por:   Murilo Lima Ribeiro             Data: 25/08/2025                                                ║')
+print('║ Editado por:   Murilo Lima Ribeiro             Data: 19/09/2025                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ CHANGELOG:                                                                                                     ║')
 print('║ - v2.0.0 (25/08/2025): Release Projeto Merger                                                                  ║')
+print('║ - v2.1.0 (19/09/2025): Ajustes Plano de Compras                                                                ║')
 print('╠════════════════════════════════════════════════════════════════════════════════════════════════════════════════╣')
 print('║ Este script é responsável pela atualização:                                                                    ║')
 print('║ >> Amarração das Correntes de Fornecimento                                                                     ║')
@@ -159,6 +160,7 @@ df_revisao_importada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios
                             dtype = tp_dado_arquivos['df_revisao_importada']).applymap(fx.padronizar)
 
 df_revisao_importada = df_revisao_importada.rename(columns=rename_dataframes['df_revisao_importada'])
+df_revisao_importada = df_revisao_importada.dropna(subset=['PLANTA','CODIGO_MP'])
 
 # DataFrame :: Compras Nacionais
 df_revisao_nacional = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['df_revisao_nacional']),
@@ -166,6 +168,7 @@ df_revisao_nacional = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
                             usecols = list(tp_dado_arquivos['df_revisao_nacional'].keys()),
                             dtype = tp_dado_arquivos['df_revisao_nacional']).applymap(fx.padronizar)
 df_revisao_nacional = df_revisao_nacional.rename(columns=rename_dataframes['df_revisao_nacional'])
+df_revisao_nacional = df_revisao_nacional.dropna(subset=['PLANTA','CODIGO_MP'])
 
 # DataFrame :: 
 df_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
@@ -269,7 +272,7 @@ df_revisao = fx.left_outer_join(df_revisao, df_portos, left_on = 'PORTO', right_
              name_left='Revisão de Chegadas >>ALL<<', name_right='Portos')
 
 # 2025-08-18 :: Incluindo a informação de PLANTA para aumentar a granularidade do BIND.py
-df_revisao = df_revisao.merge(df_correntes, how='left', left_on=['NOME_PORTO_VCM','PORTO','PLANTA'], right_on=['NOME_PORTO_VCM','PORTO','UNIDADE'])
+df_revisao = df_revisao.merge(df_correntes, how='left', left_on=['NOME_PORTO_VCM','PORTO','PLANTA'], right_on=['NOME_PORTO_VCM','PORTO','UNIDADE_SAP'])
 
 
 # Tá no arquivo de supply, faz sentido ter isso em bind?
