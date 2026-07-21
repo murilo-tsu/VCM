@@ -138,10 +138,12 @@ df_fretes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['fretes'])
                        dtype=tp_dado_arquivos['fretes'])
 
 # DataFrame :: Template Preço Exato
-# fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_preco']))
-df_template_rmov = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_preco']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_preco']))
+df_template_rmov = fx.leitura_segura(
+    'template_preco', os.path.join(cwd, path + arquivos_primarios['template_preco']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_preco']),
                        usecols=list(tp_dado_arquivos['template_preco'].keys()),
-                       dtype=tp_dado_arquivos['template_preco'])
+                       dtype=tp_dado_arquivos['template_preco']))
 df_corrente_mc = df_template_rmov.copy()
 df_corrente_mc = df_corrente_mc.drop(columns={'Preço Exato'})
 

@@ -175,6 +175,8 @@ df_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda'
                            sheet_name = arquivos_primarios['demanda_sn'],
                            usecols = list(tp_dado_arquivos['demanda'].keys()),
                            dtype = tp_dado_arquivos['demanda'])
+decimals_kg = 2
+df_demanda['QUANTIDADE'] = df_demanda['QUANTIDADE'].apply(lambda x: round(x, decimals_kg))
 
 # DataFrame :: 
 df_unidades = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['unidades_exp']),
@@ -201,20 +203,26 @@ df_dicionario = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicge
                               dtype = tp_dado_arquivos['dicgen'])
 
 # DataFrame :: Template Demanda
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
-template_demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
+template_demanda = fx.leitura_segura(
+    'template_demanda', os.path.join(cwd, path + arquivos_primarios['template_demanda']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
                             usecols = list(tp_dado_arquivos['template_demanda'].keys()),
-                            dtype = tp_dado_arquivos['template_demanda'])
+                            dtype = tp_dado_arquivos['template_demanda']))
 
 # DataFrame :: Template Definição Limites
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_limites']))
-template_limites = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_limites']),\
-                              delimiter = ';', encoding = 'utf-8')
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_limites']))
+template_limites = fx.leitura_segura(
+    'template_limites', os.path.join(cwd, path + arquivos_primarios['template_limites']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_limites']),
+                              delimiter = ';', encoding = 'utf-8'))
 
 # DataFrame :: Template Correntes
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_correntes']))
-template_correntes = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_correntes']),\
-                              delimiter = ';', encoding = 'utf-8')
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_correntes']))
+template_correntes = fx.leitura_segura(
+    'template_correntes', os.path.join(cwd, path + arquivos_primarios['template_correntes']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_correntes']),
+                              delimiter = ';', encoding = 'utf-8'))
 
 
 # =======================================================================================================================

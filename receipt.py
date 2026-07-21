@@ -130,9 +130,11 @@ df_pontos_venda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['uni
 df_pontos_venda = df_pontos_venda.rename(columns=rename_dataframes['df_pontos_venda'])
 
 # DataFrame :: Template Receita Movimentação
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['unidades_rec_mov']))
-df_template_rmov = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_rec_mov']), delimiter = ';', encoding = 'utf-8', 
-                               usecols=list(tp_dado_arquivos['template_rec_mov_sn'].keys()), dtype=tp_dado_arquivos['template_rec_mov_sn'])
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_rec_mov']))
+df_template_rmov = fx.leitura_segura(
+    'template_rec_mov', os.path.join(cwd, path + arquivos_primarios['template_rec_mov']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_rec_mov']), delimiter = ';', encoding = 'utf-8',
+                               usecols=list(tp_dado_arquivos['template_rec_mov_sn'].keys()), dtype=tp_dado_arquivos['template_rec_mov_sn']))
 
 df_corrente_produto = df_template_rmov.copy()
 df_corrente_produto = df_corrente_produto[['Corrente', 'Produto']]

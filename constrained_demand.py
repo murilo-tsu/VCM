@@ -165,12 +165,14 @@ RendSaida = RendSaida.loc[RendSaida['ValorSaida'] == 1.0]
 RendSaida = RendSaida.reset_index().drop(columns='index')
 # DataFrame :: Arquivo de Resultados do VCM :: Output da rodada de otimização
 fx.validar_data_arquivo(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']))
-resultados_vcm = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']),
+resultados_vcm = fx.leitura_segura(
+    'arq_resultados_vcm', os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']),
+    lambda: pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['arq_resultados_vcm']),
                                sheet_name = arquivos_primarios['arq_resultados_vcm_sn01'],
                                usecols = list(tp_dado_arquivos['arq_resultados_vcm'].keys()),
                                # 2025-06-03 :: REMOVIDO SKIPROWS
                                #dtype = tp_dado_arquivos['arq_resultados_vcm'], skiprows = 2).applymap(fx.padronizar)
-                               dtype = tp_dado_arquivos['arq_resultados_vcm']).applymap(fx.padronizar)
+                               dtype = tp_dado_arquivos['arq_resultados_vcm'])).applymap(fx.padronizar)
 # DataFrame :: Esqueleto topológico de correntes existentes no VCM
 tbUpdateCorrentes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['arq_tbUpdateCorrentes']),
                             sheet_name= arquivos_primarios['arq_tbUpdateCorrentes'].split('.')[0],

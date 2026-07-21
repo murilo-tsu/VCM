@@ -178,34 +178,42 @@ ptax_demurrage = pd.read_excel(os.path.join(path + arquivos_primarios['demurrage
                                   dtype =tp_dado_arquivos['ptax'])
 
 # Dataframe :: Template Suprimento
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']))
-template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']))
+template_suprimento = fx.leitura_segura(
+    'wizard_suprimento_faixa', os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
                                   usecols = list(tp_dado_arquivos['wizard_suprimento_faixa'].keys()),
-                                  dtype = tp_dado_arquivos['wizard_suprimento_faixa'])
+                                  dtype = tp_dado_arquivos['wizard_suprimento_faixa']))
 wizard_suprimento_faixa = template_suprimento[['Unidade', 'Produto', 'Periodo']]
 
 # DataFrame :: TEMPLATE DE CUSTO DE HANDLING PARA ARMAZÉNS EXTERNOS
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
-df_template_hand_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']))
+df_template_hand_armz = fx.leitura_segura(
+    'template_hand_armz', os.path.join(cwd, path + arquivos_primarios['template_hand_armz']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_hand_armz']),
                          usecols=list(tp_dado_arquivos['template_hand_armz'].keys()),
-                         dtype=tp_dado_arquivos['template_hand_armz'])
+                         dtype=tp_dado_arquivos['template_hand_armz']))
 df_template_hand_armz['Recebimento'] = 0.0
 df_template_hand_armz['Expedição'] = 0.0
 
 # DataFrame :: TEMPLATE DE CUSTOS VARIAVEIS PARA ARMAZÉNS EXTERNOS
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
-df_template_var_armz = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_var_armz']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_var_armz']))
+df_template_var_armz = fx.leitura_segura(
+    'template_var_armz', os.path.join(cwd, path + arquivos_primarios['template_var_armz']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_var_armz']),
                          usecols=list(tp_dado_arquivos['template_var_armz'].keys()),
-                         dtype=tp_dado_arquivos['template_var_armz'])
+                         dtype=tp_dado_arquivos['template_var_armz']))
 df_template_var_armz['Valor'] = 0.0
 df_template_var_armz['Custo Financeiro'] = 0.0
 df_template_var_armz['Custo Variável'] = 0.0
 
 # DataFrame :: Template Capacidade
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
-template_capacidade = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
+template_capacidade = fx.leitura_segura(
+    'template_capacidade', os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_capacidade']),
                        usecols=list(tp_dado_arquivos['template_capacidade'].keys()),
-                       dtype=tp_dado_arquivos['template_capacidade'])
+                       dtype=tp_dado_arquivos['template_capacidade']))
 template_capacidade['Volume Mínimo'] = 0.0
 template_capacidade['Volume Máximo'] = 0.0
 
@@ -354,23 +362,49 @@ wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa.drop(columns={'PRD
 # ===============================================================================================================================
 
 print('Realizando preenchimentos de custos de acordo com as datas de vigência...')
-for i in tqdm(range(wizard_custo_suprimento_faixa.shape[0])):
-    for j in range(custos_mp.shape[0]):
-        if  wizard_custo_suprimento_faixa['Produto'][i] == custos_mp['PRD-VCM'][j] and wizard_custo_suprimento_faixa['Periodo'][i] == custos_mp['Nome VCM'][j]:
-            wizard_custo_suprimento_faixa['Custo MP BRL/ton'][i] = custos_mp['Custo VCM (BRL/ton)'][j]
-            wizard_custo_suprimento_faixa['Validação'][i] = '1'
-            
-        # Regra adicional para buscar o LAST_UPDATED_COST
-        elif wizard_custo_suprimento_faixa['Validação'][i] == '0' and wizard_custo_suprimento_faixa['Produto'][i] == custos_mp['PRD-VCM'][j]:
-            wizard_custo_suprimento_faixa['Custo MP BRL/ton'][i] = custos_mp['LAST_UPDATED_COST'][j]
-            wizard_custo_suprimento_faixa['Validação'][i] = '1'  
-                      
-    for k in range(demurrage.shape[0]):
-        if wizard_custo_suprimento_faixa['Validação'][i] != '0' and wizard_custo_suprimento_faixa['ID-LEFT'][i] == demurrage['ID-RIGHT'][k]:
-            if wizard_custo_suprimento_faixa['CATEGORIA'][i] == 'PREMIUM':
-                wizard_custo_suprimento_faixa['Demurrage BRL/ton'][i] = demurrage['Demurrage BRL - PREMIUM'][k]
-            if wizard_custo_suprimento_faixa['CATEGORIA'][i] == 'CONVENCIONAL':
-                wizard_custo_suprimento_faixa['Demurrage BRL/ton'][i] = demurrage['Demurrage BRL'][k]
+
+# ── custo MP ──────────────────────────────────────────────────────────────────
+_custos_agg = custos_mp.groupby(['PRD-VCM', 'Nome VCM'], as_index=False).last()
+
+# Merge exato (Produto + Periodo) → Custo VCM (BRL/ton)
+_custo_exato = wizard_custo_suprimento_faixa[['Produto', 'Periodo']].merge(
+    _custos_agg[['PRD-VCM', 'Nome VCM', 'Custo VCM (BRL/ton)']],
+    left_on=['Produto', 'Periodo'], right_on=['PRD-VCM', 'Nome VCM'],
+    how='left'
+)['Custo VCM (BRL/ton)']
+
+# Fallback: só Produto → LAST_UPDATED_COST
+_fallback = custos_mp.groupby('PRD-VCM', as_index=False)['LAST_UPDATED_COST'].last()
+_custo_fallback = wizard_custo_suprimento_faixa[['Produto']].merge(
+    _fallback, left_on='Produto', right_on='PRD-VCM', how='left'
+)['LAST_UPDATED_COST']
+
+wizard_custo_suprimento_faixa['Custo MP BRL/ton'] = (
+    _custo_exato.fillna(_custo_fallback).fillna(0.0).values
+)
+wizard_custo_suprimento_faixa['Validação'] = np.where(
+    wizard_custo_suprimento_faixa['Custo MP BRL/ton'] != 0.0, '1', '0'
+)
+
+# ── demurrage ─────────────────────────────────────────────────────────────────
+_demu = (
+    demurrage[['ID-RIGHT', 'Demurrage BRL', 'Demurrage BRL - PREMIUM']]
+    .groupby('ID-RIGHT', as_index=False).last()
+)
+_demu_merged = wizard_custo_suprimento_faixa[['ID-LEFT', 'CATEGORIA', 'Validação']].merge(
+    _demu, left_on='ID-LEFT', right_on='ID-RIGHT', how='left'
+)
+_mask_valido  = _demu_merged['Validação'] == '1'
+_mask_premium = (_mask_valido & (_demu_merged['CATEGORIA'] == 'PREMIUM')).values
+_mask_conv    = (_mask_valido & (_demu_merged['CATEGORIA'] == 'CONVENCIONAL')).values
+
+wizard_custo_suprimento_faixa['Demurrage BRL/ton'] = 0.0
+wizard_custo_suprimento_faixa.loc[_mask_premium, 'Demurrage BRL/ton'] = (
+    _demu_merged.loc[_mask_premium, 'Demurrage BRL - PREMIUM'].fillna(0.0).values
+)
+wizard_custo_suprimento_faixa.loc[_mask_conv, 'Demurrage BRL/ton'] = (
+    _demu_merged.loc[_mask_conv, 'Demurrage BRL'].fillna(0.0).values
+)
 
 wizard_custo_suprimento_faixa['Custo do Produto'] = wizard_custo_suprimento_faixa['Custo MP BRL/ton'] + wizard_custo_suprimento_faixa['Demurrage BRL/ton']
 wizard_custo_suprimento_faixa = wizard_custo_suprimento_faixa[['Unidade','Produto','Periodo','Custo do Produto']]
@@ -457,7 +491,12 @@ template_capacidade = fx.left_outer_join(template_capacidade, df_cap_arm_maxmin,
 template_capacidade['Volume Máximo'] = template_capacidade['Quantidade']
 template_capacidade = template_capacidade[['Unidade','Periodo','Volume Mínimo','Volume Máximo']]
 template_capacidade = template_capacidade.rename(columns={'Unidade_x':'Unidade'})
-template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].fillna(500000)
+# Antes preenchia o NaN com 500000 direto no arquivo, mascarando a ausência de capacidade
+# real dentro da própria tabela usada pelo otimizador. Agora descarta a linha em vez de
+# inventar o valor — model_builder.py já cai no fallback BIG_CAPACITY_DEFAULT (config.py,
+# mesmo 500.000) para chaves ausentes, e reporta isso como WARNING (ver
+# _check_missing_economic_data), em vez de esconder o gap como se fosse dado real.
+template_capacidade = template_capacidade.dropna(subset=['Volume Máximo'])
 template_capacidade['Volume Máximo'] =  template_capacidade['Volume Máximo'].round(2)
 template_capacidade.to_excel(os.path.join(cwd,output_path+'tbOutCapacidadeArmazenagem.xlsx'), index=False, sheet_name='VOLUME_AGRUPADO')
 

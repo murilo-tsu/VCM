@@ -158,9 +158,11 @@ produtos_cmiss = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['prod
 
 # Dataframe :: Template Suprimento
 fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']))
-template_suprimento = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
+template_suprimento = fx.leitura_segura(
+    'wizard_suprimento_faixa', os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['wizard_suprimento_faixa']),
                                   usecols = list(tp_dado_arquivos['wizard_suprimento_faixa'].keys()),
-                                  dtype = tp_dado_arquivos['wizard_suprimento_faixa'])
+                                  dtype = tp_dado_arquivos['wizard_suprimento_faixa']))
 wizard_suprimento_faixa = template_suprimento[['Unidade', 'Produto', 'Periodo']]
 
 

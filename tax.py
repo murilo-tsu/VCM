@@ -37,6 +37,10 @@ from unidecode import unidecode
 warnings.filterwarnings('ignore')
 start_time = time.time()
 
+# =======================================================================================================================
+# FEATURE FLAG — desativar para pular cálculo ICMS e gerar arquivos vazios
+# =======================================================================================================================
+CALCULAR_IMPOSTOS = True
 
 # =======================================================================================================================
 # CONFIGURAÇÕES INICIAIS
@@ -51,6 +55,20 @@ output_path = 'Output Data/'                   # Dados de saída (input para o V
 exec_log_path = 'Error Logs/'                  # Logs de erros durante a execução
 
 logging.info("Iniciando execução do script.")
+
+if not CALCULAR_IMPOSTOS:
+    _cols_saida   = ["Unidade Origem", "Unidade Destino", "Corrente", "Produto",
+                     "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST"]
+    _cols_entrada = ["Unidade Destino", "Unidade Origem", "Corrente", "Produto",
+                     "Período", "Base de Cálculo", "ICMS-SUBST", "ICMS-ST"]
+    pd.DataFrame(columns=_cols_saida).to_csv(
+        os.path.join(cwd, output_path + "tbOutImpICMSSaida.csv"),
+        sep=';', encoding='utf-8', index=False)
+    pd.DataFrame(columns=_cols_entrada).to_csv(
+        os.path.join(cwd, output_path + "tbOutImpICMSEntrada.csv"),
+        sep=';', encoding='utf-8', index=False)
+    print("CALCULAR_IMPOSTOS=False: arquivos ICMS gerados vazios. Encerrando.")
+    sys.exit(0)
 
 
 # =======================================================================================================================
@@ -109,16 +127,20 @@ df_corrente_produto = pd.read_excel(os.path.join(cwd, path + arquivos_primarios[
 df_corrente_produto = df_corrente_produto.rename(columns={'Produto':'PRD-VCM'})
 
 # Dataframe :: Template Impostos Entrada
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
-df_template_icms_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']), delimiter = ';',
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']))
+df_template_icms_entrada = fx.leitura_segura(
+    'template_imp_entrada', os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_entrada']), delimiter = ';',
                        encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_entrada'].keys()),
-                       dtype=tp_dado_arquivos['template_imp_entrada'])
+                       dtype=tp_dado_arquivos['template_imp_entrada']))
 
 # Dataframe :: Template Impostos Saida
-#validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']))
-df_template_icms_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']), delimiter = ';',
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']))
+df_template_icms_saida = fx.leitura_segura(
+    'template_imp_saida', os.path.join(cwd, path + arquivos_primarios['template_imp_saida']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_imp_saida']), delimiter = ';',
                        encoding = 'utf-8', usecols=list(tp_dado_arquivos['template_imp_saida'].keys()),
-                       dtype=tp_dado_arquivos['template_imp_saida'])
+                       dtype=tp_dado_arquivos['template_imp_saida']))
 
 # Dataframe :: Custo de Reposição
 df_valor_compra =  pd.read_excel(os.path.join(cwd, path + arquivos_primarios['custo_reposicao']),

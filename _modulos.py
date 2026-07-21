@@ -30,7 +30,6 @@ import inspect
 from tqdm import tqdm
 from pandas.tseries.offsets import MonthEnd
 from pandas.tseries.offsets import MonthBegin
-from tkinter import messagebox
 from unidecode import unidecode
 warnings.filterwarnings('ignore')
 start_time = time.time()
@@ -38,25 +37,51 @@ start_time = time.time()
 class aux_functions_vcm:
     
     def validar_data_arquivo(self,arquivo):
+        # Escape hatch para dataset de teste congelado (ex: ago/2022-ago/2023), cujos
+        # arquivos tmp* nao sao (nem devem ser) atualizados todo mes. Producao real com
+        # dados novos nao deve setar essa variavel.
+        if os.environ.get('VCM_SKIP_STALENESS_CHECK'):
+            return
         try:
-            
+
             timestamp = os.path.getmtime(arquivo)
             # Obter data e hora do momento da atualização
             curr_date = time.localtime()
             comp_timestamp = time.localtime(timestamp)
 
             # Converter em um objeto do tipo datetime
-            data_edicao = datetime.datetime.fromtimestamp(timestamp)        
+            data_edicao = datetime.datetime.fromtimestamp(timestamp)
 
-            # Exibe a data em um pop-up
-            if curr_date.tm_mon > comp_timestamp.tm_mon and curr_date.tm_year >= comp_timestamp.tm_year:
-                messagebox.showinfo("Script Encerrado!!!", f'O arquivo {arquivo} está desatualizado.\nÚltima atualização em: {data_edicao}')
-                print(f'Script foi encerrado porque o arquivo {arquivo} está desatualizado.')
-                sys.exit()
-        
-        except FileNotFoundError: 
-            messagebox.showerror("Erro", "Arquivo não encontrado.")
-            
+            # Compara mes/ano em numero absoluto de meses (evita bug de virada de ano,
+            # onde tm_mon isolado comparava errado: ex. atual=jan/2027 vs arquivo=dez/2026)
+            curr_total_meses = curr_date.tm_year * 12 + curr_date.tm_mon
+            comp_total_meses = comp_timestamp.tm_year * 12 + comp_timestamp.tm_mon
+
+            if curr_total_meses > comp_total_meses:
+                print(f'[ERRO] Arquivo desatualizado: {arquivo}')
+                print(f'       Última atualização em: {data_edicao}')
+                print('       Script encerrado — atualize o arquivo antes de rodar novamente.')
+                sys.exit(1)
+
+        except FileNotFoundError:
+            print(f'[ERRO] Arquivo não encontrado: {arquivo}')
+            sys.exit(1)
+
+
+    def leitura_segura(self, nome, arquivo, fn):
+        """Executa uma leitura (lambda com pd.read_excel/pd.read_csv) dando contexto
+        claro (qual dado, qual arquivo) em vez de deixar vazar KeyError/ValueError
+        crus do pandas quando o schema do dado de entrada muda."""
+        try:
+            return fn()
+        except FileNotFoundError:
+            print(f'[ERRO] Arquivo não encontrado para "{nome}": {arquivo}')
+            sys.exit(1)
+        except (KeyError, ValueError) as e:
+            print(f'[ERRO] Schema inesperado ao ler "{nome}" em {arquivo}: {e}')
+            print('       Verifique nomes de aba/coluna no arquivo de entrada.')
+            sys.exit(1)
+
 
     # Função de padronização das colunas
     def padronizar(self,value):

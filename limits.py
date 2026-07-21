@@ -117,18 +117,22 @@ df_cap_portos = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['capac
                        dtype=tp_dado_arquivos['capacidade_portos']).applymap(fx.padronizar)
 
 # DataFrame :: Template Saída
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_saida']))
-template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_saida']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_saida']))
+template_saida = fx.leitura_segura(
+    'template_saida', os.path.join(cwd, path + arquivos_primarios['template_saida']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_saida']),
                        delimiter = ';', encoding = 'utf-8-sig',
                        usecols=list(tp_dado_arquivos['template_saida'].keys()),
-                       dtype=tp_dado_arquivos['template_saida'])
+                       dtype=tp_dado_arquivos['template_saida']))
 
 # DataFrame :: Template Entrada
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_entrada']))
-template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_entrada']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_entrada']))
+template_entrada = fx.leitura_segura(
+    'template_entrada', os.path.join(cwd, path + arquivos_primarios['template_entrada']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_entrada']),
                        delimiter = ';', encoding = 'utf-8-sig',
                        usecols=list(tp_dado_arquivos['template_entrada'].keys()),
-                       dtype=tp_dado_arquivos['template_entrada'])
+                       dtype=tp_dado_arquivos['template_entrada']))
 
 # DataFrame :: Template Capacidade
 #fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_capacidade']))
@@ -216,8 +220,12 @@ template_saida = fx.left_outer_join(template_saida, df_cap, left_on=['Unidade','
                    name_left = 'Template Saída', name_right = 'Capacidades Expedição Portos + Unidades')
 template_saida = template_saida[['Unidade','Periodo','Limite','Ativo']]
 template_saida['Ativo'] = template_saida['Ativo'].fillna('True')
-# (07/08/2025) Como solicitado pelo Matheus, alterando o que não teve resultado de 0 para 500000
-template_saida['Limite'] = template_saida['Limite'].fillna(500000)
+# Antes preenchia o NaN com 500000 direto no arquivo (pedido do Matheus, 07/08/2025, para não
+# zerar capacidade por ausência de dado). Mesmo padrão do fix de armazenagem em warehouses.py:
+# descarta a linha em vez de mascarar — model_builder.py já cai no fallback BIG_CAPACITY_DEFAULT
+# (config.py, mesmo 500.000) para chaves ausentes, e reporta isso como WARNING, em vez de
+# esconder o gap como se fosse capacidade real cadastrada.
+template_saida = template_saida.dropna(subset=['Limite'])
 template_saida['Limite'] = template_saida['Limite'].round(2)
 template_saida.to_csv(os.path.join(cwd,output_path+'tbOutCapProdPor_LimMaxS.csv'), index = False, sep=';', encoding='utf-8')
 print('\nLimites de capacidade de expedição preenchidos!')

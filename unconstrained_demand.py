@@ -118,16 +118,20 @@ id_mercados_consumidores = id_mercados_consumidores['VCM'].to_frame().rename({'V
 
 # DataFrame :: Template de Demanda :: Validar se data de atualização do arquivo consta no mês atual
 fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_demanda']))
-wizard_spot_demanda_produto_faixa = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
+wizard_spot_demanda_produto_faixa = fx.leitura_segura(
+    'template_demanda', os.path.join(cwd, path + arquivos_primarios['template_demanda']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_demanda']),
                                                   sheet_name = arquivos_primarios['template_demanda_sn01'],
                                                   usecols = list(tp_dado_arquivos['template_demanda'].keys()),
-                                                  dtype = tp_dado_arquivos['template_demanda'])
+                                                  dtype = tp_dado_arquivos['template_demanda']))
 
 # DataFrame :: Arquivo de Demanda Irrestrita :: Planejamento de Demanda
 demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
                         sheet_name = arquivos_primarios['demanda_sn'],
                         usecols = list(tp_dado_arquivos['demanda'].keys()),
                         dtype = tp_dado_arquivos['demanda'])
+decimals_kg = 2
+demanda['QUANTIDADE'] = demanda['QUANTIDADE'].apply(lambda x: round(x, decimals_kg))
 
 # DataFrame :: Resultado da Otimização da Topologia CMISS
 demanda_cmiss = pd.read_excel(os.path.join(cwd, output_path + arquivos_primarios['demanda_cmiss']),

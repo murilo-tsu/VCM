@@ -198,26 +198,34 @@ demanda = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['demanda']),
 demanda['UNIDADE PRODUTORA'] = demanda['UNIDADE PRODUTORA'].replace(list(dicgen['DE']),list(dicgen['PARA']))
 
 # DataFrame :: Template de Rendimento de Receitas Saída
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']))
+# (leitura via Excel abaixo está desativada — substituída pela leitura CSV ativa;
+#  validação de staleness aplicada contra o arquivo realmente lido)
 # template_saida = pd.read_excel(os.path.join(cwd,path + arquivos_primarios['template_RendSaida']),
 #                                 sheet_name = arquivos_primarios['template_RendSaida_sn01'],
 #                                 usecols=list(tp_dado_arquivos['template_RendSaida'].keys()),
 #                                 dtype = tp_dado_arquivos['template_RendSaida'])
 
-template_saida = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']))
+template_saida = fx.leitura_segura(
+    'template_RendSaida', os.path.join(cwd, path + arquivos_primarios['template_RendSaida']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendSaida']),
                     usecols = list(tp_dado_arquivos['template_RendSaida'].keys()),
-                    dtype = tp_dado_arquivos['template_RendSaida'], sep = ';')
+                    dtype = tp_dado_arquivos['template_RendSaida'], sep = ';'))
 
 # DataFrame :: Template de Rendimento de Receitas de Entrada
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']))
+# (leitura via Excel abaixo está desativada — substituída pela leitura CSV ativa;
+#  validação de staleness aplicada contra o arquivo realmente lido)
 # template_entrada = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
 #                                  sheet_name = arquivos_primarios['template_RendEntr_sn01'],
 #                                  usecols = list(tp_dado_arquivos['template_RendEntr'].keys()),
 #                                  dtype = tp_dado_arquivos['template_RendEntr'])
 
-template_entrada = pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']))
+template_entrada = fx.leitura_segura(
+    'template_RendEntr', os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
+    lambda: pd.read_csv(os.path.join(cwd, path + arquivos_primarios['template_RendEntr']),
                     usecols = list(tp_dado_arquivos['template_RendEntr'].keys()),
-                    dtype = tp_dado_arquivos['template_RendEntr'], sep = ';')
+                    dtype = tp_dado_arquivos['template_RendEntr'], sep = ';'))
 
 # DataFrame :: Criação de uma Lista Técnica Alternativa com  base em preenchimentos anteriores VCM - Opção 03
 bom_alt_vcm = template_saida.copy()

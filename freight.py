@@ -161,10 +161,12 @@ exclude_routes = pd.melt(exclude_routes, id_vars = ['MODAL','Origem','Origem Rod
 exclude_routes = exclude_routes[['Corrente VCM','MODAL']].drop_duplicates()
 
 # DataFrame :: Template de Fretes
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_fretes']))
-template_fretes = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_fretes']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_fretes']))
+template_fretes = fx.leitura_segura(
+    'template_fretes', os.path.join(cwd, path + arquivos_primarios['template_fretes']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_fretes']),
                        usecols=list(tp_dado_arquivos['template_fretes'].keys()),
-                       dtype=tp_dado_arquivos['template_fretes'])
+                       dtype=tp_dado_arquivos['template_fretes']))
 
 template_fretes['ID'] = template_fretes['Origem'] + '-' + template_fretes['Destino'] + '-' +\
                         template_fretes['Corrente'] + '-' + template_fretes['Periodo']

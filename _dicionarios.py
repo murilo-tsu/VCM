@@ -62,12 +62,14 @@ arquivos_primarios = {
      'demanda': 'iptDemandaIrrestrita.xlsx',
      'demanda_sn': 'iptDemandaIrrestrita',
      # 'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.xlsx',
-     'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.csv',
+     # 'arq_RendEntr': 'WIZARD_RENDIMENTO_ENTRADA.csv',  # gerado por yield_deploy.py (legacy)
+     'arq_RendEntr': 'tbOutRendimentoEnt.csv',           # gerado pelo ETL da Data Tool
      # 'arq_RendEntr_sn01': 'RENDIMENTO_ENTRADA_PROD',
      # 'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.xlsx',
-     'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.csv',
+     # 'arq_RendSaida': 'WIZARD_RENDIMENTO_SAIDA.csv',   # gerado por yield_deploy.py (legacy)
+     'arq_RendSaida': 'tbOutRendimentoSai.csv',          # gerado pelo ETL da Data Tool
      # 'arq_RendSaida_sn01': 'RENDIMENTO_SAIDA_PROD',
-     'arq_resultados_vcm': 'Resultados.xlsx',
+     'arq_resultados_vcm': 'Resultados_Otimizador.xlsx', # gerado pelo vcm_optimizer
      'arq_resultados_vcm_sn01': 'RESULTADOS',
      'arq_tbUpdateCorrentes': 'iptUpdateCorrentes.xlsx',
      'arq_tbUpdateCorrentes_sn': 'iptUpdateCorrentes',

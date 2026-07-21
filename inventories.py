@@ -77,11 +77,13 @@ dicgen = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['dicgen']),
                        dtype=tp_dado_arquivos['dicgen']).applymap(fx.padronizar)
 
 # Dataframe :: Template Estoques
-#fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_estoques']))
-wizard_volumes_iniciais = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_estoques']),
+fx.validar_data_arquivo(os.path.join(cwd, path + arquivos_primarios['template_estoques']))
+wizard_volumes_iniciais = fx.leitura_segura(
+    'template_estoques', os.path.join(cwd, path + arquivos_primarios['template_estoques']),
+    lambda: pd.read_excel(os.path.join(cwd, path + arquivos_primarios['template_estoques']),
                                         sheet_name = arquivos_primarios['template_estoques_sn'],
                                         usecols = list(tp_dado_arquivos['template_estoques'].keys()),
-                                        dtype = tp_dado_arquivos['template_estoques'])
+                                        dtype = tp_dado_arquivos['template_estoques']))
 
 # Dataframe :: Estoques Iniciais
 estoques_iniciais = pd.read_excel(os.path.join(cwd, path + arquivos_primarios['estoques_iniciais']),
